@@ -2,7 +2,9 @@
 
 import { useSyncExternalStore } from "react";
 
-// Everything lives in localStorage on the phone. Nothing is sent anywhere.
+// Everything lives in localStorage on the phone, so the app works offline.
+// When signed in, changes are also queued in `pending` and sync.ts sends
+// them to Supabase.
 
 export type Unit = "kg" | "lb";
 
@@ -37,7 +39,16 @@ export type BodyWeight = {
   unit: Unit;
 };
 
-type State = {
+// A change waiting to be sent to Supabase. Only the latest op per key is
+// kept (see opKey), so the order they're sent in doesn't matter.
+export type Op =
+  | { t: "log"; entry: LogEntry }
+  | { t: "delLog"; id: string }
+  | { t: "weight"; w: BodyWeight }
+  | { t: "delWeight"; date: string }
+  | { t: "settings" };
+
+export type State = {
   log: LogEntry[];
   drafts: Record<string, Draft>;
   defaultUnit: Unit;
@@ -45,6 +56,9 @@ type State = {
   units: Record<string, Unit>;
   bodyWeights: BodyWeight[]; // sorted by date
   bodyUnit: Unit;
+  pending: Op[];
+  // Supabase user whose data this phone holds; null when not signed in.
+  syncedUser: string | null;
 };
 
 const KEY = "workout-plan:v1";
@@ -55,6 +69,8 @@ const EMPTY: State = {
   units: {},
   bodyWeights: [],
   bodyUnit: "kg",
+  pending: [],
+  syncedUser: null,
 };
 
 let state: State = EMPTY;
@@ -103,6 +119,54 @@ function getSnapshot() {
 }
 
 const getServerSnapshot = () => EMPTY;
+
+export function getState(): State {
+  load();
+  return state;
+}
+
+function opKey(op: Op): string {
+  switch (op.t) {
+    case "log":
+      return `log:${op.entry.id}`;
+    case "delLog":
+      return `log:${op.id}`;
+    case "weight":
+      return `weight:${op.w.date}`;
+    case "delWeight":
+      return `weight:${op.date}`;
+    case "settings":
+      return "settings";
+  }
+}
+
+export function coalesce(ops: Op[]): Op[] {
+  const byKey = new Map<string, Op>();
+  for (const op of ops) {
+    byKey.delete(opKey(op));
+    byKey.set(opKey(op), op);
+  }
+  return [...byKey.values()];
+}
+
+let onPending: (() => void) | null = null;
+
+// sync.ts registers here to hear about new local changes.
+export function setPendingListener(fn: (() => void) | null) {
+  onPending = fn;
+}
+
+// Saves a change, and queues it for Supabase when signed in.
+function commit(next: State, ops: Op[]) {
+  if (!next.syncedUser || !ops.length) return set(next);
+  set({ ...next, pending: coalesce([...next.pending, ...ops]) });
+  onPending?.();
+}
+
+// Used by sync.ts only.
+export function setSyncState(next: State) {
+  set(next);
+}
 
 export function useStore(): State {
   return useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
@@ -157,18 +221,15 @@ export function finishDraft(dayId: string, entries: Omit<LogEntry, "id" | "saved
   const now = Date.now();
   const drafts = { ...state.drafts };
   delete drafts[dayId];
-  set({
-    ...state,
-    log: [
-      ...state.log,
-      ...entries.map((e, i) => ({ ...e, id: `${now}-${i}`, savedAt: now })),
-    ],
-    drafts,
-  });
+  const saved = entries.map((e, i) => ({ ...e, id: `${now}-${i}`, savedAt: now }));
+  commit(
+    { ...state, log: [...state.log, ...saved], drafts },
+    saved.map((entry) => ({ t: "log", entry })),
+  );
 }
 
 export function setExerciseUnit(exercise: string, unit: Unit) {
-  set({ ...state, units: { ...state.units, [exercise]: unit } });
+  commit({ ...state, units: { ...state.units, [exercise]: unit } }, [{ t: "settings" }]);
 }
 
 export function unitFor(s: Pick<State, "defaultUnit" | "units">, exercise: string): Unit {
@@ -177,18 +238,21 @@ export function unitFor(s: Pick<State, "defaultUnit" | "units">, exercise: strin
 
 export function saveBodyWeight(entry: BodyWeight) {
   const rest = state.bodyWeights.filter((b) => b.date !== entry.date);
-  set({
-    ...state,
-    bodyWeights: [...rest, entry].sort((a, b) => a.date.localeCompare(b.date)),
-  });
+  commit(
+    { ...state, bodyWeights: [...rest, entry].sort((a, b) => a.date.localeCompare(b.date)) },
+    [{ t: "weight", w: entry }],
+  );
 }
 
 export function deleteBodyWeight(date: string) {
-  set({ ...state, bodyWeights: state.bodyWeights.filter((b) => b.date !== date) });
+  commit(
+    { ...state, bodyWeights: state.bodyWeights.filter((b) => b.date !== date) },
+    [{ t: "delWeight", date }],
+  );
 }
 
 export function setBodyUnit(unit: Unit) {
-  set({ ...state, bodyUnit: unit });
+  commit({ ...state, bodyUnit: unit }, [{ t: "settings" }]);
 }
 
 const LB_PER_KG = 2.20462;
@@ -199,12 +263,11 @@ export function convertWeight(weight: number, from: Unit, to: Unit): number {
 }
 
 export function deleteSession(date: string, dayId: string, savedAt: number) {
-  set({
-    ...state,
-    log: state.log.filter(
-      (e) => !(e.date === date && e.dayId === dayId && e.savedAt === savedAt),
-    ),
-  });
+  const inSession = (e: LogEntry) => e.date === date && e.dayId === dayId && e.savedAt === savedAt;
+  commit(
+    { ...state, log: state.log.filter((e) => !inSession(e)) },
+    state.log.filter(inSession).map((e) => ({ t: "delLog", id: e.id })),
+  );
 }
 
 export function hasLoggedValue(s: { weight: string; reps: string }) {

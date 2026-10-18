@@ -7,7 +7,7 @@ const TABS = [
   {
     href: "/",
     label: "Plan",
-    match: (p: string) => p === "/" || p.startsWith("/day"),
+    match: (p: string) => p === "/" || p.startsWith("/day") || p.startsWith("/account"),
     icon: (
       <path d="M6.5 6.5v11M17.5 6.5v11M3 9.5v5M21 9.5v5M6.5 12h11" />
     ),

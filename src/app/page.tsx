@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { DayBadge } from "@/components/DayBadge";
 import { NextUp } from "@/components/NextUp";
+import { SyncCard } from "@/components/SyncCard";
 import { DAYS } from "@/lib/plan";
 
 export default function Home() {
@@ -52,6 +53,8 @@ export default function Home() {
           );
         })}
       </ul>
+
+      <SyncCard />
     </>
   );
 }
