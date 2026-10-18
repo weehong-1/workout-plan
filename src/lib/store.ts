@@ -31,16 +31,31 @@ export type LogEntry = {
   savedAt: number;
 };
 
+export type BodyWeight = {
+  date: string; // YYYY/MM/DD, one entry per day
+  weight: number;
+  unit: Unit;
+};
+
 type State = {
   log: LogEntry[];
   drafts: Record<string, Draft>;
   defaultUnit: Unit;
   // Per exercise choice, keyed by the name shown (substitutes have their own).
   units: Record<string, Unit>;
+  bodyWeights: BodyWeight[]; // sorted by date
+  bodyUnit: Unit;
 };
 
 const KEY = "workout-plan:v1";
-const EMPTY: State = { log: [], drafts: {}, defaultUnit: "kg", units: {} };
+const EMPTY: State = {
+  log: [],
+  drafts: {},
+  defaultUnit: "kg",
+  units: {},
+  bodyWeights: [],
+  bodyUnit: "kg",
+};
 
 let state: State = EMPTY;
 let loaded = false;
@@ -162,6 +177,29 @@ export function setExerciseUnit(exercise: string, unit: Unit) {
 
 export function unitFor(s: Pick<State, "defaultUnit" | "units">, exercise: string): Unit {
   return s.units[exercise] ?? s.defaultUnit;
+}
+
+export function saveBodyWeight(entry: BodyWeight) {
+  const rest = state.bodyWeights.filter((b) => b.date !== entry.date);
+  set({
+    ...state,
+    bodyWeights: [...rest, entry].sort((a, b) => a.date.localeCompare(b.date)),
+  });
+}
+
+export function deleteBodyWeight(date: string) {
+  set({ ...state, bodyWeights: state.bodyWeights.filter((b) => b.date !== date) });
+}
+
+export function setBodyUnit(unit: Unit) {
+  set({ ...state, bodyUnit: unit });
+}
+
+const LB_PER_KG = 2.20462;
+
+export function convertWeight(weight: number, from: Unit, to: Unit): number {
+  if (from === to) return weight;
+  return from === "kg" ? weight * LB_PER_KG : weight / LB_PER_KG;
 }
 
 export function deleteSession(date: string, dayId: string, savedAt: number) {

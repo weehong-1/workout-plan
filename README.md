@@ -12,6 +12,7 @@ A mobile first Next.js app for the "Weekly Training Plan (Push/Pull + Supersets 
 * **Progression hint** appears when you hit the target reps on every set last time.
 * **Keep screen on** toggle, so your phone doesn't lock mid workout (where the browser supports it).
 * **Training Log**: past sessions, plus "Copy for Sheets", which pastes straight into the Training Log tab (Date, Day, Exercise, Set 1, Set 2, Notes), and CSV download.
+* **Body weight**: log your weight each day (kg or lb), see the latest, a trend chart (1M, 3M, 1Y, All) and history, and download it as CSV.
 * **Notes**: all the rules from the Notes tab.
 * **kg or lb**: pick a default unit on the home screen, and switch any exercise to the other unit on its card (remembered per exercise).
 * Installable to the home screen, with light and dark mode.

@@ -19,6 +19,14 @@ const TABS = [
     icon: <path d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01" />,
   },
   {
+    href: "/weight",
+    label: "Weight",
+    match: (p: string) => p.startsWith("/weight"),
+    icon: (
+      <path d="M5 4h14a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1Zm3.5 6a5 5 0 0 1 7 0M12 10l1.5-2" />
+    ),
+  },
+  {
     href: "/notes",
     label: "Notes",
     match: (p: string) => p.startsWith("/notes"),
