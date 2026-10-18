@@ -38,6 +38,8 @@ Everything is saved on your phone first, so the app is instant and keeps working
 
    Never use the secret or service_role key here.
 
+   For local development, copy [`.env.example`](.env.example) to `.env.local` and fill in the same two values.
+
 Supabase's built in email only sends a few emails an hour, to your own team's addresses, which is fine for a personal app. Without the two variables the app runs on the phone only, as before.
 
 ## Updating the plan
