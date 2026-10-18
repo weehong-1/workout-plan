@@ -8,7 +8,13 @@ import { type LogEntry, deleteSession, formatSet, sessionsOf, useHydrated, useSt
 
 // One row per exercise, columns matching the sheet:
 // Date | Day | Exercise | Set 1 | Set 2 | Notes
+// Extra sets get their own Set 3, Set 4... columns before Notes.
+function setColumns(log: LogEntry[]): number {
+  return Math.max(2, ...log.map((e) => e.sets.length));
+}
+
 function toRows(log: LogEntry[]): string[][] {
+  const columns = setColumns(log);
   return log.map((e) => {
     const day = getDay(e.dayId);
     const notes = [e.substitute && `Used substitute: ${e.substitute}`, e.notes].filter(Boolean).join(". ");
@@ -16,14 +22,16 @@ function toRows(log: LogEntry[]): string[][] {
       e.date,
       day ? dayLabel(day) : e.dayId,
       e.exercise,
-      formatSet(e.sets[0] ?? { weight: "", reps: "" }),
-      formatSet(e.sets[1] ?? { weight: "", reps: "" }),
+      ...Array.from({ length: columns }, (_, i) => formatSet(e.sets[i] ?? { weight: "", reps: "" })),
       notes,
     ];
   });
 }
 
-const HEADER = ["Date", "Day", "Exercise", "Set 1", "Set 2", "Notes"];
+function header(log: LogEntry[]): string[] {
+  const sets = Array.from({ length: setColumns(log) }, (_, i) => `Set ${i + 1}`);
+  return ["Date", "Day", "Exercise", ...sets, "Notes"];
+}
 
 function csvCell(v: string) {
   return /[",\n]/.test(v) ? `"${v.replace(/"/g, '""')}"` : v;
@@ -67,7 +75,7 @@ export function LogView() {
   };
 
   const download = () => {
-    const csv = [HEADER, ...toRows(log)].map((r) => r.map(csvCell).join(",")).join("\n");
+    const csv = [header(log), ...toRows(log)].map((r) => r.map(csvCell).join(",")).join("\n");
     const url = URL.createObjectURL(new Blob([csv], { type: "text/csv" }));
     const a = document.createElement("a");
     a.href = url;

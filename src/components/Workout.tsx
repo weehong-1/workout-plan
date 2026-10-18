@@ -33,7 +33,10 @@ export function Workout({ day }: { day: Day }) {
     (n, ex) => n + (draft?.exercises[ex.order]?.sets.filter((s) => s.done).length ?? 0),
     0,
   );
-  const totalSets = exercises.reduce((n, ex) => n + ex.sets, 0);
+  const totalSets = exercises.reduce(
+    (n, ex) => n + (draft?.exercises[ex.order]?.sets.length ?? ex.sets),
+    0,
+  );
 
   const finish = () => {
     const date = todayString();
@@ -182,6 +185,15 @@ function ExerciseCard({
       sets: cur.sets.map((s, j) => (j === i ? { ...s, [field]: value } : s)),
     }));
 
+  const addSet = () =>
+    update((cur) => ({ ...cur, sets: [...cur.sets, { weight: "", reps: "", done: false }] }));
+
+  // Only sets beyond the planned count can be removed.
+  const removeSet = () =>
+    update((cur) =>
+      cur.sets.length > ex.sets ? { ...cur, sets: cur.sets.slice(0, -1) } : cur,
+    );
+
   const toggleDone = (i: number) => {
     const wasDone = d.sets[i].done;
     update((cur) => ({
@@ -321,6 +333,29 @@ function ExerciseCard({
             </button>
           </div>
         ))}
+      </div>
+
+      <div className="mt-2 flex gap-2">
+        <button
+          onClick={addSet}
+          className="flex h-11 flex-1 items-center justify-center gap-1.5 rounded-xl border border-dashed border-[var(--line)] text-sm font-medium text-[var(--muted)] active:scale-[0.98]"
+        >
+          <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2.4} aria-hidden>
+            <path d="M12 5v14M5 12h14" strokeLinecap="round" />
+          </svg>
+          Add set
+        </button>
+        {d.sets.length > ex.sets && (
+          <button
+            onClick={removeSet}
+            className="flex h-11 flex-1 items-center justify-center gap-1.5 rounded-xl border border-dashed border-[var(--line)] text-sm font-medium text-[var(--muted)] active:scale-[0.98]"
+          >
+            <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2.4} aria-hidden>
+              <path d="M5 12h14" strokeLinecap="round" />
+            </svg>
+            Remove set {d.sets.length}
+          </button>
+        )}
       </div>
 
       <input
