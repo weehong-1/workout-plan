@@ -1,7 +1,9 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { useRestTimer } from "@/components/RestTimer";
+import { VideoModal } from "@/components/VideoModal";
 import {
   type Block,
   type Day,
@@ -160,6 +162,7 @@ function ExerciseCard({
   straightToNext: boolean;
 }) {
   const timer = useRestTimer();
+  const [watching, setWatching] = useState(false);
   const d = draft ?? emptyExercise(ex.sets);
   const name = d.useSub ? ex.substitute : ex.name;
   const video = d.useSub ? ex.substituteVideo : ex.video;
@@ -256,17 +259,16 @@ function ExerciseCard({
       </p>
 
       <div className="mt-3 flex flex-wrap gap-2">
-        <a
-          href={video}
-          target="_blank"
-          rel="noopener noreferrer"
+        <button
+          onClick={() => setWatching(true)}
           className="flex h-10 items-center gap-1.5 rounded-full bg-red-600 px-4 text-sm font-semibold text-white active:scale-95"
         >
           <svg viewBox="0 0 24 24" className="h-4 w-4" fill="currentColor" aria-hidden>
             <path d="M8 5.5v13l11-6.5-11-6.5Z" />
           </svg>
           Tutorial
-        </a>
+        </button>
+        {watching && <VideoModal url={video} title={name} onClose={() => setWatching(false)} />}
         <button
           onClick={() => update((cur) => ({ ...cur, useSub: !cur.useSub }))}
           className="flex h-10 items-center rounded-full border border-[var(--line)] px-4 text-sm font-medium active:scale-95"

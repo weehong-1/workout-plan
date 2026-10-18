@@ -32,8 +32,16 @@ export type Day = {
 };
 
 const yt = (id: string) => `https://www.youtube.com/watch?v=${id}`;
-const search = (q: string) =>
-  `https://www.youtube.com/results?search_query=${encodeURIComponent(q).replace(/%20/g, "+")}`;
+
+// The sheet linked YouTube searches for a few exercises; those were swapped
+// for specific videos so every tutorial can play inside the app.
+export function youtubeId(url: string): string | null {
+  try {
+    return new URL(url).searchParams.get("v");
+  } catch {
+    return null;
+  }
+}
 
 const WARM = "8 / 5 / 3";
 
@@ -107,9 +115,9 @@ export const DAYS: Day[] = [
             reps: "10",
             rest: "Rest 1.5~2 min after each round",
             cues: "Balls of your feet on the edge of a step, lower your heels for a full stretch, rise as high as you can and pause 1 sec, no bouncing",
-            video: search("standing calf raise tutorial"),
+            video: yt("KRJIKsY02nE"),
             substitute: "Single Leg Dumbbell Calf Raise",
-            substituteVideo: search("single leg dumbbell calf raise tutorial"),
+            substituteVideo: yt("1D7s-VyLq0Y"),
           },
         ],
       },
@@ -338,7 +346,7 @@ export const DAYS: Day[] = [
             cues: "Upper back on the bench, drive up until your body is in a straight line, squeeze glutes and pause at the top",
             video: yt("S_uZP4UH6J0"),
             substitute: "Smith Machine Hip Thrust",
-            substituteVideo: search("smith machine hip thrust tutorial"),
+            substituteVideo: yt("s3N-i46gR8o"),
           },
           {
             order: "C2",
@@ -367,9 +375,9 @@ export const DAYS: Day[] = [
             reps: "10",
             rest: "Go straight to D2",
             cues: "Keep a slight fixed bend in the elbows, bring your hands together in front of your chest and squeeze, open slowly to feel the stretch",
-            video: search("cable chest fly tutorial"),
+            video: yt("PLS8SpaHlnI"),
             substitute: "Pec Deck Fly",
-            substituteVideo: search("pec deck fly tutorial"),
+            substituteVideo: yt("ybi3NPUK47M"),
           },
           {
             order: "D2",
@@ -380,9 +388,9 @@ export const DAYS: Day[] = [
             reps: "10",
             rest: "Rest 1~1.5 min after each round",
             cues: "Balls of your feet on the edge of a step, lower your heels for a full stretch, rise as high as you can and pause 1 sec, no bouncing",
-            video: search("standing calf raise tutorial"),
+            video: yt("KRJIKsY02nE"),
             substitute: "Single Leg Dumbbell Calf Raise",
-            substituteVideo: search("single leg dumbbell calf raise tutorial"),
+            substituteVideo: yt("1D7s-VyLq0Y"),
           },
         ],
       },
@@ -521,7 +529,7 @@ export const DAYS: Day[] = [
             cues: "Grip heavy dumbbells tightly, chest up, core tight, take small steady steps",
             video: yt("VBobkldqqvk"),
             substitute: "Kettlebell Farmer's Walk",
-            substituteVideo: search("kettlebell farmers walk tutorial"),
+            substituteVideo: yt("sZAx0TVLwPI"),
           },
         ],
       },

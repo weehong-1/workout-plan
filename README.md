@@ -5,7 +5,7 @@ A mobile first Next.js app for the "Weekly Training Plan (Push/Pull + Supersets 
 ## Features
 
 * **Next up**: follows the A → B → C rotation from where you left off, and offers optional D Arm Day after C.
-* **Workout screen**: every exercise with warm up, sets × reps, rest, form cues, a tutorial video link, and a one tap swap to the substitute.
+* **Workout screen**: every exercise with warm up, sets × reps, rest, form cues, a tutorial video that plays in a pop up (no new tab), and a one tap swap to the substitute.
 * **Supersets** are grouped, so it's clear which exercises to alternate.
 * **Set logging**: 2 sets by default, with Add set for more. Tap ✓ to log a set. An empty set takes the previous set's weight (or last session's) and the target reps.
 * **Rest timer** starts on ✓, with ±15s, vibration and a beep. It keeps running if you switch pages or lock the phone.
