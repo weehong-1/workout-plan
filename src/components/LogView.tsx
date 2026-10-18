@@ -22,7 +22,7 @@ function toRows(log: LogEntry[]): string[][] {
       e.date,
       day ? dayLabel(day) : e.dayId,
       e.exercise,
-      ...Array.from({ length: columns }, (_, i) => formatSet(e.sets[i] ?? { weight: "", reps: "" })),
+      ...Array.from({ length: columns }, (_, i) => formatSet(e.sets[i] ?? { weight: "", reps: "" }, e.unit)),
       notes,
     ];
   });
@@ -129,7 +129,7 @@ export function LogView() {
                     <div className="flex items-baseline justify-between gap-3">
                       <span className="min-w-0 font-medium">{e.substitute ?? e.exercise}</span>
                       <span className="shrink-0 tabular-nums text-[var(--muted)]">
-                        {e.sets.map(formatSet).join(", ")}
+                        {e.sets.map((s) => formatSet(s, e.unit)).join(", ")}
                       </span>
                     </div>
                     {(e.substitute || e.notes) && (

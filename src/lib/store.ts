@@ -4,6 +4,8 @@ import { useSyncExternalStore } from "react";
 
 // Everything lives in localStorage on the phone. Nothing is sent anywhere.
 
+export type Unit = "kg" | "lb";
+
 export type SetLog = { weight: string; reps: string; done: boolean };
 
 export type DraftExercise = {
@@ -24,6 +26,7 @@ export type LogEntry = {
   exercise: string; // planned exercise name
   substitute?: string; // set when the substitute was used
   sets: { weight: string; reps: string }[];
+  unit?: Unit; // missing on entries saved before units existed, which were kg
   notes: string;
   savedAt: number;
 };
@@ -31,10 +34,13 @@ export type LogEntry = {
 type State = {
   log: LogEntry[];
   drafts: Record<string, Draft>;
+  defaultUnit: Unit;
+  // Per exercise choice, keyed by the name shown (substitutes have their own).
+  units: Record<string, Unit>;
 };
 
 const KEY = "workout-plan:v1";
-const EMPTY: State = { log: [], drafts: {} };
+const EMPTY: State = { log: [], drafts: {}, defaultUnit: "kg", units: {} };
 
 let state: State = EMPTY;
 let loaded = false;
@@ -137,12 +143,25 @@ export function finishDraft(dayId: string, entries: Omit<LogEntry, "id" | "saved
   const drafts = { ...state.drafts };
   delete drafts[dayId];
   set({
+    ...state,
     log: [
       ...state.log,
       ...entries.map((e, i) => ({ ...e, id: `${now}-${i}`, savedAt: now })),
     ],
     drafts,
   });
+}
+
+export function setDefaultUnit(unit: Unit) {
+  set({ ...state, defaultUnit: unit });
+}
+
+export function setExerciseUnit(exercise: string, unit: Unit) {
+  set({ ...state, units: { ...state.units, [exercise]: unit } });
+}
+
+export function unitFor(s: Pick<State, "defaultUnit" | "units">, exercise: string): Unit {
+  return s.units[exercise] ?? s.defaultUnit;
 }
 
 export function deleteSession(date: string, dayId: string, savedAt: number) {
@@ -158,11 +177,11 @@ export function hasLoggedValue(s: { weight: string; reps: string }) {
   return s.weight.trim() !== "" || s.reps.trim() !== "";
 }
 
-// "60" → "60kg×10", "BW" → "BW×10", matching the sheet's log format.
-export function formatSet(s: { weight: string; reps: string }): string {
+// "60" → "60kg×10" (or "135lb×10"), "BW" → "BW×10", matching the sheet's log format.
+export function formatSet(s: { weight: string; reps: string }, unit: Unit = "kg"): string {
   const w = s.weight.trim();
   const r = s.reps.trim();
-  const weight = w === "" ? "" : /^\d+(\.\d+)?$/.test(w) ? `${w}kg` : w;
+  const weight = w === "" ? "" : /^\d+(\.\d+)?$/.test(w) ? `${w}${unit}` : w;
   if (!weight) return r;
   return r ? `${weight}×${r}` : weight;
 }

@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useRestTimer } from "@/components/RestTimer";
+import { UnitSwitch } from "@/components/UnitSwitch";
 import { VideoModal } from "@/components/VideoModal";
 import {
   type Block,
@@ -15,19 +16,23 @@ import {
 import {
   type DraftExercise,
   type LogEntry,
+  type Unit,
   discardDraft,
   emptyExercise,
   finishDraft,
   formatSet,
   hasLoggedValue,
   lastEntryFor,
+  setExerciseUnit,
+  unitFor,
   todayString,
   updateDraftExercise,
   useStore,
 } from "@/lib/store";
 
 export function Workout({ day }: { day: Day }) {
-  const { log, drafts } = useStore();
+  const store = useStore();
+  const { log, drafts } = store;
   const router = useRouter();
   const draft = drafts[day.id];
   const exercises = day.blocks.flatMap((b) => b.exercises);
@@ -54,6 +59,7 @@ export function Workout({ day }: { day: Day }) {
         exercise: ex.name,
         substitute: d.useSub ? ex.substitute : undefined,
         sets,
+        unit: unitFor(store, d.useSub ? ex.substitute : ex.name),
         notes: d.notes.trim(),
       });
     }
@@ -162,11 +168,14 @@ function ExerciseCard({
   straightToNext: boolean;
 }) {
   const timer = useRestTimer();
+  const store = useStore();
   const [watching, setWatching] = useState(false);
   const d = draft ?? emptyExercise(ex.sets);
   const name = d.useSub ? ex.substitute : ex.name;
   const video = d.useSub ? ex.substituteVideo : ex.video;
+  const unit = unitFor(store, name);
   const last = lastEntryFor(log, ex.name);
+  const lastUnit = last?.unit ?? "kg";
   const target = targetReps(ex.reps);
   const hitTarget =
     !!last &&
@@ -178,9 +187,11 @@ function ExerciseCard({
   const update = (fn: (ex: DraftExercise) => DraftExercise) =>
     updateDraftExercise(dayId, ex.order, ex.sets, fn);
 
-  // Previous set's weight this session, else the same set last session.
+  // Previous set's weight this session, else the same set last session
+  // (only when it was logged in the same unit).
   const suggestedWeight = (cur: DraftExercise, i: number) =>
-    cur.sets[i - 1]?.weight || (cur.useSub ? "" : last?.sets[i]?.weight ?? "");
+    cur.sets[i - 1]?.weight ||
+    (cur.useSub || lastUnit !== unit ? "" : last?.sets[i]?.weight ?? "");
 
   const setField = (i: number, field: "weight" | "reps", value: string) =>
     update((cur) => ({
@@ -281,17 +292,22 @@ function ExerciseCard({
         <div className="mt-3 text-sm">
           <p className="text-[var(--muted)]">
             Last ({last.date}):{" "}
-            <span className="font-medium text-[var(--fg)]">{last.sets.map(formatSet).join(", ")}</span>
+            <span className="font-medium text-[var(--fg)]">{last.sets.map((s) => formatSet(s, lastUnit)).join(", ")}</span>
           </p>
           {hitTarget && (
             <p className="mt-1 font-medium text-emerald-600 dark:text-emerald-400">
-              You hit {target} on every set: add {isLowerBody(ex.muscles) ? "2.5~5 kg" : "1~2.5 kg"} today.
+              You hit {target} on every set: add {weightStep(isLowerBody(ex.muscles), unit)} today.
             </p>
           )}
         </div>
       )}
 
-      <div className="mt-3 space-y-2">
+      <div className="mt-4 mb-2 flex items-center justify-between">
+        <span className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">Working sets</span>
+        <UnitSwitch value={unit} onChange={(u) => setExerciseUnit(name, u)} />
+      </div>
+
+      <div className="space-y-2">
         {d.sets.map((s, i) => (
           <div key={i} className="flex items-center gap-2">
             <span className="w-10 shrink-0 text-xs font-semibold text-[var(--muted)]">Set {i + 1}</span>
@@ -305,7 +321,7 @@ function ExerciseCard({
                 onChange={(e) => setField(i, "weight", e.target.value)}
                 className="h-12 w-full rounded-xl border border-[var(--line)] bg-[var(--bg)] pr-9 pl-3 tabular-nums outline-none placeholder:text-[var(--muted)]/60 focus:border-[var(--accent)]"
               />
-              <span className="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-xs text-[var(--muted)]">kg</span>
+              <span className="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-xs text-[var(--muted)]">{unit}</span>
             </label>
             <span className="text-[var(--muted)]">×</span>
             <label className="relative w-[4.75rem] shrink-0">
@@ -368,6 +384,12 @@ function ExerciseCard({
       />
     </article>
   );
+}
+
+// Progression steps from the Notes tab, with lb equivalents.
+function weightStep(lower: boolean, unit: Unit) {
+  if (unit === "lb") return lower ? "5~10 lb" : "2.5~5 lb";
+  return lower ? "2.5~5 kg" : "1~2.5 kg";
 }
 
 function Stat({ label, value }: { label: string; value: string }) {

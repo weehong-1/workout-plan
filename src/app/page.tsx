@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { DayBadge } from "@/components/DayBadge";
+import { DefaultUnit } from "@/components/DefaultUnit";
 import { NextUp } from "@/components/NextUp";
 import { DAYS } from "@/lib/plan";
 
@@ -52,6 +53,8 @@ export default function Home() {
           );
         })}
       </ul>
+
+      <DefaultUnit />
     </>
   );
 }
