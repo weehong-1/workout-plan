@@ -167,10 +167,6 @@ export function finishDraft(dayId: string, entries: Omit<LogEntry, "id" | "saved
   });
 }
 
-export function setDefaultUnit(unit: Unit) {
-  set({ ...state, defaultUnit: unit });
-}
-
 export function setExerciseUnit(exercise: string, unit: Unit) {
   set({ ...state, units: { ...state.units, [exercise]: unit } });
 }

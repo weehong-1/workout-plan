@@ -3,8 +3,9 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useRestTimer } from "@/components/RestTimer";
-import { UnitSwitch } from "@/components/UnitSwitch";
+import { UnitSelect } from "@/components/UnitSelect";
 import { VideoModal } from "@/components/VideoModal";
+import { WeightSelect } from "@/components/WeightSelect";
 import {
   type Block,
   type Day,
@@ -187,9 +188,10 @@ function ExerciseCard({
   const update = (fn: (ex: DraftExercise) => DraftExercise) =>
     updateDraftExercise(dayId, ex.order, ex.sets, fn);
 
-  // Previous set's weight this session, else the same set last session
-  // (only when it was logged in the same unit).
-  const suggestedWeight = (cur: DraftExercise, i: number) =>
+  // Where the weight picker opens: the previous set's weight this session,
+  // else the same set last session (only when logged in the same unit).
+  // It positions the wheel only; nothing gets filled in.
+  const nearWeight = (cur: DraftExercise, i: number) =>
     cur.sets[i - 1]?.weight ||
     (cur.useSub || lastUnit !== unit ? "" : last?.sets[i]?.weight ?? "");
 
@@ -215,9 +217,9 @@ function ExerciseCard({
       sets: cur.sets.map((s, j) => {
         if (j !== i) return s;
         if (s.done) return { ...s, done: false };
-        // Tapping ✓ on an empty set accepts the suggested weight and the target reps.
+        // Tapping ✓ with no reps entered counts the target reps.
         return {
-          weight: s.weight || suggestedWeight(cur, j),
+          weight: s.weight,
           reps: s.reps || (target !== null ? String(target) : ""),
           done: true,
         };
@@ -304,25 +306,20 @@ function ExerciseCard({
 
       <div className="mt-4 mb-2 flex items-center justify-between">
         <span className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">Working sets</span>
-        <UnitSwitch value={unit} onChange={(u) => setExerciseUnit(name, u)} />
+        <UnitSelect value={unit} onChange={(u) => setExerciseUnit(name, u)} />
       </div>
 
       <div className="space-y-2">
         {d.sets.map((s, i) => (
           <div key={i} className="flex items-center gap-2">
             <span className="w-10 shrink-0 text-xs font-semibold text-[var(--muted)]">Set {i + 1}</span>
-            <label className="relative min-w-0 flex-1">
-              <span className="sr-only">Set {i + 1} weight</span>
-              <input
-                inputMode="decimal"
-                enterKeyHint="next"
-                value={s.weight}
-                placeholder={suggestedWeight(d, i)}
-                onChange={(e) => setField(i, "weight", e.target.value)}
-                className="h-12 w-full rounded-xl border border-[var(--line)] bg-[var(--bg)] pr-9 pl-3 tabular-nums outline-none placeholder:text-[var(--muted)]/60 focus:border-[var(--accent)]"
-              />
-              <span className="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-xs text-[var(--muted)]">{unit}</span>
-            </label>
+            <WeightSelect
+              value={s.weight}
+              unit={unit}
+              near={nearWeight(d, i)}
+              label={`Set ${i + 1} weight`}
+              onChange={(v) => setField(i, "weight", v)}
+            />
             <span className="text-[var(--muted)]">×</span>
             <label className="relative w-[4.75rem] shrink-0">
               <span className="sr-only">Set {i + 1} reps</span>

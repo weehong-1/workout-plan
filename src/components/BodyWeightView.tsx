@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { UnitSwitch } from "@/components/UnitSwitch";
+import { UnitSelect } from "@/components/UnitSelect";
 import { WeightChart, type WeightPoint, shortDate } from "@/components/WeightChart";
 import {
   convertWeight,
@@ -91,7 +91,7 @@ export function BodyWeightView() {
       >
         <div className="flex items-center justify-between">
           <h2 className="font-semibold">Log your weight</h2>
-          <UnitSwitch value={bodyUnit} onChange={setBodyUnit} />
+          <UnitSelect value={bodyUnit} onChange={setBodyUnit} />
         </div>
         <div className="mt-3 flex gap-2">
           <label className="relative min-w-0 flex-1">
