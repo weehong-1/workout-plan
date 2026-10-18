@@ -1,0 +1,65 @@
+@import "tailwindcss";
+
+:root {
+  --bg: #f6f6f4;
+  --card: #ffffff;
+  --fg: #18181b;
+  --muted: #6b6b73;
+  --line: #e4e4e0;
+  --soft: #efefec;
+  --accent: #ea580c;
+  --accent-fg: #ffffff;
+  --day-a: #ea580c;
+  --day-b: #0284c7;
+  --day-c: #7c3aed;
+  --day-d: #059669;
+  --day-fg: #ffffff;
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0c0c0e;
+    --card: #17171a;
+    --fg: #f4f4f5;
+    --muted: #9b9ba3;
+    --line: #2a2a2f;
+    --soft: #212125;
+    --accent: #fb923c;
+    --accent-fg: #1a0a00;
+    --day-a: #fb923c;
+    --day-b: #38bdf8;
+    --day-c: #a78bfa;
+    --day-d: #34d399;
+    --day-fg: #0c0c0e;
+    color-scheme: dark;
+  }
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  overscroll-behavior-y: none;
+}
+
+/* 16px inputs stop iOS Safari from zooming in on focus. */
+input,
+textarea,
+select {
+  font-size: 16px;
+}
+
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type="number"] {
+  -moz-appearance: textfield;
+}
