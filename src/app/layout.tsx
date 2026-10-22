@@ -1,7 +1,8 @@
 import type { Metadata, Viewport } from "next";
+import { AuthGate } from "@/components/AuthGate";
 import { BottomNav } from "@/components/BottomNav";
 import { RestTimerProvider } from "@/components/RestTimer";
-import { SyncStarter } from "@/components/SyncCard";
+import { PersistenceNotice } from "@/components/PersistenceNotice";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -24,13 +25,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <body className="min-h-dvh antialiased">
-        <RestTimerProvider>
-          <main className="mx-auto max-w-xl px-4 pt-[calc(env(safe-area-inset-top)+1rem)] pb-[calc(env(safe-area-inset-bottom)+11rem)]">
-            {children}
-          </main>
-          <BottomNav />
-          <SyncStarter />
-        </RestTimerProvider>
+        <AuthGate>
+          <PersistenceNotice />
+          <RestTimerProvider>
+            <main className="mx-auto max-w-xl px-4 pt-[calc(env(safe-area-inset-top)+1rem)] pb-[calc(env(safe-area-inset-bottom)+11rem)]">
+              {children}
+            </main>
+            <BottomNav />
+          </RestTimerProvider>
+        </AuthGate>
       </body>
     </html>
   );

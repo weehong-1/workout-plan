@@ -69,7 +69,7 @@ export default async function DayPage({ params }: Props) {
               </li>
             )}
             <li>Leave 1~2 reps in reserve. Never train to failure or let your form break down.</li>
-            <li>Tap ✓ after each working set to log it and start the rest timer. An empty set takes last session's weight and the target reps.</li>
+            <li>Choose your weight and enter reps, then tap ✓ to complete a working set. Blank reps use the target; weight is never filled automatically. The rest timer starts unless the next superset exercise follows immediately.</li>
           </ul>
         </details>
       </header>

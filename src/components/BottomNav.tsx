@@ -7,16 +7,10 @@ const TABS = [
   {
     href: "/",
     label: "Plan",
-    match: (p: string) => p === "/" || p.startsWith("/day") || p.startsWith("/account"),
+    match: (p: string) => p === "/" || p.startsWith("/day"),
     icon: (
       <path d="M6.5 6.5v11M17.5 6.5v11M3 9.5v5M21 9.5v5M6.5 12h11" />
     ),
-  },
-  {
-    href: "/log",
-    label: "Log",
-    match: (p: string) => p.startsWith("/log"),
-    icon: <path d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01" />,
   },
   {
     href: "/weight",
@@ -27,11 +21,22 @@ const TABS = [
     ),
   },
   {
-    href: "/notes",
-    label: "Notes",
-    match: (p: string) => p.startsWith("/notes"),
+    href: "/nutrition",
+    label: "Nutrition",
+    match: (p: string) => p.startsWith("/nutrition"),
     icon: (
-      <path d="M12 6.5C10.5 5 8 4.5 4 4.5v13c4 0 6.5.5 8 2 1.5-1.5 4-2 8-2v-13c-4 0-6.5.5-8 2Zm0 0v13" />
+      <path d="M4 3v5a3 3 0 0 0 6 0V3M7 3v18M17 3c-2 2-3 5-3 8h5M19 3v18" />
+    ),
+  },
+  {
+    href: "/account",
+    label: "Account",
+    match: (p: string) => p === "/account" || p.startsWith("/account/"),
+    icon: (
+      <>
+        <circle cx="12" cy="8" r="4" />
+        <path d="M4 21v-2a8 8 0 0 1 16 0v2" />
+      </>
     ),
   },
 ];
@@ -47,6 +52,7 @@ export function BottomNav() {
             <li key={t.href} className="flex-1">
               <Link
                 href={t.href}
+                aria-current={active ? "page" : undefined}
                 className={`flex h-full flex-col items-center justify-center gap-1 text-xs font-medium ${
                   active ? "text-[var(--accent)]" : "text-[var(--muted)]"
                 }`}

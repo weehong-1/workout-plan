@@ -1,11 +1,12 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { setKeepScreenOn, useStore } from "@/lib/store";
 
 // Keeps the phone screen on while you train, where the browser supports it.
 export function WakeLockToggle() {
   const [supported, setSupported] = useState(false);
-  const [on, setOn] = useState(false);
+  const { keepScreenOn: on } = useStore();
   const lock = useRef<WakeLockSentinel | null>(null);
 
   useEffect(() => setSupported("wakeLock" in navigator), []);
@@ -19,7 +20,7 @@ export function WakeLockToggle() {
         if (cancelled) void l.release();
         else lock.current = l;
       } catch {
-        setOn(false);
+        setKeepScreenOn(false);
       }
     };
     const onVisible = () => {
@@ -39,7 +40,7 @@ export function WakeLockToggle() {
 
   return (
     <button
-      onClick={() => setOn((v) => !v)}
+      onClick={() => setKeepScreenOn(!on)}
       aria-pressed={on}
       className={`flex h-9 items-center gap-1.5 rounded-full border px-3 text-xs font-medium ${
         on

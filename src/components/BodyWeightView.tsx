@@ -1,11 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { UnitSelect } from "@/components/UnitSelect";
 import { WeightChart, type WeightPoint, shortDate } from "@/components/WeightChart";
 import {
   convertWeight,
   deleteBodyWeight,
+  flushChanges,
+  getPersistenceStatus,
   saveBodyWeight,
   setBodyUnit,
   todayString,
@@ -37,6 +39,9 @@ export function BodyWeightView() {
   const [date, setDate] = useState(() => todayString().replace(/\//g, "-"));
   const [value, setValue] = useState("");
   const [saved, setSaved] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState("");
+  const submitting = useRef(false);
   const [showAll, setShowAll] = useState(false);
   const [range, setRange] = useState<(typeof RANGES)[number]["id"]>("3m");
 
@@ -54,15 +59,30 @@ export function BodyWeightView() {
   const points = all.filter((p) => p.t >= cutoff);
   const entryDate = date.replace(/-/g, "/");
   const existing = bodyWeights.some((b) => b.date === entryDate);
-  const num = parseFloat(value);
-  const valid = Number.isFinite(num) && num > 0 && num < 1000 && !!date;
+  const num = /^\d+(?:\.\d*)?$/.test(value.trim()) ? Number(value) : NaN;
+  const validDate = /^\d{4}-\d{2}-\d{2}$/.test(date)
+    && todayString(new Date(parse(entryDate))) === entryDate && entryDate <= todayString();
+  const valid = Number.isFinite(num) && num > 0 && num < 1000 && validDate;
 
-  const save = () => {
-    if (!valid) return;
-    saveBodyWeight({ date: entryDate, weight: num, unit: bodyUnit });
-    setValue("");
-    setSaved(true);
-    setTimeout(() => setSaved(false), 1500);
+  const save = async () => {
+    if (!valid || submitting.current) return;
+    submitting.current = true;
+    setSaving(true);
+    setSaved(false);
+    setSaveError("");
+    try {
+      if (!saveBodyWeight({ date: entryDate, weight: num, unit: bodyUnit })) {
+        throw new Error("Your account is not ready to save, or the weight or date is invalid.");
+      }
+      if (!await flushChanges()) throw new Error(getPersistenceStatus().error ?? "Please keep this page open and retry.");
+      setValue("");
+      setSaved(true);
+    } catch (error) {
+      setSaveError(error instanceof Error ? error.message : "Please try again.");
+    } finally {
+      submitting.current = false;
+      setSaving(false);
+    }
   };
 
   const download = () => {
@@ -85,10 +105,11 @@ export function BodyWeightView() {
       <form
         onSubmit={(e) => {
           e.preventDefault();
-          save();
+          void save();
         }}
         className="rounded-3xl border border-[var(--line)] bg-[var(--card)] p-4"
       >
+        <fieldset disabled={saving}>
         <div className="flex items-center justify-between">
           <h2 className="font-semibold">Log your weight</h2>
           <UnitSelect value={bodyUnit} onChange={setBodyUnit} />
@@ -100,7 +121,7 @@ export function BodyWeightView() {
               inputMode="decimal"
               enterKeyHint="done"
               value={value}
-              onChange={(e) => setValue(e.target.value.replace(",", "."))}
+              onChange={(e) => { setValue(e.target.value.replace(",", ".")); setSaved(false); setSaveError(""); }}
               placeholder={latest ? latest.value.toFixed(1) : "0.0"}
               className="h-14 w-full rounded-xl border border-[var(--line)] bg-[var(--bg)] pr-10 pl-4 text-xl font-semibold tabular-nums outline-none placeholder:font-normal placeholder:text-[var(--muted)]/60 focus:border-[var(--accent)]"
             />
@@ -112,18 +133,22 @@ export function BodyWeightView() {
               type="date"
               value={date}
               max={todayString().replace(/\//g, "-")}
-              onChange={(e) => setDate(e.target.value)}
+              onChange={(e) => { setDate(e.target.value); setSaved(false); setSaveError(""); }}
               className="h-14 w-full rounded-xl border border-[var(--line)] bg-[var(--bg)] px-3 outline-none focus:border-[var(--accent)]"
             />
           </label>
         </div>
         <button
           type="submit"
-          disabled={!valid}
+          disabled={!valid || saving}
           className="mt-3 h-12 w-full rounded-xl bg-[var(--accent)] font-semibold text-[var(--accent-fg)] active:scale-[0.98] disabled:opacity-40"
         >
-          {saved ? "Saved ✓" : existing ? `Update ${shortDate(parse(entryDate))}` : "Save"}
+          {saving ? "Saving…" : saveError ? "Retry saving" : saved ? "Saved ✓" : existing ? `Update ${shortDate(parse(entryDate))}` : "Save"}
         </button>
+        </fieldset>
+        <p role={saveError ? "alert" : "status"} className={`mt-2 text-xs ${saveError ? "text-red-600 dark:text-red-400" : "text-[var(--muted)]"}`}>
+          {saveError ? `Weight has not been saved to the database: ${saveError}` : saving ? "Saving your weight to the database…" : saved ? "Weight saved to your account." : "Save stores your weight in your account, available after a reload or on another device."}
+        </p>
       </form>
 
       {latest ? (
