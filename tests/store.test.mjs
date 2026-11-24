@@ -7,12 +7,17 @@ import { webcrypto } from "node:crypto";
 const source = ts.transpileModule(await readFile(new URL("../src/lib/store.ts", import.meta.url), "utf8"), {
   compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2020 },
 }).outputText;
-const empty = () => ({ trainingPlans: [], dayExercises: {}, log: [], drafts: {}, defaultUnit: "kg", units: {}, bodyWeights: [], bodyUnit: "kg", timer: null, keepScreenOn: false });
+const plan = {};
+new Function("exports", ts.transpileModule(await readFile(new URL("../src/lib/plan.ts", import.meta.url), "utf8"), {
+  compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2020 },
+}).outputText)(plan);
+const empty = () => ({ trainingPlans: [], dayExercises: {}, log: [], drafts: {}, defaultUnit: "kg", units: {}, bodyWeights: [], bodyUnit: "kg", timer: null, keepScreenOn: false, plan: null, sessions: [] });
 function store(database, crypto = webcrypto) {
   const exports = {};
   const require = (name) => {
     if (name === "react") return { useSyncExternalStore: () => {} };
     if (name === "@/lib/database") return database;
+    if (name === "@/lib/plan") return plan;
     throw new Error(`Unexpected import: ${name}`);
   };
   new Function("exports", "require", "crypto", source)(exports, require, crypto);

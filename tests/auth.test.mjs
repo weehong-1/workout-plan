@@ -12,6 +12,7 @@ function auth(store, signOut, extraClient = {}, window = {}) {
     if (name === "react") return { createContext: () => ({ Provider: {} }), useContext: () => null };
     if (name === "@/lib/store") return store;
     if (name === "@/lib/supabase") return { supabase: () => ({ ...extraClient, auth: { signOut, ...extraClient.auth } }) };
+    if (name === "@/lib/photos") return { removeAllPhotos: async () => {} };
     throw new Error(name);
   }, window);
   return exports;

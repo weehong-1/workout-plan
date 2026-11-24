@@ -456,3 +456,93 @@ test("database migration, transactional edits, retry safety and account isolatio
     await db.close();
   }
 });
+
+test("photo paths are stored with workouts and weights, validated per owner, and survive re-running the schema", async () => {
+  const db = new PGlite();
+  try {
+    await db.exec(`
+      create role anon; create role authenticated;
+      create schema auth; create table auth.users (id uuid primary key);
+      create function auth.uid() returns uuid language sql stable as
+        $$ select nullif(current_setting('request.jwt.claim.sub', true), '')::uuid $$;
+      grant usage on schema public, auth to authenticated, anon;
+      grant execute on function auth.uid() to authenticated, anon;
+      insert into auth.users values ('${A}'), ('${B}');
+    `);
+    const schema = await readFile(new URL("../supabase/schema.sql", import.meta.url), "utf8");
+    await db.exec(schema);
+    await db.exec(`set role authenticated; set request.jwt.claim.sub = '${A}';`);
+    const apply = (type, payload) => db.query("select public.apply_workout_change($1::uuid,$2,$3::jsonb)", [A, type, JSON.stringify({ _mutationId: crypto.randomUUID(), ...payload })]);
+    const photo = (user = A) => `${user}/${crypto.randomUUID()}.jpg`;
+    const mine = [photo(), photo()];
+    const entry = { id: "e1", date: "2026/11/24", dayId: "a", exercise: "Adductor Machine", sets: [{ weight: "50", reps: "10" }], unit: "kg", notes: "", savedAt: 1 };
+    await apply("finish", { dayId: "a", entries: [{ ...entry, photos: mine }, { ...entry, id: "e2" }] });
+    const logs = (await db.query("select id, photos from public.log_entries order by id")).rows;
+    assert.deepEqual(logs, [{ id: "e1", photos: mine }, { id: "e2", photos: [] }]);
+    await assert.rejects(apply("finish", { dayId: "a", entries: [{ ...entry, id: "e3", photos: [photo(B)] }] }), /photos_valid/);
+
+    await apply("weight", { date: "2026/11/24", weight: 70, unit: "kg" });
+    await apply("weightPhotos", { date: "2026/11/24", photos: mine });
+    await apply("weight", { date: "2026/11/24", weight: 69.5, unit: "kg" });
+    const weight = (await db.query("select weight, photos from public.body_weights")).rows[0];
+    assert.deepEqual(weight, { weight: 69.5, photos: mine }, "Updating the weight keeps its photos");
+    for (const photos of [[photo(B)], ["../x.jpg"], [1], Array.from({ length: 7 }, () => photo()), {}]) {
+      await assert.rejects(apply("weightPhotos", { date: "2026/11/24", photos }), /Invalid photos/);
+    }
+    await apply("weightPhotos", { date: "2000/01/01", photos: mine }); // missing entry: harmless no-op
+
+    await db.exec("reset role;");
+    await db.exec(schema);
+    assert.deepEqual((await db.query("select photos from public.body_weights")).rows[0].photos, mine);
+  } finally {
+    await db.close();
+  }
+});
+
+test("the account plan is validated, saved, kept across schema reruns, and sessions record the Save screen", async () => {
+  const db = new PGlite();
+  try {
+    await db.exec(`
+      create role anon; create role authenticated;
+      create schema auth; create table auth.users (id uuid primary key);
+      create function auth.uid() returns uuid language sql stable as
+        $$ select nullif(current_setting('request.jwt.claim.sub', true), '')::uuid $$;
+      grant usage on schema public, auth to authenticated, anon;
+      grant execute on function auth.uid() to authenticated, anon;
+      insert into auth.users values ('${A}'), ('${B}');
+    `);
+    const schema = await readFile(new URL("../supabase/schema.sql", import.meta.url), "utf8");
+    await db.exec(schema);
+    await db.exec(`set role authenticated; set request.jwt.claim.sub = '${A}';`);
+    const apply = (type, payload) => db.query("select public.apply_workout_change($1::uuid,$2,$3::jsonb)", [A, type, JSON.stringify({ _mutationId: crypto.randomUUID(), ...payload })]);
+    const exercise = { order: "ex-1", name: "Hammer Curl", muscles: "Biceps", warmUp: "None", sets: 2, reps: "12", rest: "", cues: "", video: "", substitute: "", substituteVideo: "", startWeight: "8kg" };
+    const day = (id, letter, extra = {}) => ({ id, letter, name: `${letter} Day`, optional: false, focus: "", duration: "", blocks: [{ format: "Straight Sets", exercises: [exercise] }], ...extra });
+    const plan = { days: [day("a", "A"), day("day-1234abcd", "B", { optional: true })], weekdays: [1, 3, 5] };
+    await apply("plan", { plan });
+    assert.deepEqual((await db.query("select plan from public.settings")).rows[0].plan, plan);
+    for (const bad of [
+      { ...plan, days: [] },
+      { ...plan, days: [day("a", "A"), day("a", "B")] },
+      { ...plan, days: [day("A!", "A")] },
+      { ...plan, days: [day("a", "A", { name: " " })] },
+      { ...plan, days: [day("a", "A", { blocks: [{ format: "x", exercises: [{ ...exercise, sets: "2" }] }] })] },
+      { ...plan, weekdays: [7] },
+      { days: plan.days },
+    ]) {
+      await assert.rejects(apply("plan", { plan: bad }), /Invalid plan/);
+    }
+    const photo = `${A}/${crypto.randomUUID()}.jpg`;
+    const entry = { id: "e1", date: "2026/11/25", dayId: "a", exercise: "Hammer Curl", sets: [{ weight: "8", reps: "12" }], unit: "kg", notes: "", savedAt: 7 };
+    await apply("finish", { dayId: "a", entries: [entry], session: { dayId: "a", date: "2026/11/25", savedAt: 7, notes: "Felt strong", photos: [photo], durationMin: 48 } });
+    const session = (await db.query("select day_id, saved_at, notes, photos, duration_min from public.workout_sessions")).rows[0];
+    assert.deepEqual({ ...session, saved_at: Number(session.saved_at) }, { day_id: "a", saved_at: 7, notes: "Felt strong", photos: [photo], duration_min: 48 });
+    await assert.rejects(apply("finish", { dayId: "a", entries: [], session: { date: "2026/11/25", savedAt: 8, notes: "", photos: [`${B}/${crypto.randomUUID()}.jpg`], durationMin: 1 } }), /photos_valid/);
+    await apply("deleteSession", { date: "2026/11/25", dayId: "a", savedAt: 7 });
+    assert.equal((await db.query("select count(*)::int as n from public.workout_sessions")).rows[0].n, 0);
+    await db.exec("reset role;");
+    await db.exec(schema);
+    assert.deepEqual((await db.query("select plan from public.settings")).rows[0].plan, plan, "Rerunning the schema keeps the plan");
+  } finally {
+    await db.close();
+  }
+});

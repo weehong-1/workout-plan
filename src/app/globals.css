@@ -1,39 +1,32 @@
 @import "tailwindcss";
 
+/* One dark theme: high contrast and big numbers you can read at arm's length
+   under gym lighting. Orange is the only action colour. */
 :root {
-  --bg: #f6f6f4;
-  --card: #ffffff;
-  --fg: #18181b;
-  --muted: #6b6b73;
-  --line: #e4e4e0;
-  --soft: #efefec;
-  --accent: #ea580c;
-  --accent-fg: #ffffff;
-  --day-a: #ea580c;
-  --day-b: #0284c7;
-  --day-c: #7c3aed;
-  --day-d: #059669;
-  --day-fg: #ffffff;
-  color-scheme: light;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #0c0c0e;
-    --card: #17171a;
-    --fg: #f4f4f5;
-    --muted: #9b9ba3;
-    --line: #2a2a2f;
-    --soft: #212125;
-    --accent: #fb923c;
-    --accent-fg: #1a0a00;
-    --day-a: #fb923c;
-    --day-b: #38bdf8;
-    --day-c: #a78bfa;
-    --day-d: #34d399;
-    --day-fg: #0c0c0e;
-    color-scheme: dark;
-  }
+  --bg: #0f0f10;
+  --panel: #151517;
+  --card: #1b1b1e;
+  --soft: #26262a;
+  --line: #2a2a2f;
+  --fg: #f5f5f4;
+  --muted: #a1a1aa;
+  --faint: #71717a;
+  --accent: #ff8a3d;
+  --accent-fg: #1a0a00;
+  --accent-bg: #2a1a0e;
+  --up: #4ade80;
+  --up-bg: #13301f;
+  --up-solid: #22c55e;
+  --warn: #fdba74;
+  --warn-bg: #2a2113;
+  --danger: #f87171;
+  --day-a: #ff8a3d;
+  --day-b: #7dd3fc;
+  --day-c: #c4b5fd;
+  --day-d: #6ee7b7;
+  --day-fg: #0f0f10;
+  --font-display: var(--font-space-grotesk), ui-sans-serif, system-ui, sans-serif;
+  color-scheme: dark;
 }
 
 html {
@@ -44,8 +37,13 @@ html {
 body {
   background: var(--bg);
   color: var(--fg);
-  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-family: var(--font-inter), ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   overscroll-behavior-y: none;
+}
+
+.font-display {
+  font-family: var(--font-display);
+  font-variant-numeric: tabular-nums;
 }
 
 /* 16px inputs stop iOS Safari from zooming in on focus. */
@@ -53,6 +51,11 @@ input,
 textarea,
 select {
   font-size: 16px;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--faint);
 }
 
 input[type="number"]::-webkit-inner-spin-button,

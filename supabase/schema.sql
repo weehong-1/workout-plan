@@ -112,6 +112,92 @@ create policy "Own rows" on public.training_plans for all to authenticated
 
 grant select, insert, update, delete on public.log_entries, public.body_weights, public.settings, public.workout_drafts, public.training_plans to authenticated;
 
+-- Photos: rows store only paths of files in the private "photos" storage
+-- bucket (bottom of this file). A path must sit in the row owner's folder.
+create or replace function public.valid_photo_paths(photos jsonb, owner uuid)
+returns boolean language plpgsql immutable set search_path = '' as $$
+declare
+  path jsonb;
+begin
+  if jsonb_typeof(photos) is distinct from 'array' or jsonb_array_length(photos) > 6 then return false; end if;
+  for path in select value from jsonb_array_elements(photos) loop
+    if jsonb_typeof(path) is distinct from 'string'
+      or (path #>> '{}') !~ ('^' || owner::text || '/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.jpg$') then
+      return false;
+    end if;
+  end loop;
+  return true;
+end;
+$$;
+alter table public.log_entries add column if not exists photos jsonb not null default '[]'::jsonb;
+alter table public.body_weights add column if not exists photos jsonb not null default '[]'::jsonb;
+alter table public.log_entries drop constraint if exists log_entries_photos_valid;
+alter table public.log_entries add constraint log_entries_photos_valid check (public.valid_photo_paths(photos, user_id));
+alter table public.body_weights drop constraint if exists body_weights_photos_valid;
+alter table public.body_weights add constraint body_weights_photos_valid check (public.valid_photo_paths(photos, user_id));
+
+-- One row per finished workout: the Save screen's notes, photos and duration.
+create table if not exists public.workout_sessions (
+  user_id uuid not null default auth.uid() references auth.users (id) on delete cascade,
+  day_id text not null,
+  saved_at bigint not null,    -- matches log_entries.saved_at of the same workout
+  date text not null,          -- YYYY/MM/DD
+  notes text not null default '' check (char_length(notes) <= 2000),
+  photos jsonb not null default '[]'::jsonb,
+  duration_min integer check (duration_min between 0 and 1440),
+  primary key (user_id, day_id, saved_at),
+  constraint workout_sessions_photos_valid check (public.valid_photo_paths(photos, user_id))
+);
+alter table public.workout_sessions enable row level security;
+drop policy if exists "Own rows" on public.workout_sessions;
+create policy "Own rows" on public.workout_sessions for all to authenticated
+  using ((select auth.uid()) = user_id) with check ((select auth.uid()) = user_id);
+grant select, insert, update, delete on public.workout_sessions to authenticated;
+
+-- The account's own training plan (days, exercises, rotation, weekdays).
+-- Null means the built-in restart plan. Exercises use the same shape as
+-- training_plans blocks.
+create or replace function public.valid_plan(plan jsonb)
+returns boolean language plpgsql immutable set search_path = '' as $$
+declare
+  day jsonb;
+  weekday jsonb;
+  ids text[] := '{}';
+begin
+  if jsonb_typeof(plan) is distinct from 'object'
+    or jsonb_typeof(plan->'days') is distinct from 'array'
+    or jsonb_array_length(plan->'days') not between 1 and 12
+    or jsonb_typeof(plan->'weekdays') is distinct from 'array'
+    or jsonb_array_length(plan->'weekdays') > 7 then
+    return false;
+  end if;
+  for weekday in select value from jsonb_array_elements(plan->'weekdays') loop
+    if jsonb_typeof(weekday) is distinct from 'number' or (weekday #>> '{}') not in ('0', '1', '2', '3', '4', '5', '6') then
+      return false;
+    end if;
+  end loop;
+  for day in select value from jsonb_array_elements(plan->'days') loop
+    if jsonb_typeof(day) is distinct from 'object'
+      or jsonb_typeof(day->'id') is distinct from 'string' or (day->>'id') !~ '^[a-z0-9-]{1,48}$'
+      or (day->>'id') = any(ids)
+      or jsonb_typeof(day->'letter') is distinct from 'string' or char_length(day->>'letter') not between 1 and 2
+      or jsonb_typeof(day->'name') is distinct from 'string' or char_length(btrim(day->>'name')) not between 1 and 40
+      or jsonb_typeof(day->'optional') is distinct from 'boolean'
+      or jsonb_typeof(day->'focus') is distinct from 'string' or char_length(day->>'focus') > 300
+      or jsonb_typeof(day->'duration') is distinct from 'string' or char_length(day->>'duration') > 40
+      or not public.valid_training_plan_blocks(day->'blocks')
+      or (select count(*) from jsonb_array_elements(day->'blocks') as b, jsonb_array_elements(b.value->'exercises')) > 30 then
+      return false;
+    end if;
+    ids := ids || (day->>'id');
+  end loop;
+  return true;
+end;
+$$;
+alter table public.settings add column if not exists plan jsonb;
+alter table public.settings drop constraint if exists settings_plan_valid;
+alter table public.settings add constraint settings_plan_valid check (plan is null or public.valid_plan(plan));
+
 -- Keep a transaction receipt so retries after a lost response cannot replay an
 -- old draft or delete a newer draft. Receipt and edit commit/roll back together.
 create table if not exists public.workout_mutations (
@@ -299,20 +385,40 @@ begin
         on conflict (user_id, day_id) do update set draft = excluded.draft, updated_at = now();
       end if;
     when 'finish' then
-      insert into public.log_entries (user_id, id, date, day_id, exercise, substitute, sets, unit, notes, saved_at)
+      insert into public.log_entries (user_id, id, date, day_id, exercise, substitute, sets, unit, notes, saved_at, photos)
       select account_id, e->>'id', e->>'date', e->>'dayId', e->>'exercise', e->>'substitute',
-        e->'sets', coalesce(e->>'unit', 'kg'), coalesce(e->>'notes', ''), (e->>'savedAt')::bigint
+        e->'sets', coalesce(e->>'unit', 'kg'), coalesce(e->>'notes', ''), (e->>'savedAt')::bigint,
+        coalesce(e->'photos', '[]'::jsonb)
       from jsonb_array_elements(payload->'entries') as e
       on conflict (user_id, id) do nothing;
+      -- Session-level photo and notes from the Save screen (optional).
+      if jsonb_typeof(payload->'session') = 'object' then
+        insert into public.workout_sessions (user_id, day_id, saved_at, date, notes, photos, duration_min)
+        values (account_id, payload->>'dayId', (payload->'session'->>'savedAt')::bigint, payload->'session'->>'date',
+          coalesce(payload->'session'->>'notes', ''), coalesce(payload->'session'->'photos', '[]'::jsonb),
+          (payload->'session'->>'durationMin')::integer)
+        on conflict (user_id, day_id, saved_at) do nothing;
+      end if;
       delete from public.workout_drafts where user_id = account_id and day_id = payload->>'dayId';
+    when 'plan' then
+      if not public.valid_plan(payload->'plan') then raise exception 'Invalid plan'; end if;
+      insert into public.settings (user_id, plan) values (account_id, payload->'plan')
+      on conflict (user_id) do update set plan = excluded.plan, updated_at = now();
     when 'weight' then
       insert into public.body_weights (user_id, date, weight, unit)
       values (account_id, payload->>'date', (payload->>'weight')::double precision, payload->>'unit')
       on conflict (user_id, date) do update set weight = excluded.weight, unit = excluded.unit, updated_at = now();
     when 'deleteWeight' then
       delete from public.body_weights where user_id = account_id and date = payload->>'date';
+    when 'weightPhotos' then
+      if not public.valid_photo_paths(payload->'photos', account_id) then raise exception 'Invalid photos'; end if;
+      -- A no-op if the entry was deleted meanwhile, so a retry cannot get stuck.
+      update public.body_weights set photos = payload->'photos', updated_at = now()
+      where user_id = account_id and date = payload->>'date';
     when 'deleteSession' then
       delete from public.log_entries where user_id = account_id and date = payload->>'date'
+        and day_id = payload->>'dayId' and saved_at = (payload->>'savedAt')::bigint;
+      delete from public.workout_sessions where user_id = account_id
         and day_id = payload->>'dayId' and saved_at = (payload->>'savedAt')::bigint;
     when 'exerciseUnit' then
       if payload->>'unit' not in ('kg', 'lb') then raise exception 'Invalid unit'; end if;
@@ -362,3 +468,20 @@ end;
 $$;
 revoke all on function public.delete_own_account(uuid, text) from public, anon;
 grant execute on function public.delete_own_account(uuid, text) to authenticated;
+
+-- Private photo storage: one folder per account (<user id>/<file>.jpg). The
+-- app resizes photos to JPEG before upload. Skipped where Supabase Storage is
+-- not installed (local tests).
+do $$
+begin
+  if to_regclass('storage.buckets') is null then return; end if;
+  insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+  values ('photos', 'photos', false, 5242880, array['image/jpeg'])
+  on conflict (id) do update set public = false,
+    file_size_limit = excluded.file_size_limit, allowed_mime_types = excluded.allowed_mime_types;
+  execute 'drop policy if exists "Own photos" on storage.objects';
+  execute $p$create policy "Own photos" on storage.objects for all to authenticated
+    using (bucket_id = 'photos' and (storage.foldername(name))[1] = (select auth.uid())::text)
+    with check (bucket_id = 'photos' and (storage.foldername(name))[1] = (select auth.uid())::text)$p$;
+end;
+$$;

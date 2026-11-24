@@ -1,473 +1,325 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useId, useState } from "react";
-import { useRestTimer } from "@/components/RestTimer";
-import { UnitSelect } from "@/components/UnitSelect";
+import { useEffect, useId, useState } from "react";
 import { VideoModal } from "@/components/VideoModal";
-import { WeightSelect } from "@/components/WeightSelect";
-import { ExercisePicker } from "@/components/ExercisePicker";
-import { AddedExerciseCard, addedExerciseLogName } from "@/components/AddedExerciseCard";
+import { WakeLockToggle } from "@/components/WakeLock";
+import { Check, VerdictPill } from "@/components/ui";
 import {
-  type Block,
   type Day,
   type Exercise,
-  isLowerBody,
-  restSeconds,
+  type Suggestion,
+  dayExercises,
+  splitReps,
+  suggestFor,
   targetReps,
+  warmUpSets,
+  youtubeId,
 } from "@/lib/plan";
+import { removePhotos } from "@/lib/photos";
 import {
   type DraftExercise,
   type LogEntry,
   type Unit,
   discardDraft,
+  draftPhotos,
   emptyExercise,
-  finishDraft,
   flushChanges,
-  formatSet,
-  hasLoggedValue,
-  lastEntryFor,
+  historyFor,
   setExerciseUnit,
   unitFor,
-  todayString,
   updateDraftExercise,
+  useHydrated,
+  usePlan,
   useStore,
 } from "@/lib/store";
 
+const GRID = "grid grid-cols-[2.25rem_minmax(0,1fr)_4.75rem_3.75rem_2.75rem] items-center gap-1.5 px-1";
+
+export function WorkoutScreen({ dayId }: { dayId: string }) {
+  const plan = usePlan();
+  const hydrated = useHydrated();
+  if (!hydrated) return null;
+  const day = plan.days.find((d) => d.id === dayId);
+  if (!day) {
+    return (
+      <div className="py-16 text-center">
+        <p className="text-lg font-semibold">This training day no longer exists.</p>
+        <Link href="/" className="mt-4 inline-flex min-h-11 items-center font-semibold text-[var(--accent)]">Back to Today</Link>
+      </div>
+    );
+  }
+  return <Workout day={day} />;
+}
+
+// Live clock for the duration, refreshed every 30 s.
+export function useNow(intervalMs = 30_000) {
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const t = setInterval(() => setNow(Date.now()), intervalMs);
+    return () => clearInterval(t);
+  }, [intervalMs]);
+  return now;
+}
+
+export type WorkoutStats = { minutes: number; volume: number; done: number; total: number };
+
+export function workoutStats(day: Day, draft: { startedAt: number; exercises: Record<string, DraftExercise> } | undefined, now: number): WorkoutStats {
+  let done = 0, total = 0, volume = 0;
+  for (const ex of dayExercises(day)) {
+    const d = draft?.exercises[ex.order];
+    const started = !!d?.sets.some((s) => s.done);
+    if (ex.optional && !started) continue;
+    const sets = d?.sets ?? [];
+    total += Math.max(sets.length, ex.sets);
+    for (const s of sets) {
+      if (!s.done) continue;
+      done++;
+      volume += (parseFloat(s.weight) || 0) * (parseInt(s.reps, 10) || 0);
+    }
+  }
+  const minutes = draft ? Math.max(0, Math.round((now - draft.startedAt) / 60_000)) : 0;
+  return { minutes, volume, done, total };
+}
+
 export function Workout({ day }: { day: Day }) {
   const store = useStore();
-  const [saving, setSaving] = useState(false);
-  const [pickingExercise, setPickingExercise] = useState(false);
-  const { log, drafts } = store;
-  const added = store.dayExercises[day.id] ?? [];
   const router = useRouter();
-  const draft = drafts[day.id];
-  const exercises = [
-    ...day.blocks.flatMap((b) => b.exercises),
-    ...added.map((exercise) => ({ order: exercise.key, name: addedExerciseLogName(exercise), sets: exercise.sets, substitute: "" })),
-  ];
-  const doneSets = exercises.reduce(
-    (n, ex) => n + (draft?.exercises[ex.order]?.sets.filter((s) => s.done).length ?? 0),
-    0,
-  );
-  const totalSets = exercises.reduce(
-    (n, ex) => n + (draft?.exercises[ex.order]?.sets.length ?? ex.sets),
-    0,
-  );
+  const now = useNow();
+  const draft = store.drafts[day.id];
+  const exercises = dayExercises(day);
+  const stats = workoutStats(day, draft, now);
 
-  const finish = async () => {
-    if (saving) return;
-    const date = todayString();
-    const entries: Omit<LogEntry, "id" | "savedAt">[] = [];
-    for (const ex of exercises) {
-      const d = draft?.exercises[ex.order];
-      if (!d) continue;
-      const sets = d.sets.filter(hasLoggedValue).map(({ weight, reps }) => ({ weight, reps }));
-      if (!sets.length && !d.notes.trim()) continue;
-      entries.push({
-        date,
-        dayId: day.id,
-        exercise: ex.name,
-        substitute: d.useSub ? ex.substitute : undefined,
-        sets,
-        unit: unitFor(store, d.useSub ? ex.substitute : ex.name),
-        notes: d.notes.trim(),
-      });
-    }
-    if (!entries.length) {
-      alert("Log at least one set before finishing.");
-      return;
-    }
-    setSaving(true);
-    finishDraft(day.id, entries);
-    const saved = await flushChanges();
-    setSaving(false);
-    if (saved) router.push("/");
-  };
-
-  const discard = () => {
-    if (confirm("Clear everything you've entered for this workout?")) discardDraft(day.id);
+  const discard = async () => {
+    if (!confirm("Discard this workout? Everything you've logged today, including photos, will be cleared.")) return;
+    const photos = draftPhotos(draft);
+    discardDraft(day.id);
+    router.push("/");
+    if (photos.length && await flushChanges()) void removePhotos(photos);
   };
 
   return (
-    <>
-      <div className="sticky top-0 z-20 -mx-4 mb-4 border-b border-[var(--line)] bg-[var(--bg)]/90 px-4 py-2 backdrop-blur-md">
-        <div className="flex items-center justify-between text-xs font-medium text-[var(--muted)]">
-          <span>
-            {doneSets} / {totalSets} working sets
-          </span>
-          <span>{Math.round((doneSets / totalSets) * 100)}%</span>
+    <div className="-mx-4 lg:mx-auto lg:max-w-3xl">
+      <header className="sticky top-0 z-20 border-b border-[var(--line)] bg-[var(--bg)]/95 px-4 pt-1 pb-3 backdrop-blur-md">
+        <div className="flex items-center gap-2">
+          <Link href="/" aria-label="Minimise workout" className="-ml-2 grid h-11 w-11 place-items-center rounded-xl">
+            <svg viewBox="0 0 24 24" className="h-[22px] w-[22px]" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="m6 9 6 6 6-6" /></svg>
+          </Link>
+          <h1 className="font-display flex-1 truncate text-xl font-bold">{day.name}</h1>
+          <Link href={`/day/${day.id}/save`} className="flex h-10 items-center rounded-xl bg-[var(--accent)] px-[18px] text-sm font-bold text-[var(--accent-fg)]">Finish</Link>
         </div>
-        <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-[var(--soft)]">
-          <div
-            className="h-full rounded-full bg-[var(--accent)] transition-[width]"
-            style={{ width: `${(doneSets / totalSets) * 100}%` }}
-          />
-        </div>
-      </div>
-
-      <div className="mb-4 flex justify-end">
-        <button type="button" onClick={() => setPickingExercise(true)} disabled={saving || added.length >= 30} className="min-h-11 rounded-xl border border-[var(--line)] bg-[var(--card)] px-4 text-sm font-semibold disabled:opacity-40">
-          <span aria-hidden="true">＋ </span>Add exercise
-        </button>
-      </div>
-      <fieldset disabled={saving} className="space-y-4">
-        {day.blocks.map((block, i) => (
-          <BlockView key={i} day={day} block={block} draft={draft?.exercises} log={log} />
-        ))}
-        {added.length > 0 && <h2 className="pt-2 text-lg font-bold">Your added exercises</h2>}
-        {added.map((exercise, index) => (
-          <AddedExerciseCard key={exercise.key} dayId={day.id} exercise={exercise} index={index}
-            render={(ex, historyName) => <ExerciseCard dayId={day.id} ex={ex} historyName={historyName} displayOrder={`+${index + 1}`} draft={draft?.exercises[exercise.key]} log={log} straightToNext={false} />} />
-        ))}
-        <button type="button" onClick={() => setPickingExercise(true)} disabled={added.length >= 30}
-          className="flex min-h-14 w-full items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-[var(--line)] bg-[var(--card)] px-4 py-3 font-semibold text-[var(--fg)] active:scale-[0.98] disabled:opacity-40">
-          <span className="text-xl" aria-hidden="true">＋</span> Add exercise
-        </button>
-        {added.length >= 30 && <p className="text-sm text-[var(--muted)]">This day has reached the limit of 30 added exercises.</p>}
-      </fieldset>
-      {pickingExercise && <ExercisePicker dayId={day.id} dayName={day.name} added={added} onClose={() => setPickingExercise(false)} />}
-
-      <div className="mt-8 space-y-3">
-        <button
-          onClick={() => void finish()}
-          disabled={saving}
-          className="flex h-14 w-full items-center justify-center rounded-2xl bg-[var(--accent)] text-lg font-semibold text-[var(--accent-fg)] active:scale-[0.98] disabled:opacity-40"
-        >
-          {saving ? "Saving workout…" : "Finish & save workout"}
-        </button>
-        {draft && (
-          <button disabled={saving} onClick={discard} className="h-11 w-full text-sm font-medium text-[var(--muted)]">
-            Discard this workout
-          </button>
-        )}
-      </div>
-    </>
-  );
-}
-
-function BlockView({
-  day,
-  block,
-  draft,
-  log,
-}: {
-  day: Day;
-  block: Block;
-  draft: Record<string, DraftExercise> | undefined;
-  log: LogEntry[];
-}) {
-  const superset = block.exercises.length > 1;
-  const cards = block.exercises.map((ex, i) => (
-    <ExerciseCard
-      key={ex.order}
-      dayId={day.id}
-      ex={ex}
-      draft={draft?.[ex.order]}
-      log={log}
-      straightToNext={superset && i < block.exercises.length - 1}
-    />
-  ));
-
-  if (!superset) return cards;
-
-  const orders = block.exercises.map((e) => e.order).join(" → ");
-  return (
-    <section className="rounded-[1.4rem] bg-[var(--soft)] p-1.5">
-      <header className="flex items-center justify-between px-3 pt-2 pb-2.5">
-        <h2 className="text-sm font-bold">{block.format}</h2>
-        <p className="text-xs text-[var(--muted)]">
-          {orders}, then rest · {block.exercises[0].sets} rounds
-        </p>
+        <dl className="mt-2 grid grid-cols-3 px-1">
+          <div><dt className="text-xs text-[var(--muted)]">Duration</dt><dd className="font-display mt-0.5 text-[17px] font-bold text-[var(--accent)]">{stats.minutes} min</dd></div>
+          <div><dt className="text-xs text-[var(--muted)]">Volume</dt><dd className="font-display mt-0.5 text-[17px] font-bold">{Math.round(stats.volume).toLocaleString("en-US")} kg</dd></div>
+          <div><dt className="text-xs text-[var(--muted)]">Sets</dt><dd className="font-display mt-0.5 text-[17px] font-bold" aria-live="polite">{stats.done} / {stats.total}</dd></div>
+        </dl>
       </header>
-      <div className="space-y-1.5">{cards}</div>
-    </section>
+
+      {exercises.map((ex) => (
+        <ExerciseBlock key={ex.order} dayId={day.id} ex={ex} draft={draft?.exercises[ex.order]} log={store.log} />
+      ))}
+
+      {!exercises.length && (
+        <p className="px-4 py-10 text-center text-[var(--muted)]">
+          No exercises on this day yet. <Link href={`/plan/${day.id}`} className="font-semibold text-[var(--accent)]">Add some</Link>
+        </p>
+      )}
+
+      <div className="flex flex-col gap-3 px-4 pt-6">
+        <Link href={`/day/${day.id}/save`} className="flex h-14 items-center justify-center rounded-2xl bg-[var(--accent)] text-[17px] font-bold text-[var(--accent-fg)]">Finish workout</Link>
+        <div className="flex items-center justify-between">
+          <WakeLockToggle />
+          {draft && <button type="button" onClick={() => void discard()} className="h-11 px-2 text-sm font-semibold text-[var(--danger)]">Discard workout</button>}
+        </div>
+      </div>
+    </div>
   );
 }
 
-function ExerciseCard({
-  dayId,
-  ex,
-  draft,
-  log,
-  straightToNext,
-  historyName,
-  displayOrder,
-}: {
+function formatPrev(set: { weight: string; reps: string } | undefined, unit: Unit) {
+  if (!set) return "—";
+  const w = set.weight.trim();
+  const weight = !w ? "" : /^\d+(\.\d+)?$/.test(w) ? w : w;
+  return weight ? `${weight}${unit === "lb" && weight !== "BW" ? "lb" : ""} × ${set.reps}` : `${set.reps}`;
+}
+
+export function ExerciseBlock({ dayId, ex, draft, log }: {
   dayId: string;
   ex: Exercise;
   draft: DraftExercise | undefined;
   log: LogEntry[];
-  straightToNext: boolean;
-  historyName?: string;
-  displayOrder?: string;
 }) {
   const titleId = useId();
-  const timer = useRestTimer();
   const store = useStore();
+  const [showForm, setShowForm] = useState(false);
   const [watching, setWatching] = useState(false);
   const d = draft ?? emptyExercise(ex.sets);
-  const name = d.useSub ? ex.substitute : ex.name;
-  const video = d.useSub ? ex.substituteVideo : ex.video;
-  const unitKey = historyName ?? name;
-  const unit = unitFor(store, unitKey);
-  const last = lastEntryFor(log, historyName ?? ex.name);
-  const lastUnit = last?.unit ?? "kg";
+  const name = d.useSub && ex.substitute ? ex.substitute : ex.name;
+  const unit = unitFor(store, name);
+  const history = historyFor(log, ex.name);
+  const last = history.at(-1);
+  const lastUnit: Unit = last?.unit ?? "kg";
+  const suggestion: Suggestion = d.useSub
+    ? { weight: "", verdict: "first", label: "Substitute" }
+    : suggestFor(ex, history);
   const target = targetReps(ex.reps);
-  const hitTarget =
-    !!last &&
-    target !== null &&
-    last.sets.length >= ex.sets &&
-    last.sets.every((s) => parseInt(s.reps, 10) >= target);
-  const completedSets = d.sets.filter((s) => s.done).length;
-  const allDone = d.sets.length > 0 && completedSets === d.sets.length;
   const timed = /sec|min/.test(ex.reps);
-  const restLabel = ex.rest.replace(/^Rest /, "").replace(/ after each round$/, "");
+  const reps = splitReps(ex.reps);
+  const timedHint = ex.reps.match(/\d+/)?.[0] ?? "";
+  const workWeight = parseFloat(d.sets.find((s) => s.weight)?.weight || suggestion.weight);
+  const warm = d.useSub ? [] : warmUpSets(ex.warmUp, Number.isFinite(workWeight) ? workWeight : null, unit === "lb" ? 2.5 : 1.25);
+  const completed = d.sets.filter((s) => s.done).length;
+  const allDone = d.sets.length > 0 && completed === d.sets.length;
+  const video = d.useSub ? ex.substituteVideo : ex.video;
+  const playable = !!video && youtubeId(video) !== null;
 
-  const update = (fn: (ex: DraftExercise) => DraftExercise) =>
-    updateDraftExercise(dayId, ex.order, ex.sets, fn);
-
-  // Where the weight picker opens: the previous set's weight this session,
-  // else the same set last session (only when logged in the same unit).
-  // It positions the wheel only; nothing gets filled in.
-  const nearWeight = (cur: DraftExercise, i: number) =>
-    cur.sets[i - 1]?.weight ||
-    (cur.useSub || lastUnit !== unit ? "" : last?.sets[i]?.weight ?? "");
-
+  const update = (fn: (cur: DraftExercise) => DraftExercise) => updateDraftExercise(dayId, ex.order, ex.sets, fn);
   const setField = (i: number, field: "weight" | "reps", value: string) =>
-    update((cur) => ({
-      ...cur,
-      sets: cur.sets.map((s, j) => (j === i ? { ...s, [field]: value } : s)),
-    }));
-
-  const addSet = () =>
-    update((cur) => ({ ...cur, sets: [...cur.sets, { weight: "", reps: "", done: false }] }));
-
-  // Only sets beyond the planned count can be removed.
-  const removeSet = () =>
-    update((cur) =>
-      cur.sets.length > ex.sets ? { ...cur, sets: cur.sets.slice(0, -1) } : cur,
-    );
-
-  const toggleDone = (i: number) => {
-    const wasDone = d.sets[i].done;
+    update((cur) => ({ ...cur, sets: cur.sets.map((s, j) => (j === i ? { ...s, [field]: value.replace(",", ".") } : s)) }));
+  const toggle = (i: number) =>
     update((cur) => ({
       ...cur,
       sets: cur.sets.map((s, j) => {
         if (j !== i) return s;
         if (s.done) return { ...s, done: false };
-        // Tapping ✓ with no reps entered counts the target reps.
+        // Ticking a row with blank cells logs the suggested values.
         return {
-          weight: s.weight,
-          reps: s.reps || (target !== null ? String(target) : ""),
+          weight: s.weight || (suggestion.weight === "BW" ? "BW" : suggestion.weight),
+          reps: s.reps || (target !== null ? String(target) : timedHint),
           done: true,
         };
       }),
     }));
-    if (!wasDone && !straightToNext) {
-      const sec = restSeconds(ex.rest);
-      if (sec) timer.start(sec, historyName ?? name);
-    }
-  };
 
   return (
-    <article
-      aria-labelledby={titleId}
-      className={`overflow-hidden rounded-2xl border bg-[var(--card)] transition-colors ${
-        allDone ? "border-emerald-500/60" : "border-[var(--line)]"
-      }`}
-    >
-      <div className="p-4">
-        <header className="flex items-start gap-3">
-          <span className="grid h-10 min-w-10 shrink-0 place-items-center rounded-xl bg-[var(--soft)] px-1.5 text-sm font-bold">
-            {displayOrder ?? (ex.order === "Finisher" ? "Fin" : ex.order)}
-          </span>
-          <div className="min-w-0 flex-1">
-            <h3 id={titleId} className="text-lg font-bold leading-snug">{name}</h3>
-            {d.useSub && <p className="mt-0.5 text-xs text-[var(--muted)]">Substitute for {ex.name}</p>}
-            <p className="mt-0.5 text-sm text-[var(--muted)]">{ex.muscles}</p>
-          </div>
-        </header>
-
-        <dl className="mt-4 grid grid-cols-2 gap-2">
-          <Stat label="Target" value={`${ex.sets} × ${timed ? ex.reps : `${ex.reps.replace(/ per leg$/, "")} reps${ex.reps.includes("per leg") ? " per leg" : ""}`}`} />
-          <Stat label={straightToNext ? "Next exercise" : ex.rest.includes("round") ? "Rest after round" : "Rest between sets"}
-            value={straightToNext ? ex.rest : restLabel} />
-        </dl>
-
-        <details className="group mt-3 rounded-xl border border-[var(--line)]">
-          <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-3 rounded-xl px-3 text-sm font-semibold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)] [&::-webkit-details-marker]:hidden">
-            Form & warm-up
-            <svg viewBox="0 0 24 24" className="h-4 w-4 shrink-0 text-[var(--muted)] transition-transform group-open:rotate-180 motion-reduce:transition-none" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden>
-              <path d="m6 9 6 6 6-6" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </summary>
-          <div className="space-y-3 border-t border-[var(--line)] px-3 py-3 text-sm leading-relaxed">
-            <div>
-              <p className="font-semibold">Warm-up · {ex.warmUp}</p>
-              <p className="mt-1 text-[var(--muted)]">
-                {ex.warmUp.startsWith("8 / 5 / 3")
-                  ? "Use roughly 50%, 70% and 85% of your working weight. Rest 30–60 sec between warm-up sets."
-                  : "Prepare with lighter sets as needed before your working sets."}
-              </p>
-            </div>
-            <div>
-              <p className="font-semibold">Form cues</p>
-              <p className="mt-1 text-[var(--muted)]">{d.useSub
-                ? `Use technique specific to ${ex.substitute}; the original exercise’s form cues may not apply.${video ? " Watch the substitute tutorial below for guidance." : ""}`
-                : ex.cues}</p>
-            </div>
-            {video && <button
-              type="button"
-              onClick={() => setWatching(true)}
-              className="flex min-h-11 items-center gap-2 rounded-xl border border-[var(--line)] bg-[var(--soft)] px-3 font-semibold active:scale-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]"
-            >
-              <svg viewBox="0 0 24 24" className="h-4 w-4" fill="currentColor" aria-hidden>
-                <path d="M8 5.5v13l11-6.5-11-6.5Z" />
-              </svg>
-              Watch tutorial
-            </button>}
-          </div>
-        </details>
-        {watching && video && <VideoModal url={video} title={name} onClose={() => setWatching(false)} />}
-        {ex.substitute && <button
-          type="button"
-          aria-pressed={d.useSub}
-          onClick={() => { setWatching(false); update((cur) => ({ ...cur, useSub: !cur.useSub })); }}
-          className="mt-1 flex min-h-11 w-full items-center gap-2 rounded-xl px-1 py-2 text-left text-sm font-medium text-[var(--muted)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]"
-        >
-          <svg viewBox="0 0 24 24" className="h-4 w-4 shrink-0" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden>
-            <path d="M4 7h16m-4-4 4 4-4 4M20 17H4m4-4-4 4 4 4" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-          {d.useSub ? `Back to ${ex.name}` : `Equipment taken? Use ${ex.substitute}`}
-        </button>}
+    <section aria-labelledby={titleId} className="border-b-8 border-[var(--panel)] px-3 pt-4 pb-3">
+      <div className="flex items-start gap-2.5 px-1">
+        <div className="min-w-0 flex-1">
+          <h2 id={titleId} className="text-[17px] leading-snug font-bold">
+            <Link href={`/progress/${dayId}/${encodeURIComponent(ex.order)}`} className="hover:underline">{name}</Link>
+          </h2>
+          <p className="mt-0.5 text-[13px] text-[var(--muted)]">
+            {d.useSub ? `Instead of ${ex.name}` : `${ex.sets} × ${timed ? ex.reps : `${reps.count}${reps.per ? ` ${reps.per}` : ""}`}`}
+          </p>
+        </div>
+        {allDone ? <VerdictPill verdict="done">Done</VerdictPill>
+          : ex.optional && !completed ? <VerdictPill verdict="hold">Optional</VerdictPill>
+          : <VerdictPill verdict={suggestion.verdict}>{suggestion.label}</VerdictPill>}
       </div>
 
-      <div className="border-t border-[var(--line)] bg-[var(--bg)]/50 p-3 sm:p-4">
-        {last && !d.useSub && (
-          <div className="mb-4 rounded-xl border border-[var(--line)] bg-[var(--card)] p-3 text-sm">
-            <p className="text-xs font-medium text-[var(--muted)]">Last session · {last.date}</p>
-            <p className="mt-1 font-semibold tabular-nums">{last.sets.map((s) => formatSet(s, lastUnit)).join(" · ")}</p>
-            {hitTarget && (
-              <p className="mt-1 font-medium text-emerald-600 dark:text-emerald-400">
-                You hit {target} on every set: add {weightStep(isLowerBody(ex.muscles), unit)} today.
-              </p>
-            )}
+      {ex.note && !d.useSub && <p className="mx-1 mt-2 rounded-lg bg-[var(--warn-bg)] px-2.5 py-2 text-[13px] text-[var(--warn)]">{ex.note}</p>}
+
+      <label className="mx-1 mt-1 block">
+        <span className="sr-only">Notes for {name}</span>
+        <input
+          value={d.notes}
+          onChange={(e) => update((cur) => ({ ...cur, notes: e.target.value }))}
+          placeholder="Add a note…"
+          className="h-9 w-full bg-transparent text-sm text-[#d4d4d8] outline-none"
+        />
+      </label>
+
+      <div role="table" aria-label={`Sets for ${name}`} className="mt-1">
+        <div role="row" className={`${GRID} h-7 text-[11px] font-bold uppercase tracking-[0.06em] text-[var(--faint)]`}>
+          <span role="columnheader">Set</span>
+          <span role="columnheader">Previous</span>
+          <span role="columnheader" className="text-center">
+            <button type="button" onClick={() => setExerciseUnit(name, unit === "kg" ? "lb" : "kg")}
+              aria-label={`Weight in ${unit}. Switch to ${unit === "kg" ? "lb" : "kg"}`}
+              className="uppercase underline decoration-dotted underline-offset-2">{unit}</button>
+          </span>
+          <span role="columnheader" className="text-center">{timed ? "Sec" : "Reps"}</span>
+          <span role="columnheader" className="text-center"><span className="sr-only">Done</span><Check className="mx-auto h-3.5 w-3.5" /></span>
+        </div>
+
+        {warm.length > 0 && (
+          <div role="row" className={`${GRID} h-12 ${d.warmDone ? "bg-[var(--up-bg)]" : ""}`}>
+            <span role="cell" className="font-bold text-[var(--warn)]">W</span>
+            <span role="cell" className="truncate text-[13px] text-[var(--muted)]">Warm-up</span>
+            <span role="cell" className="font-display truncate text-center text-[13px] font-bold">{warm.map((w) => w.weight).join("·")}</span>
+            <span role="cell" className="font-display truncate text-center text-[13px] font-bold">{warm.map((w) => w.reps).join("·")}</span>
+            <span role="cell" className="grid place-items-center">
+              <button type="button" onClick={() => update((cur) => ({ ...cur, warmDone: !cur.warmDone }))} aria-pressed={!!d.warmDone}
+                aria-label={d.warmDone ? "Undo warm-up" : "Complete warm-up"}
+                className={`grid h-10 w-10 place-items-center rounded-[10px] ${d.warmDone ? "bg-[var(--up-solid)] text-[#05200f]" : "bg-[var(--soft)] text-[var(--faint)]"}`}>
+                <Check className="h-[18px] w-[18px]" />
+              </button>
+            </span>
           </div>
         )}
 
-        <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-          <div>
-            <h4 className="text-sm font-bold">Working sets</h4>
-            <p role="status" className={`mt-0.5 text-xs font-medium ${allDone ? "text-emerald-700 dark:text-emerald-400" : "text-[var(--muted)]"}`}>
-              {completedSets} / {d.sets.length} sets complete{allDone && " · Exercise done"}
-            </p>
-          </div>
-          <UnitSelect value={unit} onChange={(u) => setExerciseUnit(unitKey, u)} />
-        </div>
-
-        <div aria-hidden="true" className="mb-2 grid grid-cols-[1.75rem_minmax(0,1fr)_4rem_3rem] items-center gap-2 px-1 text-center text-[11px] font-semibold uppercase tracking-wide text-[var(--muted)] sm:grid-cols-[2rem_minmax(0,1fr)_4.75rem_3rem]">
-          <span>Set</span>
-          <span>Weight</span>
-          <span>{timed ? "Seconds" : "Reps"}</span>
-          <span>Done</span>
-        </div>
-        <div className="space-y-2">
-          {d.sets.map((s, i) => (
-            <div key={i} className={`grid grid-cols-[1.75rem_minmax(0,1fr)_4rem_3rem] items-center gap-2 rounded-xl p-1 sm:grid-cols-[2rem_minmax(0,1fr)_4.75rem_3rem] ${s.done ? "bg-emerald-500/10" : ""}`}>
-              <span className={`text-center text-sm font-bold tabular-nums ${s.done ? "text-emerald-700 dark:text-emerald-400" : "text-[var(--muted)]"}`}><span className="sr-only">Set </span>{i + 1}</span>
-              <WeightSelect
-                value={s.weight}
-                unit={unit}
-                near={nearWeight(d, i)}
-                label={`Set ${i + 1} weight`}
-                onChange={(v) => setField(i, "weight", v)}
-              />
-              <label className="relative min-w-0">
-                <span className="sr-only">Set {i + 1} {timed ? "seconds" : "reps"}</span>
-                <input
-                  inputMode="numeric"
-                  enterKeyHint="done"
-                  value={s.reps}
-                  placeholder={target !== null ? String(target) : "sec"}
-                  onChange={(e) => setField(i, "reps", e.target.value)}
-                  className="h-12 w-full rounded-xl border border-[var(--line)] bg-[var(--bg)] px-3 text-center tabular-nums outline-none placeholder:text-[var(--muted)]/60 focus:border-[var(--accent)]"
-                />
-              </label>
-              <button
-                onClick={() => toggleDone(i)}
-                aria-label={s.done ? `Undo set ${i + 1}` : `Complete set ${i + 1}`}
-                aria-pressed={s.done}
-                type="button"
-                className={`grid h-12 w-12 shrink-0 place-items-center rounded-xl border-2 active:scale-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)] ${
-                  s.done
-                    ? "border-emerald-500 bg-emerald-500 text-white"
-                    : "border-[var(--line)] text-[var(--muted)]"
-                }`}
-              >
-                <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth={2.6} aria-hidden>
-                  <path d="m5 12.5 4.5 4.5L19 7.5" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              </button>
+        {d.sets.map((s, i) => {
+          const prev = !d.useSub && last ? last.sets[i] : undefined;
+          return (
+            <div key={i} role="row" className={`${GRID} h-12 ${s.done ? "bg-[var(--up-bg)]" : ""}`}>
+              <span role="cell" className={`font-bold ${s.done ? "text-[var(--up)]" : "text-[var(--muted)]"}`}>{i + 1}</span>
+              <span role="cell" className="truncate text-sm text-[var(--muted)] tabular-nums">{formatPrev(prev, lastUnit)}</span>
+              <span role="cell">
+                <label>
+                  <span className="sr-only">Set {i + 1} weight in {unit}</span>
+                  <input inputMode="decimal" enterKeyHint="next" value={s.weight}
+                    placeholder={suggestion.weight || (prev?.weight ?? "")}
+                    onChange={(e) => setField(i, "weight", e.target.value)}
+                    className={`font-display h-9 w-full rounded-lg text-center text-[17px] font-bold outline-none focus:ring-2 focus:ring-[var(--accent)] ${s.done ? "bg-transparent" : "bg-[var(--card)]"}`} />
+                </label>
+              </span>
+              <span role="cell">
+                <label>
+                  <span className="sr-only">Set {i + 1} {timed ? "seconds" : "reps"}</span>
+                  <input inputMode="numeric" enterKeyHint="done" value={s.reps}
+                    placeholder={target !== null ? String(target) : timedHint}
+                    onChange={(e) => setField(i, "reps", e.target.value)}
+                    className={`font-display h-9 w-full rounded-lg text-center text-[17px] font-bold outline-none focus:ring-2 focus:ring-[var(--accent)] ${s.done ? "bg-transparent" : "bg-[var(--card)]"}`} />
+                </label>
+              </span>
+              <span role="cell" className="grid place-items-center">
+                <button type="button" onClick={() => toggle(i)} aria-pressed={s.done}
+                  aria-label={s.done ? `Undo set ${i + 1}` : `Complete set ${i + 1}`}
+                  className={`grid h-10 w-10 place-items-center rounded-[10px] active:scale-90 ${s.done ? "bg-[var(--up-solid)] text-[#05200f]" : "bg-[var(--soft)] text-[var(--faint)]"}`}>
+                  <Check className="h-[18px] w-[18px]" />
+                </button>
+              </span>
             </div>
-          ))}
-        </div>
+          );
+        })}
+      </div>
 
-        <p className="mt-2 text-xs leading-relaxed text-[var(--muted)]">
-          {straightToNext ? `Complete a set, then ${ex.rest.toLowerCase()}. No rest timer between paired exercises.` : "Tap ✓ to complete a set and start your rest timer."}
-          {target !== null && ` Blank reps use the target (${target}); choose your weight explicitly.`}
-        </p>
+      <div className="mt-2 flex gap-2 px-1">
+        <button type="button" onClick={() => update((cur) => ({ ...cur, sets: [...cur.sets, { weight: "", reps: "", done: false }] }))}
+          className="h-10 flex-1 rounded-[10px] bg-[var(--card)] text-sm font-semibold text-[#d4d4d8]">+ Add set</button>
+        {d.sets.length > ex.sets && (
+          <button type="button" onClick={() => update((cur) => ({ ...cur, sets: cur.sets.slice(0, -1) }))}
+            className="h-10 rounded-[10px] bg-[var(--card)] px-3 text-sm font-semibold text-[#d4d4d8]">Remove set {d.sets.length}</button>
+        )}
+      </div>
 
-        <div className="mt-3 flex flex-wrap gap-2">
-          <button
-            type="button"
-            onClick={addSet}
-            className="flex h-11 flex-1 items-center justify-center gap-1.5 rounded-xl border border-dashed border-[var(--line)] text-sm font-medium text-[var(--muted)] active:scale-[0.98]"
-          >
-            <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2.4} aria-hidden>
-              <path d="M12 5v14M5 12h14" strokeLinecap="round" />
-            </svg>
-            Add set
+      <div className="mt-1 flex flex-wrap gap-x-4 px-1">
+        <button type="button" aria-expanded={showForm} onClick={() => setShowForm(!showForm)} className="flex min-h-10 items-center text-[13px] font-semibold text-[var(--muted)]">
+          {showForm ? "Hide form & video" : "Form & video"}
+        </button>
+        {ex.substitute && (
+          <button type="button" aria-pressed={d.useSub} onClick={() => update((cur) => ({ ...cur, useSub: !cur.useSub }))}
+            className="flex min-h-10 items-center text-[13px] font-semibold text-[var(--muted)]">
+            {d.useSub ? `Back to ${ex.name}` : `Equipment taken? ${ex.substitute}`}
           </button>
-          {d.sets.length > ex.sets && (
-            <button
-              type="button"
-              onClick={removeSet}
-              className="flex h-11 flex-1 items-center justify-center gap-1.5 rounded-xl border border-dashed border-[var(--line)] text-sm font-medium text-[var(--muted)] active:scale-[0.98]"
-            >
-              <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2.4} aria-hidden>
-                <path d="M5 12h14" strokeLinecap="round" />
-              </svg>
-              Remove set {d.sets.length}
+        )}
+      </div>
+
+      {showForm && (
+        <div className="mx-1 mt-1 space-y-2 rounded-xl bg-[var(--card)] p-3 text-sm leading-relaxed">
+          {ex.warmUp && <p><strong>Warm-up · {ex.warmUp}</strong></p>}
+          <p className="text-[#d4d4d8]">{d.useSub ? `Use technique specific to ${ex.substitute}.` : ex.cues || "No form notes for this exercise yet."}</p>
+          {video && (
+            <button type="button" onClick={() => (playable ? setWatching(true) : window.open(video, "_blank", "noopener,noreferrer"))}
+              className="flex min-h-11 items-center gap-2 font-bold text-[var(--accent)]">
+              <svg viewBox="0 0 24 24" className="h-4 w-4" fill="currentColor" aria-hidden><path d="M8 5.5v13l11-6.5-11-6.5Z" /></svg>
+              {playable ? "Watch tutorial" : "Find tutorial on YouTube ↗"}
             </button>
           )}
         </div>
-
-        <label className="mt-3 block">
-          <span className="mb-1.5 block text-xs font-medium text-[var(--muted)]">Exercise notes (optional)</span>
-          <input
-            value={d.notes}
-            onChange={(e) => update((cur) => ({ ...cur, notes: e.target.value }))}
-            placeholder="How did it feel?"
-            className="h-11 w-full rounded-xl border border-[var(--line)] bg-[var(--card)] px-3 outline-none placeholder:text-[var(--muted)]/60 focus:border-[var(--accent)]"
-          />
-        </label>
-      </div>
-    </article>
-  );
-}
-
-// Progression steps from the Notes tab, with lb equivalents.
-function weightStep(lower: boolean, unit: Unit) {
-  if (unit === "lb") return lower ? "5~10 lb" : "2.5~5 lb";
-  return lower ? "2.5~5 kg" : "1~2.5 kg";
-}
-
-function Stat({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-xl bg-[var(--soft)] px-3 py-2.5">
-      <dt className="text-[11px] font-medium uppercase tracking-wide text-[var(--muted)]">{label}</dt>
-      <dd className="mt-1 text-sm font-bold leading-snug">{value}</dd>
-    </div>
+      )}
+      {watching && playable && <VideoModal url={video} title={name} onClose={() => setWatching(false)} />}
+    </section>
   );
 }

@@ -3,39 +3,34 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
+// Three jobs: what to lift today, whether you're getting stronger, and your
+// body. Account sits in Today's header; Nutrition lives under Body.
 const TABS = [
   {
     href: "/",
-    label: "Plan",
-    match: (p: string) => p === "/" || p.startsWith("/day"),
+    label: "Today",
+    match: (p: string) => p === "/" || p.startsWith("/day") || p.startsWith("/plan") || p.startsWith("/account"),
+    icon: <path d="M6.5 6.5v11M17.5 6.5v11M3 9.5v5M21 9.5v5M6.5 12h11" />,
+  },
+  {
+    href: "/progress",
+    label: "Progress",
+    match: (p: string) => p.startsWith("/progress"),
     icon: (
-      <path d="M6.5 6.5v11M17.5 6.5v11M3 9.5v5M21 9.5v5M6.5 12h11" />
+      <>
+        <path d="M3 17l6-6 4 4 8-8" />
+        <path d="M15 7h6v6" />
+      </>
     ),
   },
   {
     href: "/weight",
-    label: "Weight",
-    match: (p: string) => p.startsWith("/weight"),
-    icon: (
-      <path d="M5 4h14a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1Zm3.5 6a5 5 0 0 1 7 0M12 10l1.5-2" />
-    ),
-  },
-  {
-    href: "/nutrition",
-    label: "Nutrition",
-    match: (p: string) => p.startsWith("/nutrition"),
-    icon: (
-      <path d="M4 3v5a3 3 0 0 0 6 0V3M7 3v18M17 3c-2 2-3 5-3 8h5M19 3v18" />
-    ),
-  },
-  {
-    href: "/account",
-    label: "Account",
-    match: (p: string) => p === "/account" || p.startsWith("/account/"),
+    label: "Body",
+    match: (p: string) => p.startsWith("/weight") || p.startsWith("/nutrition"),
     icon: (
       <>
-        <circle cx="12" cy="8" r="4" />
-        <path d="M4 21v-2a8 8 0 0 1 16 0v2" />
+        <path d="M4 20h16M6 20V9a6 6 0 0 1 12 0v11" />
+        <path d="m12 9 2-2" />
       </>
     ),
   },
@@ -43,8 +38,10 @@ const TABS = [
 
 export function BottomNav() {
   const pathname = usePathname();
+  // The workout screen is full focus: no tab bar while logging sets.
+  if (/^\/day\/[^/]+$/.test(pathname)) return null;
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-[var(--line)] bg-[var(--bg)]/90 pb-[env(safe-area-inset-bottom)] backdrop-blur-md">
+    <nav aria-label="Main" className="fixed inset-x-0 bottom-0 z-40 border-t border-[var(--line)] bg-[var(--bg)]/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-md">
       <ul className="mx-auto flex h-16 max-w-xl">
         {TABS.map((t) => {
           const active = t.match(pathname);
@@ -53,8 +50,8 @@ export function BottomNav() {
               <Link
                 href={t.href}
                 aria-current={active ? "page" : undefined}
-                className={`flex h-full flex-col items-center justify-center gap-1 text-xs font-medium ${
-                  active ? "text-[var(--accent)]" : "text-[var(--muted)]"
+                className={`flex h-full flex-col items-center justify-center gap-1 text-xs ${
+                  active ? "font-bold text-[var(--accent)]" : "font-semibold text-[var(--muted)]"
                 }`}
               >
                 <svg
@@ -62,7 +59,7 @@ export function BottomNav() {
                   className="h-6 w-6"
                   fill="none"
                   stroke="currentColor"
-                  strokeWidth={active ? 2.2 : 1.8}
+                  strokeWidth={2}
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   aria-hidden

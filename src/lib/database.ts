@@ -4,16 +4,19 @@ import { supabase } from "@/lib/supabase";
 import type { State, LogEntry } from "@/lib/store";
 import type { TrainingPlan } from "@/lib/training-plan";
 import type { AddedExercise } from "@/lib/added-exercise";
+import type { PlanSettings } from "@/lib/plan";
 
 export type Change = (
   | { type: "trainingPlan"; payload: { plan: TrainingPlan } }
   | { type: "dayExercises"; payload: { dayId: string; exercises: AddedExercise[]; removedKey?: string } }
   | { type: "draft"; payload: { dayId: string; draft: State["drafts"][string] | null } }
-  | { type: "finish"; payload: { dayId: string; entries: LogEntry[] } }
+  | { type: "finish"; payload: { dayId: string; entries: LogEntry[]; session?: State["sessions"][number] } }
+  | { type: "plan"; payload: { plan: PlanSettings } }
   | { type: "exerciseUnit"; payload: { exercise: string; unit: string } }
   | { type: "bodyUnit"; payload: { unit: string } }
   | { type: "weight"; payload: State["bodyWeights"][number] }
   | { type: "deleteWeight"; payload: { date: string } }
+  | { type: "weightPhotos"; payload: { date: string; photos: string[] } }
   | { type: "deleteSession"; payload: { date: string; dayId: string; savedAt: number } }
   | { type: "timer"; payload: { timer: State["timer"] } }
   | { type: "keepScreenOn"; payload: { enabled: boolean } }
@@ -38,13 +41,19 @@ async function rows(table: string, userId: string, order: string[]) {
   }
 }
 
+// Rows from before photos existed have no column value; omit empty lists.
+function photosOf(r: Record<string, unknown>): { photos?: string[] } {
+  return Array.isArray(r.photos) && r.photos.length ? { photos: r.photos as string[] } : {};
+}
+
 export async function readAccount(userId: string): Promise<State> {
-  const [logs, weights, settings, drafts, plans] = await Promise.all([
+  const [logs, weights, settings, drafts, plans, sessions] = await Promise.all([
     rows("log_entries", userId, ["saved_at", "id"]),
     rows("body_weights", userId, ["date"]),
     rows("settings", userId, []),
     rows("workout_drafts", userId, ["day_id"]),
     rows("training_plans", userId, ["created_at", "id"]),
+    rows("workout_sessions", userId, ["saved_at", "day_id"]),
   ]);
   const s = settings[0];
   return {
@@ -55,8 +64,11 @@ export async function readAccount(userId: string): Promise<State> {
       id: r.id, date: r.date, dayId: r.day_id, exercise: r.exercise,
       ...(r.substitute ? { substitute: r.substitute } : {}),
       sets: r.sets, unit: r.unit, notes: r.notes, savedAt: Number(r.saved_at),
+      ...photosOf(r),
     })) as State["log"],
-    bodyWeights: weights.map((r) => ({ date: r.date, weight: Number(r.weight), unit: r.unit })) as State["bodyWeights"],
+    bodyWeights: weights.map((r) => ({
+      date: r.date, weight: Number(r.weight), unit: r.unit, ...photosOf(r),
+    })) as State["bodyWeights"],
     drafts: Object.fromEntries(drafts.map((r) => [r.day_id, r.draft])) as State["drafts"],
     dayExercises: (s?.day_exercises ?? {}) as State["dayExercises"],
     units: (s?.units ?? {}) as State["units"],
@@ -64,6 +76,11 @@ export async function readAccount(userId: string): Promise<State> {
     bodyUnit: (s?.body_unit ?? "kg") as State["bodyUnit"],
     timer: (s?.rest_timer ?? null) as State["timer"],
     keepScreenOn: Boolean(s?.keep_screen_on),
+    plan: (s?.plan ?? null) as State["plan"],
+    sessions: sessions.map((r) => ({
+      dayId: r.day_id, date: r.date, savedAt: Number(r.saved_at), notes: r.notes ?? "",
+      photos: Array.isArray(r.photos) ? r.photos : [], durationMin: r.duration_min == null ? null : Number(r.duration_min),
+    })) as State["sessions"],
   };
 }
 

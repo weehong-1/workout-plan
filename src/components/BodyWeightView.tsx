@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { PhotoStrip } from "@/components/PhotoStrip";
 import { UnitSelect } from "@/components/UnitSelect";
 import { WeightChart, type WeightPoint, shortDate } from "@/components/WeightChart";
 import {
@@ -10,10 +11,12 @@ import {
   getPersistenceStatus,
   saveBodyWeight,
   setBodyUnit,
+  setBodyWeightPhotos,
   todayString,
   useHydrated,
   useStore,
 } from "@/lib/store";
+import { removePhotos } from "@/lib/photos";
 
 const RANGES = [
   { id: "1m", label: "1M", days: 30, name: "30 days" },
@@ -43,6 +46,7 @@ export function BodyWeightView() {
   const [saveError, setSaveError] = useState("");
   const submitting = useRef(false);
   const [showAll, setShowAll] = useState(false);
+  const [photoDate, setPhotoDate] = useState<string | null>(null);
   const [range, setRange] = useState<(typeof RANGES)[number]["id"]>("3m");
 
   if (!hydrated) return null;
@@ -54,6 +58,14 @@ export function BodyWeightView() {
     value: convertWeight(b.weight, b.unit, bodyUnit),
   }));
   const latest = all.at(-1);
+  const photosByDate = new Map(bodyWeights.map((b) => [b.date, b.photos ?? []]));
+  const removeEntry = (date: string) => {
+    if (!confirm(`Delete the ${date} entry${photosByDate.get(date)?.length ? " and its photos" : ""}?`)) return;
+    const photos = photosByDate.get(date) ?? [];
+    deleteBodyWeight(date);
+    // Delete the files only once the database no longer references them.
+    if (photos.length) void flushChanges().then((ok) => { if (ok) void removePhotos(photos); });
+  };
   const r = RANGES.find((x) => x.id === range)!;
   const cutoff = Date.now() - r.days * DAY;
   const points = all.filter((p) => p.t >= cutoff);
@@ -100,18 +112,19 @@ export function BodyWeightView() {
     URL.revokeObjectURL(url);
   };
 
+  // Latest weight and trend first, then the weigh-in form, then history.
   return (
-    <>
+    <div className="flex flex-col">
       <form
         onSubmit={(e) => {
           e.preventDefault();
           void save();
         }}
-        className="rounded-3xl border border-[var(--line)] bg-[var(--card)] p-4"
+        className="order-2 mt-4 rounded-3xl border border-[var(--line)] bg-[var(--card)] p-4"
       >
         <fieldset disabled={saving}>
         <div className="flex items-center justify-between">
-          <h2 className="font-semibold">Log your weight</h2>
+          <h2 className="font-semibold">Log weigh-in</h2>
           <UnitSelect value={bodyUnit} onChange={setBodyUnit} />
         </div>
         <div className="mt-3 flex gap-2">
@@ -153,9 +166,9 @@ export function BodyWeightView() {
 
       {latest ? (
         <>
-          <section className="mt-4 rounded-3xl border border-[var(--line)] bg-[var(--card)] p-4">
+          <section className="order-1 rounded-3xl border border-[var(--line)] bg-[var(--card)] p-4">
             <p className="text-xs font-semibold uppercase tracking-wider text-[var(--muted)]">Latest</p>
-            <p className="mt-1 text-4xl font-bold tabular-nums">
+            <p className="font-display mt-1 text-5xl font-bold">
               {latest.value.toFixed(1)}
               <span className="ml-1 text-lg font-medium text-[var(--muted)]">{bodyUnit}</span>
             </p>
@@ -165,7 +178,7 @@ export function BodyWeightView() {
             </p>
           </section>
 
-          <section className="mt-4 rounded-3xl border border-[var(--line)] bg-[var(--card)] p-4">
+          <section className="order-1 mt-4 rounded-3xl border border-[var(--line)] bg-[var(--card)] p-4">
             <div className="flex items-center justify-between gap-3">
               <h2 className="font-semibold">Body weight ({bodyUnit})</h2>
               <div role="radiogroup" aria-label="Range" className="flex shrink-0 rounded-lg bg-[var(--soft)] p-0.5 text-xs font-semibold">
@@ -201,20 +214,25 @@ export function BodyWeightView() {
             )}
           </section>
 
-          <section className="mt-4">
+          <section className="order-3 mt-4">
             <div className="mb-2 flex items-center justify-between">
               <h2 className="text-sm font-semibold uppercase tracking-wider text-[var(--muted)]">History</h2>
               <button onClick={download} className="h-9 px-1 text-sm font-medium text-[var(--accent)]">
                 Download CSV
               </button>
             </div>
+            <p className="mb-2 text-xs text-[var(--muted)]">Tap the camera on a day to add progress photos.</p>
             <ul className="divide-y divide-[var(--line)] rounded-2xl border border-[var(--line)] bg-[var(--card)]">
               {all
                 .map((p, i) => ({ ...p, delta: i ? p.value - all[i - 1].value : null }))
                 .reverse()
                 .slice(0, showAll ? undefined : HISTORY_PREVIEW)
-                .map((p) => (
-                  <li key={p.date} className="flex items-center gap-3 py-1 pr-1 pl-4">
+                .map((p) => {
+                  const photos = photosByDate.get(p.date) ?? [];
+                  const open = photoDate === p.date;
+                  return (
+                  <li key={p.date} className="py-1 pr-1 pl-4">
+                  <div className="flex items-center gap-2">
                     <span className="flex-1 text-sm text-[var(--muted)]">{p.date}</span>
                     <span className="w-14 text-right text-xs tabular-nums text-[var(--muted)]">
                       {p.delta !== null && signed(p.delta)}
@@ -223,7 +241,19 @@ export function BodyWeightView() {
                       {p.value.toFixed(1)} <span className="text-xs font-normal text-[var(--muted)]">{bodyUnit}</span>
                     </span>
                     <button
-                      onClick={() => confirm(`Delete the ${p.date} entry?`) && deleteBodyWeight(p.date)}
+                      onClick={() => setPhotoDate(open ? null : p.date)}
+                      aria-expanded={open}
+                      aria-label={`${photos.length ? `${photos.length} ${photos.length === 1 ? "photo" : "photos"}` : "Add progress photo"} for ${p.date}`}
+                      className={`relative grid h-11 w-11 place-items-center ${photos.length || open ? "text-[var(--accent)]" : "text-[var(--muted)]"}`}
+                    >
+                      <svg viewBox="0 0 24 24" className="h-[18px] w-[18px]" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden>
+                        <path d="M4 8h3l2-3h6l2 3h3v11H4z" strokeLinejoin="round" />
+                        <circle cx="12" cy="13" r="3.5" />
+                      </svg>
+                      {photos.length > 0 && <span aria-hidden className="absolute top-1 right-0.5 text-[10px] font-bold tabular-nums">{photos.length}</span>}
+                    </button>
+                    <button
+                      onClick={() => removeEntry(p.date)}
                       aria-label={`Delete ${p.date}`}
                       className="grid h-11 w-11 place-items-center text-[var(--muted)]"
                     >
@@ -231,8 +261,23 @@ export function BodyWeightView() {
                         <path d="M6 6l12 12M18 6 6 18" strokeLinecap="round" />
                       </svg>
                     </button>
+                  </div>
+                  {open && (
+                    <div className="pt-1 pb-3">
+                      <PhotoStrip
+                        paths={photos}
+                        label={`Progress photos for ${p.date}`}
+                        onAdd={(added) => setBodyWeightPhotos(p.date, (cur) => [...cur, ...added])}
+                        onRemove={(path) => {
+                          setBodyWeightPhotos(p.date, (cur) => cur.filter((x) => x !== path));
+                          void flushChanges().then((ok) => { if (ok) void removePhotos([path]); });
+                        }}
+                      />
+                    </div>
+                  )}
                   </li>
-                ))}
+                  );
+                })}
             </ul>
             {all.length > HISTORY_PREVIEW && (
               <button
@@ -245,10 +290,10 @@ export function BodyWeightView() {
           </section>
         </>
       ) : (
-        <p className="mt-8 text-center text-sm text-[var(--muted)]">
+        <p className="order-3 mt-8 text-center text-sm text-[var(--muted)]">
           No entries yet. Weigh in at the same time of day (like first thing in the morning) so the trend is fair.
         </p>
       )}
-    </>
+    </div>
   );
 }

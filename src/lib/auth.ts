@@ -3,6 +3,7 @@
 import { createContext, useContext } from "react";
 import type { Session } from "@supabase/supabase-js";
 import { flushChanges, getAccountGeneration, getPersistenceStatus, lockAccountEdits, resetAccount } from "@/lib/store";
+import { removeAllPhotos } from "@/lib/photos";
 import { supabase } from "@/lib/supabase";
 
 // AuthGate owns the subscription so every account screen sees the same session.
@@ -54,6 +55,12 @@ export async function deleteAccount(expectedUserId: string, confirmation: string
     const { data, error: sessionError } = await client.auth.getSession();
     if (getAccountGeneration() !== generation || sessionError || data.session?.user.id !== expectedUserId) {
       throw new Error("Your session changed. Sign in again before deleting your account.");
+    }
+    // Storage files are not removed by the database transaction.
+    try {
+      await removeAllPhotos(expectedUserId);
+    } catch {
+      throw new Error("Could not delete your photos. Please retry.");
     }
     const { error } = await client.rpc("delete_own_account", {
       expected_account_id: expectedUserId,

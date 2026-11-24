@@ -4,6 +4,9 @@ import { useSyncExternalStore } from "react";
 import { readAccount, writeChange, type Change } from "@/lib/database";
 import type { TrainingPlan } from "@/lib/training-plan";
 import type { AddedExercise } from "@/lib/added-exercise";
+import {
+  type Day, type Exercise, type PlanSettings, MAX_DAYS, MAX_DAY_EXERCISES, defaultPlan,
+} from "@/lib/plan";
 
 // Account data is loaded from Supabase. Memory is only a live UI view;
 // every edit starts a database transaction immediately. No local data cache.
@@ -16,11 +19,25 @@ export type DraftExercise = {
   sets: SetLog[];
   notes: string;
   useSub: boolean;
+  photos?: string[]; // storage paths, see lib/photos (legacy per-exercise photos)
+  warmDone?: boolean; // the warm-up row is ticked
 };
 
 export type Draft = {
   startedAt: number;
   exercises: Record<string, DraftExercise>;
+  notes?: string; // Save screen: how it went
+  photos?: string[]; // Save screen photos
+};
+
+// One finished workout's Save-screen details.
+export type WorkoutSession = {
+  dayId: string;
+  date: string;
+  savedAt: number;
+  notes: string;
+  photos: string[];
+  durationMin: number | null;
 };
 
 export type LogEntry = {
@@ -31,6 +48,7 @@ export type LogEntry = {
   substitute?: string; // set when the substitute was used
   sets: { weight: string; reps: string }[];
   unit?: Unit; // missing on entries saved before units existed, which were kg
+  photos?: string[];
   notes: string;
   savedAt: number;
 };
@@ -39,6 +57,7 @@ export type BodyWeight = {
   date: string; // YYYY/MM/DD, one entry per day
   weight: number;
   unit: Unit;
+  photos?: string[];
 };
 
 export type State = {
@@ -53,11 +72,13 @@ export type State = {
   bodyUnit: Unit;
   timer: { endAt: number; total: number; label: string } | null;
   keepScreenOn: boolean;
+  plan: PlanSettings | null; // null: the built-in restart plan
+  sessions: WorkoutSession[];
 };
 
 const EMPTY: State = {
   trainingPlans: [], dayExercises: {}, log: [], drafts: {}, defaultUnit: "kg", units: {}, bodyWeights: [], bodyUnit: "kg",
-  timer: null, keepScreenOn: false,
+  timer: null, keepScreenOn: false, plan: null, sessions: [],
 };
 export type PersistenceStatus = {
   phase: "idle" | "loading" | "saving" | "error";
@@ -278,15 +299,30 @@ export function discardDraft(dayId: string) {
   commit({ ...state, drafts }, { type: "draft", payload: { dayId, draft: null } });
 }
 
-export function finishDraft(dayId: string, entries: Omit<LogEntry, "id" | "savedAt">[]) {
+export function finishDraft(
+  dayId: string,
+  entries: Omit<LogEntry, "id" | "savedAt">[],
+  meta?: { notes: string; photos: string[]; durationMin: number | null },
+) {
   const now = Date.now();
   const drafts = { ...state.drafts };
   delete drafts[dayId];
   const saved = entries.map((e, i) => ({ ...e, id: `${crypto.randomUUID()}-${i}`, savedAt: now }));
+  const session: WorkoutSession | undefined = meta && {
+    dayId, date: entries[0]?.date ?? todayString(), savedAt: now,
+    notes: meta.notes.slice(0, 2000), photos: meta.photos, durationMin: meta.durationMin,
+  };
   commit(
-    { ...state, log: [...state.log, ...saved], drafts },
-    { type: "finish", payload: { dayId, entries: saved } },
+    { ...state, log: [...state.log, ...saved], drafts, sessions: session ? [...state.sessions, session] : state.sessions },
+    { type: "finish", payload: { dayId, entries: saved, ...(session ? { session } : {}) } },
   );
+}
+
+// Save-screen notes and photos live on the draft until the workout is saved.
+export function updateDraftMeta(dayId: string, fn: (draft: Draft) => Draft) {
+  const draft = state.drafts[dayId] ?? { startedAt: Date.now(), exercises: {} };
+  const updated = fn(draft);
+  commit({ ...state, drafts: { ...state.drafts, [dayId]: updated } }, { type: "draft", payload: { dayId, draft: updated } });
 }
 
 export function setExerciseUnit(exercise: string, unit: Unit) {
@@ -306,9 +342,12 @@ export function saveBodyWeight(entry: BodyWeight): boolean {
   if (date.getFullYear() !== year || date.getMonth() !== month - 1 || date.getDate() !== day
     || entry.date > todayString()) return false;
   const rest = state.bodyWeights.filter((b) => b.date !== entry.date);
+  // Updating a day's weight keeps its photos (the database row keeps them too).
+  const photos = state.bodyWeights.find((b) => b.date === entry.date)?.photos;
+  const payload = { date: entry.date, weight: entry.weight, unit: entry.unit };
   commit(
-    { ...state, bodyWeights: [...rest, entry].sort((a, b) => a.date.localeCompare(b.date)) },
-    { type: "weight", payload: entry },
+    { ...state, bodyWeights: [...rest, photos?.length ? { ...payload, photos } : payload].sort((a, b) => a.date.localeCompare(b.date)) },
+    { type: "weight", payload },
   );
   return true;
 }
@@ -334,7 +373,11 @@ export function convertWeight(weight: number, from: Unit, to: Unit): number {
 export function deleteSession(date: string, dayId: string, savedAt: number) {
   const inSession = (e: LogEntry) => e.date === date && e.dayId === dayId && e.savedAt === savedAt;
   commit(
-    { ...state, log: state.log.filter((e) => !inSession(e)) },
+    {
+      ...state,
+      log: state.log.filter((e) => !inSession(e)),
+      sessions: state.sessions.filter((x) => !(x.dayId === dayId && x.savedAt === savedAt)),
+    },
     { type: "deleteSession", payload: { date, dayId, savedAt } },
   );
 }
@@ -386,4 +429,87 @@ export function setRestTimer(timer: State["timer"]) {
 }
 export function setKeepScreenOn(enabled: boolean) {
   commit({ ...state, keepScreenOn: enabled }, { type: "keepScreenOn", payload: { enabled } });
+}
+
+// Photos are already uploaded to storage; these only record their paths.
+export function addDraftPhotos(dayId: string, key: string, setCount: number, paths: string[]) {
+  updateDraftExercise(dayId, key, setCount, (cur) => ({ ...cur, photos: [...(cur.photos ?? []), ...paths] }));
+}
+export function removeDraftPhoto(dayId: string, key: string, setCount: number, path: string) {
+  updateDraftExercise(dayId, key, setCount, (cur) => ({ ...cur, photos: (cur.photos ?? []).filter((p) => p !== path) }));
+}
+
+export function setBodyWeightPhotos(date: string, update: (photos: string[]) => string[]): boolean {
+  const entry = state.bodyWeights.find((b) => b.date === date);
+  if (!entry) return false;
+  const photos = update(entry.photos ?? []);
+  commit(
+    { ...state, bodyWeights: state.bodyWeights.map((b) => (b.date === date ? { ...b, photos } : b)) },
+    { type: "weightPhotos", payload: { date, photos } },
+  );
+  return true;
+}
+
+export function draftPhotos(draft: Draft | undefined): string[] {
+  return [...(draft?.photos ?? []), ...Object.values(draft?.exercises ?? {}).flatMap((e) => e.photos ?? [])];
+}
+
+// The original exercise's logged sessions, oldest first (substitutes excluded).
+export function historyFor(log: LogEntry[], exercise: string): LogEntry[] {
+  return log.filter((e) => e.exercise === exercise && !e.substitute);
+}
+
+// ---------------------------------------------------------------------------
+// The account's plan. Until it is first saved, the built-in restart plan is
+// used, with any exercises added to A, B or C by the old "Add exercise" flow.
+
+function legacyExercise(added: AddedExercise): Exercise {
+  const name = added.musclewikiId !== undefined ? `MuscleWiki #${added.musclewikiId}` : added.name;
+  return {
+    order: added.key, name, muscles: (added.primaryMuscles ?? []).join(", "), warmUp: "None",
+    sets: added.sets, reps: added.reps, rest: "", cues: (added.instructions ?? []).join(" "),
+    video: "", substitute: "", substituteVideo: "",
+  };
+}
+
+export function resolvePlan(s: Pick<State, "plan" | "dayExercises">): PlanSettings {
+  if (s.plan) return s.plan;
+  const plan = defaultPlan();
+  plan.days = plan.days.map((day) => {
+    const added = s.dayExercises[day.id] ?? [];
+    if (!added.length) return day;
+    return { ...day, blocks: [...day.blocks, ...added.map((a) => ({ format: "Straight Sets", exercises: [legacyExercise(a)] }))] };
+  });
+  return plan;
+}
+
+let planCache: { key: State; plan: PlanSettings } | null = null;
+export function usePlan(): PlanSettings {
+  const s = useStore();
+  if (planCache?.key !== s) planCache = { key: s, plan: resolvePlan(s) };
+  return planCache.plan;
+}
+
+const DAY_ID = /^[a-z0-9-]{1,48}$/;
+
+export function validPlan(plan: PlanSettings): boolean {
+  if (!plan || !Array.isArray(plan.days) || plan.days.length < 1 || plan.days.length > MAX_DAYS) return false;
+  if (!Array.isArray(plan.weekdays) || plan.weekdays.length > 7
+    || plan.weekdays.some((d) => !Number.isInteger(d) || d < 0 || d > 6)) return false;
+  const ids = new Set<string>();
+  for (const day of plan.days as Day[]) {
+    if (!DAY_ID.test(day.id) || ids.has(day.id)) return false;
+    ids.add(day.id);
+    if (!day.name.trim() || day.name.trim().length > 40 || typeof day.optional !== "boolean") return false;
+    const exercises = day.blocks.flatMap((b) => b.exercises);
+    if (exercises.length > MAX_DAY_EXERCISES) return false;
+    if (exercises.some((e) => !e.name.trim() || !Number.isInteger(e.sets) || e.sets < 1 || e.sets > 10)) return false;
+  }
+  return true;
+}
+
+export function savePlan(plan: PlanSettings): boolean {
+  if (!status.userId || !status.ready || status.locked || !validPlan(plan)) return false;
+  commit({ ...state, plan }, { type: "plan", payload: { plan } });
+  return true;
 }
