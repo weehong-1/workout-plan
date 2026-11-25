@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { askConfirm } from "@/components/ConfirmDialog";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { PhotoStrip } from "@/components/PhotoStrip";
@@ -82,7 +83,7 @@ export function SaveForm({ day }: { day: Day }) {
   };
 
   const discard = async () => {
-    if (!confirm("Discard this workout? Everything you've logged today, including photos, will be cleared.")) return;
+    if (!(await askConfirm({ title: "Discard this workout?", body: "Everything you've logged today, including photos, will be cleared.", confirmLabel: "Discard", danger: true }))) return;
     const photos = draftPhotos(draft);
     discardDraft(day.id);
     router.push("/");

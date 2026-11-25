@@ -34,6 +34,28 @@ export async function verifyCode(email: string, token: string): Promise<void> {
   // AuthGate loads this account after observing the authenticated session.
 }
 
+export async function signInWithPassword(email: string, password: string): Promise<void> {
+  const { error } = await authClient().auth.signInWithPassword({ email, password });
+  if (error) {
+    throw new Error(/invalid login credentials/i.test(error.message)
+      ? "Wrong email or password. No password yet? Sign in with an email code, then set one on the Account page."
+      : error.message);
+  }
+}
+
+export const MIN_PASSWORD_LENGTH = 8;
+
+/** Sets or changes the signed-in person's password, so later sign-ins skip the email. */
+export async function setPassword(password: string): Promise<void> {
+  if (password.length < MIN_PASSWORD_LENGTH) throw new Error(`Use at least ${MIN_PASSWORD_LENGTH} characters.`);
+  const { error } = await authClient().auth.updateUser({ password });
+  if (error) {
+    throw new Error(/reauthenticat/i.test(error.message)
+      ? "For security, sign out and back in with an email code, then set your password again."
+      : error.message);
+  }
+}
+
 let deletionInProgress = false;
 
 /** The database verifies identity again and deletes only auth.uid(), atomically. */

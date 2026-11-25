@@ -61,6 +61,7 @@ const workout = load(transpile(workoutSource, "Workout.tsx"), {
   "@/lib/photos": { removePhotos: unexpectedSideEffect },
   "@/components/ui": ui,
   "@/components/WakeLock": { WakeLockToggle: () => null },
+  "@/components/ConfirmDialog": { askConfirm: unexpectedSideEffect },
   "@/components/VideoModal": { VideoModal: () => assert.fail("Tutorial must not open during initial rendering") },
 });
 

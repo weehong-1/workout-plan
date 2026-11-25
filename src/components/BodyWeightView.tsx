@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { askConfirm } from "@/components/ConfirmDialog";
 import { PhotoStrip } from "@/components/PhotoStrip";
 import { UnitSelect } from "@/components/UnitSelect";
 import { WeightChart, type WeightPoint, shortDate } from "@/components/WeightChart";
@@ -59,8 +60,9 @@ export function BodyWeightView() {
   }));
   const latest = all.at(-1);
   const photosByDate = new Map(bodyWeights.map((b) => [b.date, b.photos ?? []]));
-  const removeEntry = (date: string) => {
-    if (!confirm(`Delete the ${date} entry${photosByDate.get(date)?.length ? " and its photos" : ""}?`)) return;
+  const removeEntry = async (date: string) => {
+    const hasPhotos = !!photosByDate.get(date)?.length;
+    if (!(await askConfirm({ title: `Delete the ${date} weigh-in?`, body: hasPhotos ? "Its progress photos are deleted too." : undefined, confirmLabel: "Delete", danger: true }))) return;
     const photos = photosByDate.get(date) ?? [];
     deleteBodyWeight(date);
     // Delete the files only once the database no longer references them.
@@ -253,7 +255,7 @@ export function BodyWeightView() {
                       {photos.length > 0 && <span aria-hidden className="absolute top-1 right-0.5 text-[10px] font-bold tabular-nums">{photos.length}</span>}
                     </button>
                     <button
-                      onClick={() => removeEntry(p.date)}
+                      onClick={() => void removeEntry(p.date)}
                       aria-label={`Delete ${p.date}`}
                       className="grid h-11 w-11 place-items-center text-[var(--muted)]"
                     >

@@ -35,6 +35,7 @@ function harness({ flush = async () => true, accept = true } = {}) {
     if (name === "@/components/UnitSelect") return { UnitSelect: "unit-select" };
     if (name === "@/components/PhotoStrip") return { PhotoStrip: "photo-strip" };
     if (name === "@/lib/photos") return { removePhotos: async () => {} };
+    if (name === "@/components/ConfirmDialog") return { askConfirm: async () => false };
     if (name === "@/components/WeightChart") return { WeightChart: "weight-chart", shortDate: () => "Oct 21" };
     return require(name);
   });

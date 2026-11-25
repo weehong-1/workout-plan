@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
+import { askConfirm } from "@/components/ConfirmDialog";
 import { useState } from "react";
-import { sendCode, signOut, useAccountSession, verifyCode } from "@/lib/auth";
+import { MIN_PASSWORD_LENGTH, sendCode, setPassword, signInWithPassword, signOut, useAccountSession, verifyCode } from "@/lib/auth";
 import { databaseConfigured } from "@/lib/supabase";
 import { DeleteAccountDialog } from "@/components/DeleteAccountDialog";
 
@@ -15,10 +16,13 @@ export function AccountView() {
   const session = useAccountSession();
   const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
-  const [step, setStep] = useState<"email" | "code">("email");
+  const [step, setStep] = useState<"password" | "email" | "code">("password");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [showDelete, setShowDelete] = useState(false);
+  const [password, setPasswordValue] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [passwordSaved, setPasswordSaved] = useState(false);
 
   if (!databaseConfigured) {
     return (
@@ -43,7 +47,55 @@ export function AccountView() {
   if (!session) {
     return (
       <section className="rounded-3xl border border-[var(--line)] bg-[var(--card)] p-4">
-        {step === "email" ? (
+        {step === "password" ? (
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              void attempt(() => signInWithPassword(email.trim(), password));
+            }}
+          >
+            <h2 className="font-semibold">Sign in</h2>
+            <input
+              type="email"
+              name="email"
+              autoComplete="username"
+              inputMode="email"
+              required
+              disabled={busy}
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="you@example.com"
+              aria-label="Email"
+              className={`${field} mt-3`}
+            />
+            <input
+              type="password"
+              name="password"
+              autoComplete="current-password"
+              required
+              disabled={busy}
+              value={password}
+              onChange={(e) => setPasswordValue(e.target.value)}
+              placeholder="Password"
+              aria-label="Password"
+              className={`${field} mt-2`}
+            />
+            <button type="submit" disabled={busy || !email.includes("@") || !password} className={`${primary} mt-3`}>
+              {busy ? "Signing in…" : "Sign in"}
+            </button>
+            <button
+              type="button"
+              disabled={busy}
+              onClick={() => {
+                setStep("email");
+                setError("");
+              }}
+              className="mt-2 h-11 w-full text-sm font-medium text-[var(--muted)] disabled:opacity-40"
+            >
+              No password yet? Email me a code
+            </button>
+          </form>
+        ) : step === "email" ? (
           <form
             onSubmit={(e) => {
               e.preventDefault();
@@ -55,7 +107,7 @@ export function AccountView() {
           >
             <h2 className="font-semibold">Sign in</h2>
             <p className="mt-1 text-sm text-[var(--muted)]">
-              We&apos;ll email you a sign in code. No password needed.
+              We&apos;ll email you a sign in code. Once in, set a password on the Account page to skip this next time.
             </p>
             <input
               type="email"
@@ -70,6 +122,17 @@ export function AccountView() {
             />
             <button type="submit" disabled={busy || !email.includes("@")} className={`${primary} mt-3`}>
               {busy ? "Sending…" : "Email me a code"}
+            </button>
+            <button
+              type="button"
+              disabled={busy}
+              onClick={() => {
+                setStep("password");
+                setError("");
+              }}
+              className="mt-2 h-11 w-full text-sm font-medium text-[var(--muted)] disabled:opacity-40"
+            >
+              Sign in with a password
             </button>
           </form>
         ) : (
@@ -124,8 +187,8 @@ export function AccountView() {
         <div className="mt-5 border-t border-[var(--line)] pt-4">
           <button
             type="button"
-            onClick={() => {
-              if (confirm("Sign out? Your changes will be saved first. Your data stays in your account.")) {
+            onClick={async () => {
+              if (await askConfirm({ title: "Sign out?", body: "Your changes will be saved first. Your data stays in your account.", confirmLabel: "Sign out" })) {
                 void attempt(signOut);
               }
             }}
@@ -138,6 +201,45 @@ export function AccountView() {
         </div>
       </section>
       {error && <p role="alert" className="mt-3 text-sm text-red-600 dark:text-red-400">{error}</p>}
+
+      <form
+        aria-labelledby="account-password-title"
+        className="mt-5 rounded-3xl border border-[var(--line)] bg-[var(--card)] p-5"
+        onSubmit={(e) => {
+          e.preventDefault();
+          setPasswordSaved(false);
+          void attempt(async () => {
+            await setPassword(newPassword);
+            setNewPassword("");
+            setPasswordSaved(true);
+          });
+        }}
+      >
+        <h2 id="account-password-title" className="font-semibold">Password</h2>
+        <p className="mt-1 text-sm text-[var(--muted)]">Sign in instantly next time, without waiting for an email code.</p>
+        {/* Lets password managers save the new password against this email. */}
+        <input type="email" name="email" autoComplete="username" value={session.user.email ?? ""} readOnly hidden />
+        <input
+          type="password"
+          name="new-password"
+          autoComplete="new-password"
+          minLength={MIN_PASSWORD_LENGTH}
+          required
+          disabled={busy}
+          value={newPassword}
+          onChange={(e) => {
+            setNewPassword(e.target.value);
+            setPasswordSaved(false);
+          }}
+          placeholder={`New password (${MIN_PASSWORD_LENGTH}+ characters)`}
+          aria-label="New password"
+          className={`${field} mt-3`}
+        />
+        <button type="submit" disabled={busy || newPassword.length < MIN_PASSWORD_LENGTH} className={`${primary} mt-3`}>
+          {busy ? "Saving…" : "Save password"}
+        </button>
+        {passwordSaved && <p role="status" className="mt-3 text-sm text-[var(--up)]">Password saved. Use it with your email to sign in.</p>}
+      </form>
 
       <Link href="/" className="mt-5 flex min-h-12 items-center justify-center rounded-xl bg-[var(--accent)] px-4 text-sm font-semibold text-[var(--accent-fg)] active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]">
         Back to plan

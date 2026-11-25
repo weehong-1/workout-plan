@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { askConfirm } from "@/components/ConfirmDialog";
 import { createPortal } from "react-dom";
 import { MAX_PHOTOS, photoUrls, uploadPhoto } from "@/lib/photos";
 import { usePersistenceStatus } from "@/lib/store";
@@ -60,8 +61,8 @@ export function PhotoStrip({
     if (added.length) onAdd(added);
   };
 
-  const remove = (path: string) => {
-    if (!onRemove || !confirm("Remove this photo?")) return;
+  const remove = async (path: string) => {
+    if (!onRemove || !(await askConfirm({ title: "Remove this photo?", confirmLabel: "Remove", danger: true }))) return;
     onRemove(path);
   };
 
@@ -84,7 +85,7 @@ export function PhotoStrip({
             {editable && (
               <button
                 type="button"
-                onClick={() => remove(path)}
+                onClick={() => void remove(path)}
                 aria-label={`Remove photo ${i + 1}`}
                 className="absolute -top-2 -right-2 grid h-6 w-6 place-items-center rounded-full bg-[var(--fg)] text-[var(--bg)] shadow"
               >

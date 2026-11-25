@@ -370,6 +370,13 @@ export function convertWeight(weight: number, from: Unit, to: Unit): number {
   return from === "kg" ? weight * LB_PER_KG : weight / LB_PER_KG;
 }
 
+/** Every photo a saved workout references: its exercises' and the workout's own. */
+export function sessionPhotos(s: Pick<State, "log" | "sessions">, date: string, dayId: string, savedAt: number): string[] {
+  const entries = s.log.filter((e) => e.date === date && e.dayId === dayId && e.savedAt === savedAt);
+  const session = s.sessions.find((x) => x.dayId === dayId && x.savedAt === savedAt);
+  return [...new Set([...entries.flatMap((e) => e.photos ?? []), ...(session?.photos ?? [])])];
+}
+
 export function deleteSession(date: string, dayId: string, savedAt: number) {
   const inSession = (e: LogEntry) => e.date === date && e.dayId === dayId && e.savedAt === savedAt;
   commit(

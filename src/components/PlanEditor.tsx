@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { askConfirm } from "@/components/ConfirmDialog";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { ExerciseSearch } from "@/components/ExerciseSearch";
@@ -14,6 +15,7 @@ import {
   MAX_DAY_EXERCISES,
   WARM_UP_OPTIONS,
   dayExercises,
+  exerciseCount,
   relabel,
   startWeightValue,
 } from "@/lib/plan";
@@ -61,7 +63,7 @@ export function PlanView() {
               <Link href={`/plan/${day.id}`} className="min-w-0 flex-1 py-2">
                 <span className="block font-bold">{day.name}</span>
                 <span className="block text-[13px] text-[var(--muted)]">
-                  {dayExercises(day).length} exercises{day.optional ? " · optional" : ""}
+                  {exerciseCount(dayExercises(day).length)}{day.optional ? " · optional" : ""}
                 </span>
               </Link>
               <div className="flex">
@@ -166,7 +168,7 @@ function DayForm({ plan, existing }: { plan: PlanSettings; existing?: Day }) {
 
   const remove = async () => {
     if (plan.days.length < 2 || !existing) return;
-    if (!confirm(`Delete ${existing.name}? Your logged history for its exercises stays.`)) return;
+    if (!(await askConfirm({ title: `Delete ${existing.name}?`, body: "Your logged history for its exercises stays.", confirmLabel: "Delete day", danger: true }))) return;
     const message = await persist({ ...plan, days: relabel(plan.days.filter((d) => d.id !== existing.id)) });
     if (message) setError(message);
     else router.push("/plan");

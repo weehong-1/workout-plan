@@ -1,10 +1,22 @@
 "use client";
 
 import { useState } from "react";
+import { askConfirm } from "@/components/ConfirmDialog";
 import { reasonFor, sessionValue } from "@/components/ProgressView";
 import { BackLink } from "@/components/ui";
 import { dayExercises, sessionVolume, suggestFor, trainerWeight } from "@/lib/plan";
-import { formatSet, historyFor, useHydrated, usePlan, useStore } from "@/lib/store";
+import { removePhotos } from "@/lib/photos";
+import {
+  type LogEntry,
+  deleteSession,
+  flushChanges,
+  formatSet,
+  historyFor,
+  sessionPhotos,
+  useHydrated,
+  usePlan,
+  useStore,
+} from "@/lib/store";
 
 const VERDICT_BOX: Record<string, string> = {
   up: "bg-[var(--up-bg)] text-[var(--up)]",
@@ -35,6 +47,17 @@ export function ExerciseDetail({ dayId, order }: { dayId: string; order: string 
   const trainer = metric === "top" ? trainerWeight(ex) : null;
   const latest = points.at(-1);
   const first = points[0];
+  // Deletes the whole saved workout this entry belongs to, then its photo files.
+  const removeWorkout = async (e: LogEntry) => {
+    const name = plan.days.find((d) => d.id === e.dayId)?.name ?? "this";
+    const photos = sessionPhotos(store, e.date, e.dayId, e.savedAt);
+    const others = store.log.filter((x) => x.date === e.date && x.dayId === e.dayId && x.savedAt === e.savedAt).length - 1;
+    const what = [others > 0 && `${others} other ${others === 1 ? "exercise" : "exercises"}`, photos.length && "its photos"].filter(Boolean).join(" and ");
+    if (!(await askConfirm({ title: `Delete the ${name} workout from ${shortDate(e.date)}?`, body: `${what ? `This also removes ${what}. ` : ""}This can't be undone.`, confirmLabel: "Delete", danger: true }))) return;
+    deleteSession(e.date, e.dayId, e.savedAt);
+    // Delete the files only once the database no longer references them.
+    if (photos.length && await flushChanges()) void removePhotos(photos);
+  };
   const unit = metric === "volume" ? "kg" : history.length && sessionValue(history.at(-1)!) !== null && !history.at(-1)!.sets.some((x) => parseFloat(x.weight)) ? "reps" : "kg";
 
   return (
@@ -78,9 +101,17 @@ export function ExerciseDetail({ dayId, order }: { dayId: string; order: string 
         {history.length ? (
           <ul className="overflow-hidden rounded-2xl bg-[var(--card)]">
             {[...history].reverse().slice(0, 20).map((e) => (
-              <li key={e.id} className="border-b border-[var(--soft)] px-3.5 py-3 last:border-0">
-                <p className="flex justify-between gap-3 text-[13px] text-[var(--muted)]"><span>{shortDate(e.date)}</span>{e.notes && <span className="truncate">“{e.notes}”</span>}</p>
-                <p className="font-display mt-1 font-bold">{e.sets.map((x) => formatSet(x, e.unit ?? "kg")).join(" · ")}</p>
+              <li key={e.id} className="flex items-center gap-2 border-b border-[var(--soft)] py-1.5 pr-1 pl-3.5 last:border-0">
+                <div className="min-w-0 flex-1 py-1.5">
+                  <p className="flex justify-between gap-3 text-[13px] text-[var(--muted)]"><span className="shrink-0">{shortDate(e.date)}</span>{e.notes && <span className="truncate">“{e.notes}”</span>}</p>
+                  <p className="font-display mt-1 font-bold">{e.sets.map((x) => formatSet(x, e.unit ?? "kg")).join(" · ")}</p>
+                </div>
+                <button type="button" onClick={() => void removeWorkout(e)} aria-label={`Delete the ${shortDate(e.date)} workout`}
+                  className="grid h-11 w-11 shrink-0 place-items-center rounded-xl text-[var(--muted)] hover:text-[var(--danger)]">
+                  <svg viewBox="0 0 24 24" className="h-[18px] w-[18px]" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                    <path d="M4 7h16M10 11v6M14 11v6M6 7l1 12h10l1-12M9 7V4h6v3" />
+                  </svg>
+                </button>
               </li>
             ))}
           </ul>

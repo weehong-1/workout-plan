@@ -522,6 +522,10 @@ export function dayExercises(day: Day): Exercise[] {
   return day.blocks.flatMap((block) => block.exercises);
 }
 
+export function exerciseCount(n: number): string {
+  return `${n} ${n === 1 ? "exercise" : "exercises"}`;
+}
+
 // Letters follow the order of the days, so moving a day relabels it.
 export function relabel(days: Day[]): Day[] {
   return days.map((day, i) => ({ ...day, letter: DAY_LETTERS[i] ?? String(i + 1) }));

@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { askConfirm } from "@/components/ConfirmDialog";
 import { useRouter } from "next/navigation";
 import { useEffect, useId, useState } from "react";
 import { VideoModal } from "@/components/VideoModal";
@@ -92,7 +93,7 @@ export function Workout({ day }: { day: Day }) {
   const stats = workoutStats(day, draft, now);
 
   const discard = async () => {
-    if (!confirm("Discard this workout? Everything you've logged today, including photos, will be cleared.")) return;
+    if (!(await askConfirm({ title: "Discard this workout?", body: "Everything you've logged today, including photos, will be cleared.", confirmLabel: "Discard", danger: true }))) return;
     const photos = draftPhotos(draft);
     discardDraft(day.id);
     router.push("/");

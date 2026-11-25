@@ -138,3 +138,23 @@ test("confirmed deletion clears memory and redirects even when local sign-out fa
   assert(calls.includes("reset"));
   assert.equal(calls.at(-1), "redirect:/account");
 });
+
+test("password sign-in explains how to get a password when the credentials don't match", async () => {
+  const calls = [];
+  const api = auth({}, async () => ({}), { auth: {
+    signInWithPassword: async (args) => { calls.push(args); return { error: { message: "Invalid login credentials" } }; },
+  } });
+  await assert.rejects(api.signInWithPassword("me@example.com", "secret123"), /No password yet\? Sign in with an email code/);
+  assert.deepEqual(calls, [{ email: "me@example.com", password: "secret123" }]);
+});
+
+test("setting a password rejects short ones before calling Supabase, then saves", async () => {
+  const calls = [];
+  const api = auth({}, async () => ({}), { auth: {
+    updateUser: async (args) => { calls.push(args); return { error: null }; },
+  } });
+  await assert.rejects(api.setPassword("short"), /at least 8 characters/);
+  assert.deepEqual(calls, []);
+  await api.setPassword("long enough");
+  assert.deepEqual(calls, [{ password: "long enough" }]);
+});

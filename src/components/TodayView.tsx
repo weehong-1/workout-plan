@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { DayLetter, VERDICT_TEXT, btnPrimary } from "@/components/ui";
-import { type Day, DAY_LETTERS, dayExercises, nextPlanDay, suggestFor } from "@/lib/plan";
+import { type Day, DAY_LETTERS, dayExercises, exerciseCount, nextPlanDay, suggestFor } from "@/lib/plan";
 import { historyFor, unitFor, useHydrated, usePlan, useStore } from "@/lib/store";
 
 // One job: tell you which day it is and what to lift, then start.
@@ -38,7 +38,7 @@ export function TodayView() {
         </p>
         <h1 id="today-day" className="font-display mt-1.5 text-5xl leading-none font-bold tracking-tight">{day.name}</h1>
         <p className="mt-2.5 text-[15px] text-[var(--muted)]">
-          {exercises.length} exercises{day.duration ? ` · about ${day.duration}` : ""}
+          {exerciseCount(exercises.length)}{day.duration ? ` · about ${day.duration}` : ""}
         </p>
       </section>
 

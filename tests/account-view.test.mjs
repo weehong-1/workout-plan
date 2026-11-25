@@ -17,7 +17,15 @@ function account(session = { user: { id: "A", email: "person@example.com" } }) {
     if (name === "react") return {
       useState(initial) { const i = cursor++; if (!(i in state)) state[i] = initial; return [state[i], (value) => { state[i] = value; }]; },
     };
-    if (name === "@/lib/auth") return { useAccountSession: () => session, signOut: () => calls.push("signOut") };
+    if (name === "@/components/ConfirmDialog") return { askConfirm: async () => false };
+    if (name === "@/lib/auth") return {
+      useAccountSession: () => session,
+      signOut: () => calls.push("signOut"),
+      MIN_PASSWORD_LENGTH: 8,
+      signInWithPassword: async (...args) => calls.push(["signInWithPassword", ...args]),
+      setPassword: async (...args) => calls.push(["setPassword", ...args]),
+      sendCode: async (...args) => calls.push(["sendCode", ...args]),
+    };
     if (name === "@/lib/supabase") return { databaseConfigured: true };
     if (name === "@/components/DeleteAccountDialog") return { DeleteAccountDialog: "delete-dialog" };
     if (name === "next/link") return { __esModule: true, default: "a" };
@@ -66,4 +74,31 @@ test("signed-out account view never exposes account removal", () => {
   const app = account(null);
   assert.doesNotMatch(app.text(app.render()), /Account removal|Delete account/);
   assert.match(app.text(app.render()), /Sign in/);
+});
+
+test("signed-out view leads with email and password, with the email code as a fallback", async () => {
+  const app = account(null);
+  let nodes = app.nodes(app.render());
+  const inputs = nodes.filter((node) => node.type === "input");
+  assert.deepEqual(inputs.map((i) => i.props.autoComplete), ["username", "current-password"]);
+  inputs[0].props.onChange({ target: { value: " me@example.com " } });
+  inputs[1].props.onChange({ target: { value: "pw123456" } });
+  nodes = app.nodes(app.render());
+  nodes.find((node) => node.type === "form").props.onSubmit({ preventDefault() {} });
+  await new Promise((resolve) => setImmediate(resolve));
+  assert.deepEqual(app.calls, [["signInWithPassword", "me@example.com", "pw123456"]]);
+  app.nodes(app.render()).find((node) => node.type === "button" && /Email me a code/.test(app.text(node))).props.onClick();
+  assert.match(app.text(app.render()), /We'll email you a sign in code/);
+});
+
+test("signed-in view can set a password that password managers will save", async () => {
+  const app = account();
+  const form = () => app.nodes(app.render()).find((node) => node.type === "form" && node.props["aria-labelledby"] === "account-password-title");
+  const input = app.nodes(form()).find((node) => node.props?.autoComplete === "new-password");
+  assert.equal(app.nodes(form()).find((node) => node.props?.autoComplete === "username").props.value, "person@example.com");
+  input.props.onChange({ target: { value: "a good password" } });
+  form().props.onSubmit({ preventDefault() {} });
+  await new Promise((resolve) => setImmediate(resolve));
+  assert.deepEqual(app.calls, [["setPassword", "a good password"]]);
+  assert.match(app.text(app.render()), /Password saved/);
 });

@@ -79,6 +79,7 @@ for (const saved of [true, false]) {
       "@/lib/plan": plan,
       "@/lib/photos": { removePhotos: () => assert.fail("Saving must not delete photos") },
       "@/components/PhotoStrip": { PhotoStrip: () => null },
+      "@/components/ConfirmDialog": { askConfirm: () => assert.fail("Saving must not ask to confirm") },
       "@/components/ui": { VERDICT_TEXT: { up: "", hold: "", back: "", first: "" }, btnPrimary: "" },
       "@/components/Workout": { useNow: () => 0, workoutStats: () => ({ minutes: 42, volume: 400, done: 1, total: 2 }) },
       "@/lib/store": {
