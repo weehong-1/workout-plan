@@ -75,7 +75,7 @@ test("nutrition waits for account hydration before using the loaded log", () => 
   const app = harness({ weights: [loggedWeight(70)], hydrated: false });
   assert.equal(app.render(), null);
   app.updateStore({ hydrated: true });
-  assert.match(app.text(app.render()), /2,590/);
+  assert.match(app.text(app.render()), /1,904/);
 });
 
 test("nutrition starts empty without a logged weight and links to Weight instead of accepting input", () => {
@@ -102,8 +102,8 @@ test("nutrition displays the latest loaded weight in the preferred unit but calc
     assert.match(app.text(app.section("nutrition-weight-title")), display);
     assert.match(app.text(app.section("nutrition-weight-title")), /Logged\s+Oct 21, 2026\s+in Weight/);
     // Rounding the display before calculation would give different targets.
-    assert.match(app.text(app.section("nutrition-workout-title")), /2,592/);
-    assert.match(app.text(app.section("nutrition-rest-title")), /2,312/);
+    assert.match(app.text(app.section("nutrition-workout-title")), /1,905/);
+    assert.match(app.text(app.section("nutrition-rest-title")), /1,667/);
     assert(app.nodes(app.render()).some((node) => node.props?.href === "/weight" && /Update weight/.test(app.text(node))));
     assertReadOnlyWeight(app);
     assert.equal(weights.at(-1).weight, weight);
@@ -113,7 +113,7 @@ test("nutrition displays the latest loaded weight in the preferred unit but calc
 test("nutrition follows live store entries and display-unit changes without resetting activity or goal", () => {
   const app = harness();
   app.updateStore({ weights: [loggedWeight(70)] });
-  assert.match(app.text(app.render()), /2,590/);
+  assert.match(app.text(app.render()), /1,904/);
   app.set("nutrition-activity", "high");
   app.set("nutrition-goal", "gain");
   app.updateStore({ weights: [loggedWeight(70), loggedWeight(80, "kg", "2026/10/22")] });
@@ -131,9 +131,18 @@ test("nutrition follows live store entries and display-unit changes without rese
   assert.equal(app.section("nutrition-results"), undefined);
 });
 
+test("nutrition defaults to a lightly active, weight-loss estimate", () => {
+  const app = withWeight();
+  assert.equal(app.field("nutrition-activity").props.value, "light");
+  assert.equal(app.field("nutrition-goal").props.value, "lose");
+  assert.match(app.text(app.section("nutrition-rest-title")), /1,666/);
+  assert.match(app.text(app.section("nutrition-workout-title")), /1,904/);
+  assert.match(app.text(app.render()), /15% calorie deficit/);
+});
+
 test("nutrition updates goal and activity targets immediately", () => {
   const app = withWeight();
-  app.set("nutrition-goal", "lose");
+  app.set("nutrition-activity", "moderate");
   assert.match(app.text(app.section("nutrition-rest-title")), /1,964/);
   assert.match(app.text(app.section("nutrition-workout-title")), /2,202/);
   assert.match(app.text(app.render()), /15% calorie deficit/);
@@ -178,7 +187,7 @@ test("nutrition withholds all numerical targets for low calorie estimates", () =
 
 test("nutrition applies the low-calorie guardrail independently to each day", () => {
   const app = withWeight(50);
-  app.set("nutrition-goal", "lose");
+  app.set("nutrition-activity", "moderate");
   const tree = app.render();
   const workout = app.section("nutrition-workout-title", tree);
   const rest = app.section("nutrition-rest-title", tree);
@@ -200,7 +209,7 @@ test("nutrition holds recovery protein and fat steady while increasing workout c
     .map((node) => [app.text(node.props.children[0]), Number(node.props.children[1].props.children[0])]));
   const w = macros(workout);
   const r = macros(rest);
-  assert.equal(w.Protein, 126);
+  assert.equal(w.Protein, 140);
   assert.equal(w.Protein, r.Protein);
   assert.equal(w.Fat, r.Fat);
   assert(w.Carbs > r.Carbs);

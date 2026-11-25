@@ -29,8 +29,8 @@ export function NutritionView() {
 }
 
 function NutritionCalculator({ latest, displayUnit }: { latest?: BodyWeight; displayUnit: Unit }) {
-  const [activity, setActivity] = useState<ActivityLevel>("moderate");
-  const [goal, setGoal] = useState<NutritionGoal>("maintain");
+  const [activity, setActivity] = useState<ActivityLevel>("light");
+  const [goal, setGoal] = useState<NutritionGoal>("lose");
   // Read the live Weight-module record, never a copied or rounded input value.
   const estimates = NUTRITION_DAY_TYPES.map((day) => ({
     ...day,
