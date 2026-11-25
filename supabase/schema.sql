@@ -485,3 +485,17 @@ begin
     with check (bucket_id = 'photos' and (storage.foldername(name))[1] = (select auth.uid())::text)$p$;
 end;
 $$;
+
+-- Muse AI connector token, made on the Account page. Only its SHA-256 hash is
+-- kept; the token itself is shown once. The connector signs in as the account
+-- and compares the Bearer token it receives against this hash.
+create table if not exists public.connector_tokens (
+  user_id uuid primary key default auth.uid() references auth.users (id) on delete cascade,
+  token_hash text not null check (token_hash ~ '^[0-9a-f]{64}$'),
+  created_at timestamptz not null default now()
+);
+alter table public.connector_tokens enable row level security;
+drop policy if exists "Own rows" on public.connector_tokens;
+create policy "Own rows" on public.connector_tokens for all to authenticated
+  using ((select auth.uid()) = user_id) with check ((select auth.uid()) = user_id);
+grant select, insert, update, delete on public.connector_tokens to authenticated;

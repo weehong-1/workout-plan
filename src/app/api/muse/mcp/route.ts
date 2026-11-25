@@ -1,7 +1,9 @@
 // MCP endpoint for Muse AI's custom connector (Streamable HTTP, stateless).
 //
 // Vercel environment variables:
-//   MUSE_MCP_TOKEN    the Bearer token Muse sends (32+ random characters)
+//   MUSE_MCP_TOKEN    optional: a fixed Bearer token (32+ random characters).
+//                     Otherwise generate one on the Account page while signed in
+//                     as WORKOUT_EMAIL; that one can be replaced without a redeploy.
 //   WORKOUT_EMAIL     the account the tools act as
 //   WORKOUT_PASSWORD  that account's password (set on the app's Account page)
 //   WORKOUT_TIMEZONE  optional, for "today"; defaults to Asia/Singapore
@@ -9,7 +11,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js";
 import { createClient } from "@supabase/supabase-js";
-import { authorized } from "@/lib/mcp/auth";
+import { authorized, bearerToken, matchesHash } from "@/lib/mcp/auth";
 import { type Account, createTools, registerTools } from "@/lib/mcp/tools";
 
 export const runtime = "nodejs";
@@ -34,8 +36,24 @@ async function account(): Promise<Account> {
   return cached.account;
 }
 
+/** The env token, or the token generated on the account's Account page (looked up each time, so revoking is immediate). */
+async function allowed(header: string | null): Promise<boolean> {
+  if (authorized(header, process.env.MUSE_MCP_TOKEN)) return true;
+  const token = bearerToken(header);
+  if (!token || token.length < 32) return false;
+  try {
+    const { client, userId } = await account();
+    const { data, error } = await client.from("connector_tokens").select("token_hash").eq("user_id", userId).maybeSingle();
+    if (error) throw new Error(error.message);
+    return matchesHash(token, data?.token_hash);
+  } catch (e) {
+    console.error("Muse connector token check failed:", e instanceof Error ? e.message : e);
+    return false;
+  }
+}
+
 async function handle(request: Request): Promise<Response> {
-  if (!authorized(request.headers.get("authorization"), process.env.MUSE_MCP_TOKEN)) {
+  if (!(await allowed(request.headers.get("authorization")))) {
     return Response.json(
       { jsonrpc: "2.0", error: { code: -32001, message: "Unauthorized" }, id: null },
       { status: 401, headers: { "WWW-Authenticate": 'Bearer realm="workout-plan"' } },

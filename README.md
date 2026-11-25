@@ -116,9 +116,16 @@ Set these in Vercel, then redeploy:
 
 | Variable | Value |
 | --- | --- |
-| `MUSE_MCP_TOKEN` | A random token of 32+ characters. Muse sends it as `Authorization: Bearer …` |
 | `WORKOUT_EMAIL` | The account's email |
 | `WORKOUT_PASSWORD` | The account's password (set on the Account page) |
 | `WORKOUT_TIMEZONE` | Optional, for "today". Defaults to `Asia/Singapore` |
+| `MUSE_MCP_TOKEN` | Optional. A fixed token of 32+ characters, if you'd rather not generate one in the app |
 
-Without a token of at least 32 characters the endpoint rejects every request.
+Then, signed in as that account, open **Account → Muse AI connector** and tap
+**Generate token**. Copy the connector URL and the token into Muse's custom
+connector, which sends it as `Authorization: Bearer …`. The token is shown once:
+the database keeps only its SHA-256 hash (`connector_tokens`). **Replace token**
+or **Revoke token** takes effect immediately, with no redeploy. Apply the latest
+`supabase/schema.sql` first.
+
+Without a valid token the endpoint rejects every request.

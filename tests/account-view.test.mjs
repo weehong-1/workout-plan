@@ -28,6 +28,7 @@ function account(session = { user: { id: "A", email: "person@example.com" } }) {
     };
     if (name === "@/lib/supabase") return { databaseConfigured: true };
     if (name === "@/components/DeleteAccountDialog") return { DeleteAccountDialog: "delete-dialog" };
+    if (name === "@/components/MuseConnectorCard") return { MuseConnectorCard: "muse-card" };
     if (name === "next/link") return { __esModule: true, default: "a" };
     return require(name);
   });
@@ -101,4 +102,12 @@ test("signed-in view can set a password that password managers will save", async
   await new Promise((resolve) => setImmediate(resolve));
   assert.deepEqual(app.calls, [["setPassword", "a good password"]]);
   assert.match(app.text(app.render()), /Password saved/);
+});
+
+test("signed-in view offers the Muse AI connector token for this account", () => {
+  const app = account();
+  const card = app.nodes(app.render()).find((node) => node.type === "muse-card");
+  assert.equal(card.props.userId, "A");
+  const signedOut = account(null);
+  assert.equal(signedOut.nodes(signedOut.render()).find((node) => node.type === "muse-card"), undefined);
 });

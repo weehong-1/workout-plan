@@ -84,3 +84,53 @@ test("deleting a weigh-in removes its photos only after the database delete", as
   await createTools(account, "Asia/Singapore").delete_body_weight({ date: "2026-11-24" });
   assert.deepEqual(calls.map((c) => c[0] === "remove" ? c : c.slice(0, 2)), [["apply_workout_change", "deleteWeight"], ["remove", ["u1/p.jpg"]]]);
 });
+
+test("an app-generated token is accepted only when it hashes to the stored hash", async () => {
+  const { createHash } = await import("node:crypto");
+  const { bearerToken, matchesHash } = await load("../src/lib/mcp/auth.ts");
+  const sha = (value) => createHash("sha256").update(value).digest("hex");
+  const token = `wp_${"ab".repeat(32)}`;
+  assert.equal(bearerToken(`Bearer ${token}`), token);
+  assert.equal(bearerToken("Basic abc"), null);
+  assert.equal(matchesHash(token, sha(token)), true);
+  assert.equal(matchesHash(`${token}0`, sha(token)), false);
+  assert.equal(matchesHash(token, null), false);
+  assert.equal(matchesHash(token, "not-a-hash"), false);
+  assert.equal(matchesHash(null, sha(token)), false);
+  assert.equal(matchesHash("short", sha("short")), false);
+});
+
+test("connector token hashes are private to each account and removed with it", async () => {
+  const { PGlite } = await import("@electric-sql/pglite");
+  const A = "00000000-0000-0000-0000-000000000001";
+  const B = "00000000-0000-0000-0000-000000000002";
+  const db = new PGlite();
+  try {
+    await db.exec(`
+      create role anon; create role authenticated;
+      create schema auth; create table auth.users (id uuid primary key);
+      create function auth.uid() returns uuid language sql stable as
+        $$ select nullif(current_setting('request.jwt.claim.sub', true), '')::uuid $$;
+      grant usage on schema public, auth to authenticated, anon;
+      grant execute on function auth.uid() to authenticated, anon;
+      insert into auth.users values ('${A}'), ('${B}');
+    `);
+    const schema = await readFile(new URL("../supabase/schema.sql", import.meta.url), "utf8");
+    await db.exec(schema);
+    await db.exec(schema);
+    const hash = "a".repeat(64);
+    await db.exec(`set role authenticated; set request.jwt.claim.sub = '${A}';`);
+    await db.query("insert into public.connector_tokens (token_hash) values ($1)", [hash]);
+    await db.query("insert into public.connector_tokens (token_hash) values ($1) on conflict (user_id) do update set token_hash = excluded.token_hash", ["b".repeat(64)]);
+    await assert.rejects(db.query("insert into public.connector_tokens (user_id, token_hash) values ($1, $2)", [B, hash]), /row-level security/);
+    await assert.rejects(db.query("update public.connector_tokens set token_hash = 'plain'"), /check constraint/);
+    assert.deepEqual((await db.query("select token_hash from public.connector_tokens")).rows, [{ token_hash: "b".repeat(64) }]);
+    await db.exec(`set request.jwt.claim.sub = '${B}';`);
+    assert.deepEqual((await db.query("select * from public.connector_tokens")).rows, []);
+    await db.exec("set role anon; reset request.jwt.claim.sub;");
+    await assert.rejects(db.query("select * from public.connector_tokens"), /permission denied/);
+    await db.exec("reset role;");
+    await db.query("delete from auth.users where id = $1", [A]);
+    assert.equal((await db.query("select count(*)::int as n from public.connector_tokens")).rows[0].n, 0);
+  } finally { await db.close(); }
+});

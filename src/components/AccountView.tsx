@@ -6,6 +6,7 @@ import { useState } from "react";
 import { MIN_PASSWORD_LENGTH, sendCode, setPassword, signInWithPassword, signOut, useAccountSession, verifyCode } from "@/lib/auth";
 import { databaseConfigured } from "@/lib/supabase";
 import { DeleteAccountDialog } from "@/components/DeleteAccountDialog";
+import { MuseConnectorCard } from "@/components/MuseConnectorCard";
 
 const field =
   "h-14 w-full rounded-xl border border-[var(--line)] bg-[var(--bg)] px-4 outline-none placeholder:text-[var(--muted)]/60 focus:border-[var(--accent)]";
@@ -240,6 +241,8 @@ export function AccountView() {
         </button>
         {passwordSaved && <p role="status" className="mt-3 text-sm text-[var(--up)]">Password saved. Use it with your email to sign in.</p>}
       </form>
+
+      <MuseConnectorCard userId={session.user.id} />
 
       <Link href="/" className="mt-5 flex min-h-12 items-center justify-center rounded-xl bg-[var(--accent)] px-4 text-sm font-semibold text-[var(--accent-fg)] active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]">
         Back to plan
