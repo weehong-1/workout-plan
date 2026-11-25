@@ -102,3 +102,23 @@ The tests execute the schema in embedded PostgreSQL, exercise RLS isolation and 
 Push to GitHub and import the repo on [Vercel](https://vercel.com/new). Configure the Supabase environment variables above before deploying; sign-in is required.
 
 On iPhone, open the site in Safari, tap Share, then tap **Add to Home Screen**. On Android, open it in Chrome, open the menu, then tap **Add to Home screen**.
+
+## Muse AI connector (MCP)
+
+`/api/muse/mcp` is an MCP server (Streamable HTTP) for Muse AI's custom
+connector. Tools: `get_body_weight` (weekly averages and whether weight is
+dropping), `log_body_weight`, `delete_body_weight`, `get_plan`,
+`get_workouts`, `get_exercise_history`, `log_workout` and `delete_workout`.
+
+It authenticates Muse with a Bearer token and acts as one account, signing in
+with that account's email and password, so row-level security still applies.
+Set these in Vercel, then redeploy:
+
+| Variable | Value |
+| --- | --- |
+| `MUSE_MCP_TOKEN` | A random token of 32+ characters. Muse sends it as `Authorization: Bearer …` |
+| `WORKOUT_EMAIL` | The account's email |
+| `WORKOUT_PASSWORD` | The account's password (set on the Account page) |
+| `WORKOUT_TIMEZONE` | Optional, for "today". Defaults to `Asia/Singapore` |
+
+Without a token of at least 32 characters the endpoint rejects every request.
