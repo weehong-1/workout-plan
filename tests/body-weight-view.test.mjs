@@ -5,6 +5,11 @@ import { test } from "node:test";
 import ts from "typescript";
 
 const require = createRequire(import.meta.url);
+const weeklySource = ts.transpileModule(await readFile(new URL("../src/lib/weekly.ts", import.meta.url), "utf8"), {
+  compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2020 },
+}).outputText;
+const weekly = {};
+new Function("exports", weeklySource)(weekly);
 const source = ts.transpileModule(await readFile(new URL("../src/components/BodyWeightView.tsx", import.meta.url), "utf8"), {
   compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2020, jsx: ts.JsxEmit.ReactJSX },
 }).outputText;
@@ -32,6 +37,7 @@ function harness({ flush = async () => true, accept = true } = {}) {
       saveBodyWeight: (entry) => { if (accept) writes.push(entry); return accept; }, flushChanges: flush,
       getPersistenceStatus: () => ({ error: "Connection unavailable" }),
     };
+    if (name === "@/lib/weekly") return weekly;
     if (name === "@/components/UnitSelect") return { UnitSelect: "unit-select" };
     if (name === "@/components/PhotoStrip") return { PhotoStrip: "photo-strip" };
     if (name === "@/lib/photos") return { removePhotos: async () => {} };
@@ -101,4 +107,30 @@ test("body weight rejects malformed values, impossible dates and future dates wi
     await settle();
   }
   assert.equal(app.writes.length, 0);
+});
+
+const day = (date, value) => { const [y, m, d] = date.split("/").map(Number); return { date, t: new Date(y, m - 1, d).getTime(), value }; };
+
+test("weigh-ins group into Monday-to-Sunday weeks with each week's average and change", () => {
+  const weeks = weekly.groupByWeek([
+    day("2026/11/09", 94), day("2026/11/15", 93), // Mon and Sun of one week
+    day("2026/11/16", 93.2), day("2026/11/18", 92.4), day("2026/11/20", 92.6),
+    day("2026/11/24", 92.1),
+  ]);
+  assert.deepEqual(weeks.map((w) => new Date(w.start).toDateString()), ["Mon Nov 09 2026", "Mon Nov 16 2026", "Mon Nov 23 2026"]);
+  assert.deepEqual(weeks.map((w) => w.days.length), [2, 3, 1]);
+  assert.deepEqual(weeks.map((w) => Number(w.average.toFixed(2))), [93.5, 92.73, 92.1]);
+  assert.equal(weeks[0].change, null);
+  assert.equal(Number(weeks[1].change.toFixed(2)), -0.77);
+});
+
+test("the trend is the weekly slope over the last 4 calendar weeks, and needs two weeks", () => {
+  const steady = weekly.groupByWeek([day("2026/10/19", 99), day("2026/10/26", 96), day("2026/11/02", 95), day("2026/11/09", 94), day("2026/11/16", 93)]);
+  const trend = weekly.weeklyTrend(steady);
+  assert.equal(trend.weeks, 4);
+  assert.equal(Number(trend.perWeek.toFixed(2)), -1); // ignores the older 99, now outside the window
+  // A missing week counts as time passing, not as a skipped point.
+  const gap = weekly.weeklyTrend(weekly.groupByWeek([day("2026/11/02", 95), day("2026/11/16", 94)]));
+  assert.equal(gap.perWeek, -0.5);
+  assert.equal(weekly.weeklyTrend(weekly.groupByWeek([day("2026/11/16", 93)])), null);
 });

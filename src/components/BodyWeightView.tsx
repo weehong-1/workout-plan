@@ -18,6 +18,7 @@ import {
   useStore,
 } from "@/lib/store";
 import { removePhotos } from "@/lib/photos";
+import { groupByWeek, weeklyTrend } from "@/lib/weekly";
 
 const RANGES = [
   { id: "1m", label: "1M", days: 30, name: "30 days" },
@@ -27,7 +28,10 @@ const RANGES = [
 ] as const;
 
 const DAY = 86_400_000;
-const HISTORY_PREVIEW = 14;
+const HISTORY_WEEKS = 4;
+// Below this, a weekly change is noise rather than a trend.
+const FLAT = 0.1;
+const changeColor = (n: number) => (n <= -FLAT ? "text-[var(--up)]" : n >= FLAT ? "text-[var(--warn)]" : "text-[var(--muted)]");
 
 const parse = (date: string) => {
   const [y, m, d] = date.split("/").map(Number);
@@ -49,6 +53,7 @@ export function BodyWeightView() {
   const [showAll, setShowAll] = useState(false);
   const [photoDate, setPhotoDate] = useState<string | null>(null);
   const [range, setRange] = useState<(typeof RANGES)[number]["id"]>("3m");
+  const [byWeek, setByWeek] = useState(true);
 
   if (!hydrated) return null;
 
@@ -70,7 +75,15 @@ export function BodyWeightView() {
   };
   const r = RANGES.find((x) => x.id === range)!;
   const cutoff = Date.now() - r.days * DAY;
-  const points = all.filter((p) => p.t >= cutoff);
+  const weeks = groupByWeek(all);
+  const trend = weeklyTrend(weeks);
+  const thisWeek = weeks.at(-1);
+  const dayPoints = all.filter((p) => p.t >= cutoff);
+  // The weekly chart plots each week's average at its Monday.
+  const points = byWeek
+    ? weeks.filter((w) => w.start >= cutoff - 6 * DAY).map((w) => ({ date: `week-${w.start}`, t: w.start, value: w.average }))
+    : dayPoints;
+  const withDelta = new Map(all.map((p, i) => [p.date, i ? p.value - all[i - 1].value : null]));
   const entryDate = date.replace(/-/g, "/");
   const existing = bodyWeights.some((b) => b.date === entryDate);
   const num = /^\d+(?:\.\d*)?$/.test(value.trim()) ? Number(value) : NaN;
@@ -180,6 +193,31 @@ export function BodyWeightView() {
             </p>
           </section>
 
+          {thisWeek && (
+            <section aria-labelledby="weekly-title" className="order-1 mt-4 rounded-3xl border border-[var(--line)] bg-[var(--card)] p-4">
+              <h2 id="weekly-title" className="text-xs font-semibold uppercase tracking-wider text-[var(--muted)]">Weekly average</h2>
+              <p className="mt-1 flex items-baseline gap-2">
+                <span className="font-display text-3xl font-bold tabular-nums">{thisWeek.average.toFixed(1)}</span>
+                <span className="text-sm text-[var(--muted)]">{bodyUnit} · week of {shortDate(thisWeek.start)} · {thisWeek.days.length} {thisWeek.days.length === 1 ? "weigh-in" : "weigh-ins"}</span>
+              </p>
+              {thisWeek.change !== null && (
+                <p className={`mt-1 text-sm font-semibold ${changeColor(thisWeek.change)}`}>
+                  {signed(thisWeek.change)} {bodyUnit} vs the week before
+                </p>
+              )}
+              <p className="mt-2 text-sm text-[var(--muted)]">
+                {trend
+                  ? Math.abs(trend.perWeek) < FLAT
+                    ? `Holding steady over the last ${trend.weeks} weeks.`
+                    : <>
+                        <strong className={changeColor(trend.perWeek)}>{trend.perWeek < 0 ? "Dropping" : "Rising"}</strong>
+                        {` about ${Math.abs(trend.perWeek).toFixed(1)} ${bodyUnit} a week over the last ${trend.weeks} weeks.`}
+                      </>
+                  : "Weigh in over two weeks or more to see whether your weight is dropping."}
+              </p>
+            </section>
+          )}
+
           <section className="order-1 mt-4 rounded-3xl border border-[var(--line)] bg-[var(--card)] p-4">
             <div className="flex items-center justify-between gap-3">
               <h2 className="font-semibold">Body weight ({bodyUnit})</h2>
@@ -199,8 +237,16 @@ export function BodyWeightView() {
                 ))}
               </div>
             </div>
+            <div role="radiogroup" aria-label="Chart shows" className="mt-3 flex gap-1.5">
+              {([[true, "Weekly average"], [false, "Every day"]] as const).map(([weekly, label]) => (
+                <button key={label} type="button" role="radio" aria-checked={byWeek === weekly} onClick={() => setByWeek(weekly)}
+                  className={`h-8 rounded-full px-3 text-xs font-semibold ${byWeek === weekly ? "bg-[var(--accent)] text-[var(--accent-fg)]" : "bg-[var(--soft)] text-[var(--muted)]"}`}>
+                  {label}
+                </button>
+              ))}
+            </div>
             {points.length > 1 && (
-              <p className="mt-1 text-sm text-[var(--muted)]">
+              <p className="mt-2 text-sm text-[var(--muted)]">
                 {signed(points[points.length - 1].value - points[0].value)} {bodyUnit} over {r.days === Infinity ? "all time" : `the last ${r.name}`}
               </p>
             )}
@@ -212,7 +258,9 @@ export function BodyWeightView() {
               )}
             </div>
             {points.length > 0 && (
-              <p className="mt-1 text-center text-xs text-[var(--muted)]">Touch the chart to see each day.</p>
+              <p className="mt-1 text-center text-xs text-[var(--muted)]">
+                {byWeek ? "Each point is a week's average, Monday to Sunday." : "Touch the chart to see each day."}
+              </p>
             )}
           </section>
 
@@ -224,12 +272,16 @@ export function BodyWeightView() {
               </button>
             </div>
             <p className="mb-2 text-xs text-[var(--muted)]">Tap the camera on a day to add progress photos.</p>
-            <ul className="divide-y divide-[var(--line)] rounded-2xl border border-[var(--line)] bg-[var(--card)]">
-              {all
-                .map((p, i) => ({ ...p, delta: i ? p.value - all[i - 1].value : null }))
-                .reverse()
-                .slice(0, showAll ? undefined : HISTORY_PREVIEW)
-                .map((p) => {
+            <div className="flex flex-col gap-3">
+              {[...weeks].reverse().slice(0, showAll ? undefined : HISTORY_WEEKS).map((w) => (
+                <section key={w.start} aria-label={`Week of ${shortDate(w.start)}`} className="overflow-hidden rounded-2xl border border-[var(--line)] bg-[var(--card)]">
+                  <div className="flex items-baseline gap-2 border-b border-[var(--line)] bg-[var(--soft)]/40 px-4 py-2.5">
+                    <h3 className="flex-1 text-sm font-semibold">Week of {shortDate(w.start)}</h3>
+                    {w.change !== null && <span className={`text-xs font-semibold tabular-nums ${changeColor(w.change)}`}>{signed(w.change)}</span>}
+                    <span className="text-sm font-bold tabular-nums">avg {w.average.toFixed(1)} <span className="text-xs font-normal text-[var(--muted)]">{bodyUnit}</span></span>
+                  </div>
+                  <ul className="divide-y divide-[var(--line)]">
+                    {[...w.days].reverse().map((p) => {
                   const photos = photosByDate.get(p.date) ?? [];
                   const open = photoDate === p.date;
                   return (
@@ -237,7 +289,7 @@ export function BodyWeightView() {
                   <div className="flex items-center gap-2">
                     <span className="flex-1 text-sm text-[var(--muted)]">{p.date}</span>
                     <span className="w-14 text-right text-xs tabular-nums text-[var(--muted)]">
-                      {p.delta !== null && signed(p.delta)}
+                      {withDelta.get(p.date) != null && signed(withDelta.get(p.date)!)}
                     </span>
                     <span className="w-20 text-right font-semibold tabular-nums">
                       {p.value.toFixed(1)} <span className="text-xs font-normal text-[var(--muted)]">{bodyUnit}</span>
@@ -280,13 +332,16 @@ export function BodyWeightView() {
                   </li>
                   );
                 })}
-            </ul>
-            {all.length > HISTORY_PREVIEW && (
+                  </ul>
+                </section>
+              ))}
+            </div>
+            {weeks.length > HISTORY_WEEKS && (
               <button
                 onClick={() => setShowAll((v) => !v)}
                 className="mt-2 h-11 w-full text-sm font-medium text-[var(--muted)]"
               >
-                {showAll ? "Show less" : `Show all ${all.length} entries`}
+                {showAll ? "Show less" : `Show all ${weeks.length} weeks`}
               </button>
             )}
           </section>
