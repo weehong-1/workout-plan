@@ -126,11 +126,11 @@ struct ReviewTabView: View {
                 .frame(maxWidth: .infinity, minHeight: TouchTarget.minimum)
         }
         .buttonStyle(.borderedProminent)
-        .disabled(!services.account.isAvailable)
+        .disabled(!services.account.canShare)
         .padding(.top, Spacing.xs)
 
-        if !services.account.isAvailable {
-            Text("Sharing needs the server set up in this build (docs/ios/BUILD.md).")
+        if !services.account.canShare {
+            Text("Sharing needs the server and web app host set up in this build (docs/ios/BUILD.md).")
                 .font(AppFont.footnote)
                 .foregroundStyle(Color.appSecondaryLabel)
         }

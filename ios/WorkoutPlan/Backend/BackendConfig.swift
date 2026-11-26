@@ -7,11 +7,12 @@ import Foundation
 struct BackendConfig: Sendable {
     let supabaseURL: URL
     let publishableKey: String
-    /// Base of trainer links: https://<host>/share/<token>.
-    let webAppURL: URL
+    /// Base of trainer links: https://<host>/share/<token>. Nil until the web
+    /// host is set; sign-in still works, sharing waits for it.
+    let webAppURL: URL?
 
-    /// Nil while project.yml still has the placeholders, so the app runs
-    /// without a server and hides sign-in and sharing.
+    /// Nil while project.yml still has the Supabase placeholders, so the app
+    /// runs without a server and hides sign-in and sharing.
     static let current: BackendConfig? = fromBundle()
 
     static func fromBundle(_ bundle: Bundle = .main) -> BackendConfig? {
@@ -23,10 +24,9 @@ struct BackendConfig: Sendable {
         }
         guard let supabaseHost = value("SupabaseHost"),
               let key = value("SupabasePublishableKey"),
-              let webHost = value("WebAppHost"),
-              let supabaseURL = URL(string: "https://\(supabaseHost)"),
-              let webAppURL = URL(string: "https://\(webHost)")
+              let supabaseURL = URL(string: "https://\(supabaseHost)")
         else { return nil }
+        let webAppURL = value("WebAppHost").flatMap { URL(string: "https://\($0)") }
         return BackendConfig(supabaseURL: supabaseURL, publishableKey: key, webAppURL: webAppURL)
     }
 }

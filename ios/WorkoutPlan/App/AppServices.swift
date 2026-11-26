@@ -53,6 +53,9 @@ final class AccountModel {
 
     var isAvailable: Bool { client != nil }
 
+    /// Sharing also needs the web app host, where trainer links open.
+    var canShare: Bool { client?.config.webAppURL != nil }
+
     func refresh() async {
         guard let client else { return }
         let session = await client.currentSession

@@ -36,9 +36,10 @@ targets:
         ENABLE_PREVIEWS: YES
         # Public config for the trainer link (spec D10), like the web app's
         # NEXT_PUBLIC_SUPABASE_* values. Host names only: "//" starts a comment
-        # in build settings. Placeholders turn sign-in and sharing off.
-        SUPABASE_HOST: your-project-ref.supabase.co
-        SUPABASE_PUBLISHABLE_KEY: sb_publishable_xxxxxxxxxxxxxxxxxxxxxxxx
+        # in build settings. A placeholder Supabase host turns sign-in off;
+        # a placeholder web host turns only sharing off.
+        SUPABASE_HOST: anfybtqzfubjwrbtfeap.supabase.co
+        SUPABASE_PUBLISHABLE_KEY: sb_publishable_xxLQQrmmeC3PZjFdZWQAhg__RyzCSBR
         WEB_APP_HOST: your-app.vercel.app
     info:
       path: WorkoutPlan/Info.plist

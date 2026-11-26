@@ -126,6 +126,7 @@ struct TrainerLinkService: Sendable {
     }
 
     func create(_ request: Request, progress: @escaping @Sendable @MainActor (Int, Int) -> Void) async throws -> URL {
+        guard let base = client.config.webAppURL else { throw BackendError.notConfigured }
         let session = try await client.validSession()
         let calendar = Calendar.current
         let now = Date()
@@ -255,7 +256,7 @@ struct TrainerLinkService: Sendable {
         }
 
         Keychain.set(Data(token.utf8), for: Self.tokenKeyPrefix + linkID.uuidString)
-        return Self.url(base: client.config.webAppURL, token: token)
+        return Self.url(base: base, token: token)
     }
 
     private struct Insert: Encodable {
@@ -297,9 +298,10 @@ struct TrainerLinkService: Sendable {
     /// The link again, when this phone created it.
     func url(for link: ShareLinkSummary) -> URL? {
         guard let data = Keychain.data(for: Self.tokenKeyPrefix + link.id.uuidString),
-              let token = String(data: data, encoding: .utf8)
+              let token = String(data: data, encoding: .utf8),
+              let base = client.config.webAppURL
         else { return nil }
-        return Self.url(base: client.config.webAppURL, token: token)
+        return Self.url(base: base, token: token)
     }
 
     // MARK: Helpers

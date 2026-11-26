@@ -99,7 +99,8 @@ uses the web app's existing Supabase project and Vercel site (spec D10).
    These are the same public values as the website's
    `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`;
    never use a secret or service_role key. Then run `xcodegen generate` again.
-   While the placeholders are there, the app hides sign-in and sharing.
+   While the Supabase values are placeholders the app hides sign-in; while
+   the web host is a placeholder it hides only sharing.
 
 ## Simulator
 
