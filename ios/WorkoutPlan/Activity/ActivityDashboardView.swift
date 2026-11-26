@@ -1,7 +1,7 @@
 import SwiftUI
 
 enum ActivityRoute: Hashable {
-    case steps
+    case steps, sleep, heart, workouts
 }
 
 /// Activity tab (spec 6.1, design `Activity.dc.html`).
@@ -12,6 +12,7 @@ struct ActivityDashboardView: View {
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @ScaledMetric(relativeTo: .body) private var tileHeight: CGFloat = 172
+    @AppStorage(StorageKey.stepGoal) private var stepGoal: Double = GoalMath.defaultStepGoal
 
     init(store: any HealthStore) {
         self.store = store
@@ -32,18 +33,27 @@ struct ActivityDashboardView: View {
             .navigationTitle("Activity")
             .navigationBarTitleDisplayMode(.inline)
             .accountToolbar()
-            .refreshable { await model.load() }
-            .task { await model.load() }
+            .refreshable { await model.load(stepGoal: stepGoal) }
+            .task { await model.load(stepGoal: stepGoal) }
+            .onChange(of: stepGoal) {
+                Task { await model.load(stepGoal: stepGoal) }
+            }
             .onChange(of: scenePhase) { _, phase in
                 // New Watch data usually arrives while the app is in the background.
                 if phase == .active {
-                    Task { await model.load() }
+                    Task { await model.load(stepGoal: stepGoal) }
                 }
             }
             .navigationDestination(for: ActivityRoute.self) { route in
                 switch route {
                 case .steps:
-                    StepsDetailView(store: store, stepGoal: GoalMath.defaultStepGoal)
+                    StepsDetailView(store: store, stepGoal: stepGoal)
+                case .sleep:
+                    SleepDetailView(store: store)
+                case .heart:
+                    HeartDetailView(store: store)
+                case .workouts:
+                    WorkoutsDetailView(store: store)
                 }
             }
         }
@@ -73,9 +83,9 @@ struct ActivityDashboardView: View {
         case .unavailable:
             HealthUnavailableView()
         case .needsAccess:
-            NoHealthAccessView { await model.requestAccess() }
+            NoHealthAccessView { await model.requestAccess(stepGoal: stepGoal) }
         case .failed(let message):
-            ActivityErrorView(message: message) { await model.load() }
+            ActivityErrorView(message: message) { await model.load(stepGoal: stepGoal) }
         case .loaded(let snapshot):
             if snapshot.isEmpty {
                 NoActivityDataView()
@@ -106,22 +116,22 @@ struct ActivityDashboardView: View {
         if dynamicTypeSize.isAccessibilitySize {
             VStack(spacing: Spacing.s) {
                 stepsCard(snapshot)
-                SleepHighlightCard(night: snapshot.sleep)
-                HeartHighlightCard(heart: snapshot.heart)
-                WorkoutsHighlightCard(workouts: snapshot.workouts)
+                link(.sleep) { SleepHighlightCard(night: snapshot.sleep) }
+                link(.heart) { HeartHighlightCard(heart: snapshot.heart) }
+                link(.workouts) { WorkoutsHighlightCard(workouts: snapshot.workouts) }
             }
         } else {
             Grid(horizontalSpacing: Spacing.s, verticalSpacing: Spacing.s) {
                 GridRow {
                     stepsCard(snapshot)
                         .frame(minHeight: tileHeight)
-                    SleepHighlightCard(night: snapshot.sleep)
+                    link(.sleep) { SleepHighlightCard(night: snapshot.sleep) }
                         .frame(minHeight: tileHeight)
                 }
                 GridRow {
-                    HeartHighlightCard(heart: snapshot.heart)
+                    link(.heart) { HeartHighlightCard(heart: snapshot.heart) }
                         .frame(minHeight: tileHeight)
-                    WorkoutsHighlightCard(workouts: snapshot.workouts)
+                    link(.workouts) { WorkoutsHighlightCard(workouts: snapshot.workouts) }
                         .frame(minHeight: tileHeight)
                 }
             }
@@ -129,8 +139,14 @@ struct ActivityDashboardView: View {
     }
 
     private func stepsCard(_ snapshot: ActivitySnapshot) -> some View {
-        NavigationLink(value: ActivityRoute.steps) {
+        link(.steps) {
             StepsHighlightCard(steps: snapshot.steps, goal: snapshot.stepGoal)
+        }
+    }
+
+    private func link<Card: View>(_ route: ActivityRoute, @ViewBuilder card: () -> Card) -> some View {
+        NavigationLink(value: route) {
+            card()
         }
         .buttonStyle(.plain)
     }
@@ -138,4 +154,5 @@ struct ActivityDashboardView: View {
 
 #Preview {
     ActivityDashboardView(store: SampleHealthStore())
+        .environment(AppServices.preview)
 }

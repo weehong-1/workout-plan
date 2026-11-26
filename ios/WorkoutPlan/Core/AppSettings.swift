@@ -4,6 +4,7 @@ import Foundation
 enum StorageKey {
     static let onboardingComplete = "onboarding.complete"
     static let weightUnit = "settings.weightUnit"
+    static let stepGoal = "settings.stepGoal"
 }
 
 /// Weight unit chosen on first launch; can be switched in the Log weigh-in sheet.

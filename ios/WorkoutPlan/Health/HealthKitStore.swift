@@ -226,7 +226,7 @@ actor HealthKitStore: HealthStore {
         case .elliptical: return ("Elliptical", "figure.elliptical")
         case .rowing: return ("Rowing", "figure.rower")
         case .stairClimbing: return ("Stair stepper", "figure.stair.stepper")
-        case .dance: return ("Dance", "figure.dance")
+        case .cardioDance, .socialDance: return ("Dance", "figure.dance")
         default: return ("Workout", "figure.mixed.cardio")
         }
     }

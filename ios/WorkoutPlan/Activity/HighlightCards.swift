@@ -33,7 +33,7 @@ struct SleepHighlightCard: View {
     let night: SleepNight?
 
     var body: some View {
-        MetricCard(title: "Sleep", systemImage: "moon.fill", metric: .sleep) {
+        MetricCard(title: "Sleep", systemImage: "moon.fill", metric: .sleep, showsChevron: true) {
             Spacer(minLength: Spacing.xs)
             if let night {
                 let parts = Format.hoursMinutes(night.asleep)
@@ -61,6 +61,8 @@ struct SleepHighlightCard: View {
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("Sleep")
         .accessibilityValue(accessibilityValue)
+        .accessibilityHint("Opens details")
+        .accessibilityAddTraits(.isButton)
     }
 
     private var accessibilityValue: String {
@@ -109,7 +111,7 @@ struct HeartHighlightCard: View {
     let heart: HeartSummary
 
     var body: some View {
-        MetricCard(title: "Heart", systemImage: "heart.fill", metric: .heart) {
+        MetricCard(title: "Heart", systemImage: "heart.fill", metric: .heart, showsChevron: true) {
             if heart.hourly.count > 1 {
                 Chart(heart.hourly) { point in
                     LineMark(
@@ -144,6 +146,8 @@ struct HeartHighlightCard: View {
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("Heart")
         .accessibilityValue(accessibilityValue)
+        .accessibilityHint("Opens details")
+        .accessibilityAddTraits(.isButton)
     }
 
     private var accessibilityValue: String {
@@ -161,7 +165,7 @@ struct WorkoutsHighlightCard: View {
     private var totalMinutes: TimeInterval { workouts.reduce(0) { $0 + $1.duration } }
 
     var body: some View {
-        MetricCard(title: "Workouts", systemImage: "figure.run", metric: .exercise) {
+        MetricCard(title: "Workouts", systemImage: "figure.run", metric: .exercise, showsChevron: true) {
             Spacer(minLength: Spacing.xs)
             ValueWithUnit(value: Format.minutes(totalMinutes), unit: "min")
             if let latest = workouts.first {
@@ -182,6 +186,8 @@ struct WorkoutsHighlightCard: View {
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("Workouts")
         .accessibilityValue(accessibilityValue)
+        .accessibilityHint("Opens details")
+        .accessibilityAddTraits(.isButton)
     }
 
     private var accessibilityValue: String {

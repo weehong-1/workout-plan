@@ -47,13 +47,13 @@ final class ActivityViewModel {
         }
     }
 
-    func requestAccess() async {
+    func requestAccess(stepGoal: Double = GoalMath.defaultStepGoal) async {
         do {
             try await store.requestAuthorization()
         } catch {
             state = .failed(error.localizedDescription)
             return
         }
-        await load()
+        await load(stepGoal: stepGoal)
     }
 }
