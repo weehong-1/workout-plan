@@ -1,21 +1,35 @@
 import SwiftUI
 
-/// First launch (spec 5): Why Health → system Health prompt → Units.
-/// Sign in (spec 5.1) is not part of phase 1.
+/// First launch (spec 5): Sign in → Why Health → system Health prompt → Units.
+/// Sign in can be skipped, and is left out when the build has no server set up.
 struct OnboardingFlow: View {
     let store: any HealthStore
+    let account: AccountModel
     let onFinish: () -> Void
 
     private enum Step {
-        case whyHealth, units
+        case signIn, whyHealth, units
     }
 
-    @State private var step: Step = .whyHealth
+    @State private var step: Step
     @State private var isRequesting = false
+
+    init(store: any HealthStore, account: AccountModel, onFinish: @escaping () -> Void) {
+        self.store = store
+        self.account = account
+        self.onFinish = onFinish
+        _step = State(initialValue: account.isAvailable ? .signIn : .whyHealth)
+    }
 
     var body: some View {
         Group {
             switch step {
+            case .signIn:
+                SignInView(
+                    account: account,
+                    onSkip: { step = .whyHealth },
+                    onSignedIn: { step = .whyHealth }
+                )
             case .whyHealth:
                 WhyHealthView(
                     isRequesting: isRequesting,

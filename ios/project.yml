@@ -34,6 +34,12 @@ targets:
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
         ENABLE_PREVIEWS: YES
+        # Public config for the trainer link (spec D10), like the web app's
+        # NEXT_PUBLIC_SUPABASE_* values. Host names only: "//" starts a comment
+        # in build settings. Placeholders turn sign-in and sharing off.
+        SUPABASE_HOST: your-project-ref.supabase.co
+        SUPABASE_PUBLISHABLE_KEY: sb_publishable_xxxxxxxxxxxxxxxxxxxxxxxx
+        WEB_APP_HOST: your-app.vercel.app
     info:
       path: WorkoutPlan/Info.plist
       properties:
@@ -44,9 +50,13 @@ targets:
         UISupportedInterfaceOrientations:
           - UIInterfaceOrientationPortrait
         ITSAppUsesNonExemptEncryption: false
+        SupabaseHost: $(SUPABASE_HOST)
+        SupabasePublishableKey: $(SUPABASE_PUBLISHABLE_KEY)
+        WebAppHost: $(WEB_APP_HOST)
         NSHealthShareUsageDescription: >-
           Workout Plan shows your activity, sleep and heart data from Apple
-          Health. The data is read on your iPhone and nothing leaves the phone.
+          Health. It is read on your iPhone and leaves it only in a trainer link
+          you choose to create.
         NSCameraUsageDescription: >-
           Workout Plan uses the camera to take weight progress photos and food
           photos.
