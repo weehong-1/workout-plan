@@ -29,13 +29,19 @@ Personal project, not Resetrix. This file is the record of decisions for the iOS
 | D7 | Code is written on Windows and pushed to this repo; the app is built in Xcode on a Mac after cloning. Xcode Cloud is not used | Vernon, 26 Nov 2026 |
 | D8 | Until the backend is decided (section 8), weigh-ins and progress photos are stored on the phone only (SwiftData and app files), behind a store that a synced one can replace | Vernon, 26 Nov 2026 |
 | D9 | Weigh-ins are not written to Apple Health for now; the app stays read only for Health | Vernon, 26 Nov 2026 |
+| D10 | The trainer link uses the existing Supabase project and the existing web app: same email-code account, a `share_links` table and a read-only `/share/<token>` page. The iOS app calls Supabase over plain HTTPS, with no package | Vernon, 26 Nov 2026 |
+| D11 | Sign-in is optional: everything except sharing works without an account. Weight and food stay on the phone (D8); only what a link includes is uploaded, after consent | Vernon, 26 Nov 2026 |
+| D12 | Food labels are fixed (Breakfast, Lunch, Dinner, Snack), one or none per photo | Vernon, 26 Nov 2026 |
+| D13 | A trainer link may have no expiry, as drawn; it works until revoked | Vernon, 26 Nov 2026 |
+| D14 | Sleep, Heart and Workouts get detail screens like Steps. Ring goals come from Apple Health; the daily step goal is set in Account (default 10,000) | Vernon, 26 Nov 2026 |
+| D15 | Charts use Swift Charts; the minimum iOS version is 27 | Vernon, 26 Nov 2026 |
 
 ## 3. Design rules for iOS 27
 
 * Use the system components: `TabView` tab bar, navigation toolbars, sheets. Standard SwiftUI components pick up the iOS 27 Liquid Glass look, including the system Liquid Glass slider, without extra work. A custom tab bar does not, so the bottom bar in the reference design is replaced by the system tab bar.
 * Keep from the reference design: the coloured metric cards, rings and bar charts. They are the content under the glass.
 * The app must stay readable at every Liquid Glass slider setting and with Reduce Transparency and Increase Contrast on.
-* **Proposed:** charts with Swift Charts; minimum iOS version 27, since the app is for Vernon's own iPhone.
+* Charts with Swift Charts; minimum iOS version 27 (D15).
 
 ### 3.1 Design system (D6)
 
@@ -75,7 +81,7 @@ Account:       avatar in the top bar of each tab
 
 ## 5. First launch
 
-1. **Sign in.** Email code, as in the web app. **Open:** whether to add Sign in with Apple.
+1. **Sign in.** Email code, as in the web app, and optional (D11): "Not Now" skips it. Left out when the build has no server configured. **Open:** whether to add Sign in with Apple.
 2. **Why Health.** An app screen shown before the system prompt. It lists what is read (steps, active calories, exercise minutes, heart rate, sleep, Watch workouts) and why, and recommends sharing all recorded data because the yearly review needs history.
 3. **Apple Health prompt** (system). Read access per data type. iOS 27 reportedly adds a second step that asks how much history to share: "Past 30 Days and Future Data" or "All Recorded Data and Future Data". Source: Apple Developer Forums thread 842499, a developer report, not Apple documentation; check on a device.
 4. **Units.** kg or lb.
@@ -96,8 +102,8 @@ Camera and photo library permissions are asked only when first used.
 * Empty states: no Watch data yet; Health access not given.
 * If only 30 days of history were shared, a banner explains how to change it in Settings › Privacy & Security › Health.
 * Changes from the reference image: its own bottom bar replaced by the system tab bar; daily step goal 10,000 (the image's 1,000 was below the step count); calories shown as active energy (Move ring); sleep shown as hours and minutes.
-* **Open:** step goal and ring goals: read from Apple Health or set in the app.
-* **Open:** detail screens for Sleep, Heart and Workouts (only Steps is drawn).
+* Ring goals come from Apple Health; the daily step goal is set in Account (D14).
+* Sleep, Heart and Workouts have detail screens like Steps (D14), not drawn in the design.
 
 ### 6.2 Weight
 
@@ -115,8 +121,7 @@ Camera and photo library permissions are asked only when first used.
 * Label chips filter the grid: All plus the labels.
 * **+** opens the camera straight away; the photo library is one tap away. Adding a label or note is optional.
 * Tap a photo for full screen, to change its label or delete it.
-* **Open:** fixed labels (Breakfast, Lunch, Dinner, Snack) or labels Vernon creates.
-* **Open:** one label per photo (as drawn) or several. If several: the photo shows the first label plus a count ("Breakfast +1"), a filter chip shows every photo with that label, and labels are edited as chips on the photo's detail screen.
+* Fixed labels, one or none per photo (D12).
 
 ### 6.4 Review
 
@@ -135,18 +140,18 @@ Avatar in the top bar of every tab: units, Health access status, sign out, delet
 * Before the link is created, a consent screen says that Apple Health data will leave the phone and be readable by anyone who has the link.
 * The trainer opens the link in a browser; no app or account needed. It shows the review for the chosen period, read only.
 * Vernon can revoke any link at any time, expiring or not.
-* **Open:** a link without expiry stays readable by anyone it is forwarded to until revoked. Decide whether such links need a PIN or a default expiry.
-* **Open:** who hosts the trainer page (the existing web app or a new page).
+* A link without expiry is allowed and works until revoked (D13); the sheet says so.
+* The trainer page is `/share/<token>` in the existing web app (D10). Only the token's SHA-256 hash is stored; revoking deletes the link and its uploaded photos.
 
 ## 8. Data
 
 * Activity, sleep and heart data stay in Apple Health. The app reads them on the phone. Only the summaries included in a trainer link are copied to the server, after consent.
 * Weight entries, weight photos and food photos are stored in the backend. Until the backend is decided, weight entries and photos stay on the phone (D8).
-* **Open:** keep the existing Supabase project (weight history and photos carry over) or start a new one.
+* The existing Supabase project is used for trainer links (D10). **Open:** whether weight and food later sync to it too (weight history from the web app would carry over).
 
 ## 9. Next steps
 
 1. Vernon reviews this file and the screens in `docs/ios/screens/`.
-2. Phase 1 in Claude Code on Windows: XcodeGen project under `ios/`, the design system, the tab bar, the Apple Health explainer and permission, and the Activity dashboard with Steps detail. Weight, Food and Review stay placeholders.
+2. Written in Claude Code on Windows, not yet compiled: phase 1 (project, design system, tab bar, Health explainer, Activity with Steps), phase 2 (Weight), then Food, Review, the trainer link with its web page, sign-in, Account and the Sleep, Heart and Workouts details.
 3. Build phase 1 on a Mac (D7) and run it on Vernon's iPhone. **Open:** an owned or a rented Mac. A rented Mac cannot be connected to the iPhone, so installing there needs TestFlight and the paid Apple Developer Program.
-4. Later phases, one at a time: Weight, Food, Review and the trainer link (needs the backend decision in section 8).
+4. Apply `supabase/schema.sql` and redeploy the web app so trainer links work; set the Supabase and web host values in `ios/project.yml` (`docs/ios/BUILD.md`).

@@ -67,9 +67,39 @@ XcodeGen, so the project file never needs to be merged.
    The first time, the iPhone may ask you to trust the developer under
    Settings › General › VPN & Device Management.
 
-8. On first launch: read the Why Health screen, tap **Continue** and turn on
-   all categories in the Health sheet. If iOS asks how much history to share,
-   choose **All Recorded Data**.
+8. On first launch: sign in with your website email (or tap **Not Now**),
+   read the Why Health screen, tap **Continue** and turn on all categories in
+   the Health sheet. If iOS asks how much history to share, choose
+   **All Recorded Data**.
+
+## Server for trainer links (optional)
+
+Everything except sign-in and **Share with trainer** works without this. It
+uses the web app's existing Supabase project and Vercel site (spec D10).
+
+1. **Database.** In Supabase › SQL Editor, run the whole of
+   `supabase/schema.sql` again. It is safe to rerun; it adds the
+   `share_links` table, the `get_shared_review` function and the
+   "Shared photos" storage policy.
+2. **Web page.** Deploy this branch's web app to Vercel (or merge it), so
+   `https://<your site>/share/<token>` exists. No new environment variables
+   are needed.
+3. **Email code.** Supabase › Authentication › Email templates: the
+   "Magic Link" template must include `{{ .Token }}` so the email shows the
+   code the app asks for. The website's code sign-in already relies on this.
+4. **App config.** In `ios/project.yml`, replace the three placeholders under
+   the WorkoutPlan target's settings, using host names only (no `https://`):
+
+   ```yaml
+   SUPABASE_HOST: abcdefgh.supabase.co
+   SUPABASE_PUBLISHABLE_KEY: sb_publishable_...
+   WEB_APP_HOST: your-site.vercel.app
+   ```
+
+   These are the same public values as the website's
+   `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`;
+   never use a secret or service_role key. Then run `xcodegen generate` again.
+   While the placeholders are there, the app hides sign-in and sharing.
 
 ## Simulator
 
