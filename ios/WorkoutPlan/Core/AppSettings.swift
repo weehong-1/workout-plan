@@ -6,7 +6,7 @@ enum StorageKey {
     static let weightUnit = "settings.weightUnit"
 }
 
-/// Weight unit chosen on first launch. Used from the Weight phase on.
+/// Weight unit chosen on first launch; can be switched in the Log weigh-in sheet.
 enum WeightUnit: String, CaseIterable, Identifiable, Sendable {
     case kg, lb
 

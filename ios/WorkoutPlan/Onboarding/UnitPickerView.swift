@@ -19,7 +19,7 @@ struct UnitPickerView: View {
                     .font(AppFont.largeTitle)
                     .foregroundStyle(Color.appLabel)
                     .accessibilityAddTraits(.isHeader)
-                Text("How you log and see your body weight. You can change it later in Account.")
+                Text("How you log and see your body weight. You can switch it any time when you log a weigh-in.")
                     .font(AppFont.body)
                     .foregroundStyle(Color.appSecondaryLabel)
             }

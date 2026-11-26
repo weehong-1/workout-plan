@@ -8,6 +8,7 @@ enum AppTab: Hashable {
 /// the iOS 27 Liquid Glass look; there is no custom tab bar.
 struct MainTabView: View {
     let store: any HealthStore
+    let weightStore: any WeightStore
     @State private var selection: AppTab = .activity
 
     var body: some View {
@@ -16,7 +17,7 @@ struct MainTabView: View {
                 ActivityDashboardView(store: store)
             }
             Tab("Weight", systemImage: "scalemass", value: AppTab.weight) {
-                PlaceholderTabView(title: "Weight")
+                WeightTabView(store: weightStore)
             }
             Tab("Food", systemImage: "fork.knife", value: AppTab.food) {
                 PlaceholderTabView(title: "Food")
@@ -30,5 +31,5 @@ struct MainTabView: View {
 }
 
 #Preview {
-    MainTabView(store: SampleHealthStore())
+    MainTabView(store: SampleHealthStore(), weightStore: InMemoryWeightStore.sample())
 }
