@@ -1,0 +1,65 @@
+name: WorkoutPlan
+
+options:
+  bundleIdPrefix: com.example
+  deploymentTarget:
+    iOS: "27.0"
+  createIntermediateGroups: true
+  developmentLanguage: en
+
+settings:
+  base:
+    MARKETING_VERSION: "0.1.0"
+    CURRENT_PROJECT_VERSION: "1"
+    # Swift 5 language mode: strict concurrency problems show as warnings,
+    # not errors, while the code has never been compiled.
+    SWIFT_VERSION: "5.0"
+    SWIFT_STRICT_CONCURRENCY: complete
+
+targets:
+  WorkoutPlan:
+    type: application
+    platform: iOS
+    sources:
+      - path: WorkoutPlan
+    dependencies:
+      - sdk: HealthKit.framework
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.example.workoutplan
+        PRODUCT_NAME: WorkoutPlan
+        TARGETED_DEVICE_FAMILY: "1"
+        CODE_SIGN_STYLE: Automatic
+        CODE_SIGN_ENTITLEMENTS: WorkoutPlan/Resources/WorkoutPlan.entitlements
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
+        ENABLE_PREVIEWS: YES
+    info:
+      path: WorkoutPlan/Info.plist
+      properties:
+        CFBundleDisplayName: Workout Plan
+        UILaunchScreen: {}
+        UIApplicationSceneManifest:
+          UIApplicationSupportsMultipleScenes: false
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+        ITSAppUsesNonExemptEncryption: false
+        NSHealthShareUsageDescription: >-
+          Workout Plan shows your activity, sleep and heart data from Apple
+          Health. The data is read on your iPhone and nothing leaves the phone.
+        NSCameraUsageDescription: >-
+          Workout Plan uses the camera to take weight progress photos and food
+          photos.
+        NSPhotoLibraryUsageDescription: >-
+          Workout Plan uses your photo library to add weight progress photos
+          and food photos.
+
+schemes:
+  WorkoutPlan:
+    build:
+      targets:
+        WorkoutPlan: all
+    run:
+      config: Debug
+    archive:
+      config: Release
