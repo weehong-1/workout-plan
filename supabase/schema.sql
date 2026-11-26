@@ -499,3 +499,85 @@ drop policy if exists "Own rows" on public.connector_tokens;
 create policy "Own rows" on public.connector_tokens for all to authenticated
   using ((select auth.uid()) = user_id) with check ((select auth.uid()) = user_id);
 grant select, insert, update, delete on public.connector_tokens to authenticated;
+
+-- Trainer links from the iOS app (docs/ios spec section 7). Each row is a
+-- frozen review of one month or year that the app uploads after the user's
+-- consent. The link holds a random token; only its SHA-256 hash is stored.
+-- Photos in a link are copies in the owner's photo folder, named
+-- "<user id>/share-<link id>-<photo id>.jpg", so account deletion removes
+-- them with the rest. Revoking a link deletes its row and its photos.
+create or replace function public.valid_share_photo_paths(paths text[], owner uuid)
+returns boolean language sql immutable set search_path = '' as $$
+  select coalesce(bool_and(
+    p like owner::text || '/share-%.jpg' and p !~ '\.\.' and p !~ '/.*/'
+  ), true)
+  from unnest(paths) as p
+$$;
+
+create table if not exists public.share_links (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null default auth.uid() references auth.users (id) on delete cascade,
+  token_hash text not null unique check (token_hash ~ '^[0-9a-f]{64}$'),
+  trainer_name text not null default '' check (char_length(trainer_name) <= 80),
+  period_kind text not null check (period_kind in ('month', 'year')),
+  period_start date not null,
+  period_label text not null check (char_length(period_label) <= 40),
+  includes jsonb not null default '{}'::jsonb,
+  summary jsonb not null check (jsonb_typeof(summary) = 'object' and pg_column_size(summary) < 2000000),
+  photo_paths text[] not null default '{}' check (cardinality(photo_paths) <= 2000),
+  expires_at timestamptz,
+  created_at timestamptz not null default now(),
+  constraint share_links_photo_paths_owned check (public.valid_share_photo_paths(photo_paths, user_id))
+);
+create index if not exists share_links_user_idx on public.share_links (user_id, created_at desc);
+alter table public.share_links enable row level security;
+drop policy if exists "Own rows" on public.share_links;
+create policy "Own rows" on public.share_links for all to authenticated
+  using ((select auth.uid()) = user_id) with check ((select auth.uid()) = user_id);
+-- Links are created and revoked, never edited.
+revoke all on public.share_links from anon, authenticated;
+grant select, insert, delete on public.share_links to authenticated;
+
+-- The trainer page reads a link by its token, without signing in. Returns
+-- null for an unknown, revoked (deleted) or expired link. The trainer name
+-- is for the owner's list only and is not returned.
+create or replace function public.get_shared_review(link_token text)
+returns jsonb language sql stable security definer set search_path = '' as $$
+  select jsonb_build_object(
+    'period_kind', l.period_kind,
+    'period_label', l.period_label,
+    'includes', l.includes,
+    'summary', l.summary,
+    'expires_at', l.expires_at,
+    'created_at', l.created_at
+  )
+  from public.share_links as l
+  where char_length(coalesce(link_token, '')) between 32 and 128
+    and l.token_hash = encode(sha256(convert_to(link_token, 'UTF8')), 'hex')
+    and (l.expires_at is null or l.expires_at > now())
+  limit 1
+$$;
+revoke all on function public.get_shared_review(text) from public;
+grant execute on function public.get_shared_review(text) to anon, authenticated;
+
+-- True while a photo belongs to a link that still works. Lets the trainer
+-- page create short-lived signed URLs for exactly those photos.
+create or replace function public.is_shared_photo(object_name text)
+returns boolean language sql stable security definer set search_path = '' as $$
+  select exists (
+    select 1 from public.share_links as l
+    where object_name = any (l.photo_paths)
+      and (l.expires_at is null or l.expires_at > now())
+  )
+$$;
+revoke all on function public.is_shared_photo(text) from public;
+grant execute on function public.is_shared_photo(text) to anon, authenticated;
+
+do $$
+begin
+  if to_regclass('storage.objects') is null then return; end if;
+  execute 'drop policy if exists "Shared photos" on storage.objects';
+  execute $p$create policy "Shared photos" on storage.objects for select to anon
+    using (bucket_id = 'photos' and public.is_shared_photo(name))$p$;
+end;
+$$;
