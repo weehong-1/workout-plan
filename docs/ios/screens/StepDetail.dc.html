@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Steps detail</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Nunito:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div style="width: 390px; height: 960px; position: relative; overflow: hidden; background: {{t.bg}}; font-family: -apple-system, 'SF Pro Text', Inter, system-ui, sans-serif; color: {{t.text}}; box-sizing: border-box">
+  <div style="padding: 54px 16px 0; display: grid; grid-template-columns: 44px 1fr 44px; align-items: center">
+    <a href="Activity.dc.html" aria-label="Back to Activity" style="width: 44px; height: 44px; border-radius: 22px; background: {{t.glass}}; backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 0.5px solid {{t.glassBorder}}; display: flex; align-items: center; justify-content: center; color: {{t.text}}">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg>
+    </a>
+    <h1 style="margin: 0; text-align: center; font-size: 17px; font-weight: 600">Steps</h1>
+    <span></span>
+  </div>
+
+  <p style="margin: 16px 40px 0; text-align: center; font-size: 22px; line-height: 28px; font-weight: 600">You have walked <span style="color: {{t.steps}}">7,235 steps</span> today</p>
+
+  <div style="display: flex; justify-content: center; margin-top: 4px">
+    <svg width="300" height="236" viewBox="0 0 300 236" role="img" aria-label="7,235 of 10,000 steps, 72 percent of the daily goal">
+      <path d="M79.3 210.7A100 100 0 1 1 220.7 210.7" fill="none" stroke="#FF9500" stroke-opacity="0.22" stroke-width="18" stroke-linecap="round"/>
+      <path d="M79.3 210.7A100 100 0 1 1 220.7 210.7" fill="none" stroke="#FF9500" stroke-width="18" stroke-linecap="round" stroke-dasharray="339 471"/>
+      <path d="M94 196A80 80 0 1 1 206 196" fill="none" stroke="{{t.text2}}" stroke-opacity="0.6" stroke-width="3" stroke-linecap="round" stroke-dasharray="0 20.9"/>
+      <g transform="translate(138 88)" fill="none" stroke="#FF9500" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 15h10.5a3 3 0 0 0 3-3c0-1.3-1-2-2.4-2.3L11 8 9.3 5H7.2l.4 2.6L5 8.4 2 7.5z"/></g>
+      <text x="150" y="150" text-anchor="middle" font-size="40" font-weight="700" fill="{{t.text}}" font-family="'SF Pro Rounded', ui-rounded, Nunito, sans-serif">7,235</text>
+      <text x="150" y="174" text-anchor="middle" font-size="15" fill="{{t.text2}}" font-family="-apple-system, Inter, sans-serif">of 10,000 steps</text>
+    </svg>
+  </div>
+
+  <div style="margin: 4px 16px 0; background: {{t.card}}; border-radius: 24px; padding: 14px 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr))">
+    <div style="text-align: center; border-right: 0.5px solid {{t.sep}}">
+      <div style="font-size: 13px; font-weight: 600; color: {{t.move}}">Active energy</div>
+      <div style="margin-top: 2px"><span style="font: 700 24px 'SF Pro Rounded', ui-rounded, Nunito, sans-serif">245</span><span style="font-size: 15px; color: {{t.text2}}"> kcal</span></div>
+    </div>
+    <div style="text-align: center">
+      <div style="font-size: 13px; font-weight: 600; color: {{t.steps}}">Distance</div>
+      <div style="margin-top: 2px"><span style="font: 700 24px 'SF Pro Rounded', ui-rounded, Nunito, sans-serif">5.2</span><span style="font-size: 15px; color: {{t.text2}}"> km</span></div>
+    </div>
+  </div>
+
+  <section style="margin: 12px 16px 0; background: {{t.card}}; border-radius: 24px; padding: 16px">
+    <h2 style="margin: 0 0 12px; font-size: 17px; font-weight: 600">Statistics</h2>
+    <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); background: {{t.segTrack}}; border-radius: 10px; padding: 2px">
+      <button aria-pressed="true" style="border: none; background: {{t.segSel}}; padding: 6px 0; font: 600 13px -apple-system, Inter, sans-serif; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.12); color: {{t.text}}">Day</button>
+      <button style="border: none; background: transparent; padding: 6px 0; font: 500 13px -apple-system, Inter, sans-serif; border-radius: 8px; color: {{t.text}}">Week</button>
+      <button style="border: none; background: transparent; padding: 6px 0; font: 500 13px -apple-system, Inter, sans-serif; border-radius: 8px; color: {{t.text}}">Month</button>
+      <button style="border: none; background: transparent; padding: 6px 0; font: 500 13px -apple-system, Inter, sans-serif; border-radius: 8px; color: {{t.text}}">Year</button>
+    </div>
+    <div role="img" aria-label="Steps per half hour today, busiest around midday" style="margin-top: 16px; height: 90px; display: flex; align-items: flex-end; justify-content: space-between">
+      <sc-for list="{{bars}}" as="b" hint-placeholder-count="48">
+        <div style="width: 4px; height: {{b.h}}px; border-radius: 2px; background: {{b.c}}"></div>
+      </sc-for>
+    </div>
+    <div style="margin-top: 8px; display: flex; justify-content: space-between; font-size: 11px; color: {{t.text2}}">
+      <span>12 AM</span><span>6 AM</span><span>12 PM</span><span>6 PM</span><span>12 AM</span>
+    </div>
+  </section>
+
+  <section style="margin: 12px 16px 0; background: {{t.card}}; border-radius: 24px; padding: 16px; display: flex; gap: 12px; align-items: flex-start">
+    <span style="flex-shrink: 0; width: 32px; height: 32px; border-radius: 16px; background: rgba(255,149,0,0.18); display: flex; align-items: center; justify-content: center; color: {{t.steps}}">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v2M5.6 5.6 7 7M3 12h2M17 7l1.4-1.4M19 12h2M9 18h6M10 21h4M8 14a4 4 0 1 1 8 0c0 1.2-.6 2-1.3 2.7-.4.4-.7.8-.7 1.3h-4c0-.5-.3-.9-.7-1.3C8.6 16 8 15.2 8 14z"/></svg>
+    </span>
+    <div>
+      <h2 style="margin: 0; font-size: 17px; font-weight: 600">Insight</h2>
+      <p style="margin: 4px 0 0; font-size: 15px; line-height: 21px; color: {{t.text2}}">2,765 steps to go to reach today's goal. Your busiest time was 12 to 1 PM.</p>
+    </div>
+  </section>
+
+  <nav aria-label="Tabs" style="position: absolute; left: 20px; right: 20px; bottom: 28px; height: 64px; border-radius: 32px; background: {{t.glass}}; backdrop-filter: blur(20px) saturate(180%); -webkit-backdrop-filter: blur(20px) saturate(180%); border: 0.5px solid {{t.glassBorder}}; box-shadow: 0 8px 24px rgba(0,0,0,0.18); display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); padding: 4px; box-sizing: border-box">
+    <a href="Activity.dc.html" aria-current="page" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; border-radius: 28px; text-decoration: none; background: {{t.tabSel}}; color: {{t.tint}}; font-size: 10px; font-weight: 600">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5.5"/><circle cx="12" cy="12" r="2"/></svg>Activity</a>
+    <a href="Main.dc.html" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; border-radius: 28px; text-decoration: none; color: {{t.tabText}}; font-size: 10px; font-weight: 600">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><rect x="3.5" y="3.5" width="17" height="17" rx="5"/><path d="M8.5 9.5a5 5 0 0 1 7 0M12 10l1.3-1.8"/></svg>Weight</a>
+    <a href="Food.dc.html" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; border-radius: 28px; text-decoration: none; color: {{t.tabText}}; font-size: 10px; font-weight: 600">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 3v5a2 2 0 0 0 4 0V3M7 3v18M17 3c-2 1.5-2.5 4-2.5 7H17v11"/></svg>Food</a>
+    <a href="Review.dc.html" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; border-radius: 28px; text-decoration: none; color: {{t.tabText}}; font-size: 10px; font-weight: 600">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><rect x="3.5" y="4.5" width="17" height="16" rx="3"/><path d="M8 16v-3M12 16V9M16 16v-5"/></svg>Review</a>
+  </nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"dark":{"editor":"boolean","default":true},"$preview":{"width":390,"height":960}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const dark = this.props.dark ?? true;
+    const t = dark ? {
+      bg: '#000000', card: '#1C1C1E', sep: '#38383A', text: '#FFFFFF', text2: '#98989F',
+      glass: 'rgba(36,36,38,0.72)', glassBorder: 'rgba(255,255,255,0.12)', tint: '#0A84FF', tabSel: 'rgba(10,132,255,0.22)', tabText: '#D1D1D6',
+      segTrack: 'rgba(118,118,128,0.24)', segSel: '#636366', steps: '#FF9F0A', move: '#FF375F', idle: '#3A3A3C'
+    } : {
+      bg: '#F2F2F7', card: '#FFFFFF', sep: '#E5E5EA', text: '#1C1C1E', text2: '#6C6C70',
+      glass: 'rgba(250,250,252,0.8)', glassBorder: 'rgba(0,0,0,0.08)', tint: '#007AFF', tabSel: 'rgba(0,122,255,0.14)', tabText: '#3A3A3C',
+      segTrack: 'rgba(118,118,128,0.12)', segSel: '#FFFFFF', steps: '#B25E00', move: '#C8003C', idle: '#E5E5EA'
+    };
+    const hs = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,6,14,10,22,18,8,12,30,46,58,80,64,40,28,20,34,52,26,18,30,44,22,12,0,0,0,0,0,0,0,0,0,0,0];
+    const bars = hs.map((h) => ({ h: h > 0 ? h : 4, c: h > 0 ? '#FF9500' : t.idle }));
+    return { t, bars };
+  }
+}
+</script>
+</body>
+</html>

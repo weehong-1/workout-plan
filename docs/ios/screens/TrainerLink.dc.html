@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Share with trainer</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Nunito:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div style="width: 390px; height: 1000px; position: relative; overflow: hidden; background: {{t.backdrop}}; font-family: -apple-system, 'SF Pro Text', Inter, system-ui, sans-serif; color: {{t.text}}; box-sizing: border-box">
+  <div style="position: absolute; left: 0; right: 0; top: 58px; bottom: 0; background: {{t.sheet}}; border-radius: 34px 34px 0 0; padding: 10px 16px 0; box-sizing: border-box">
+    <div style="width: 36px; height: 5px; border-radius: 3px; background: {{t.grabber}}; margin: 0 auto 10px"></div>
+    <div style="display: grid; grid-template-columns: 44px 1fr 44px; align-items: center">
+      <a href="Review.dc.html" aria-label="Cancel" style="width: 44px; height: 44px; border-radius: 22px; background: {{t.sheetCard}}; border: 0.5px solid {{t.glassBorder}}; display: flex; align-items: center; justify-content: center; color: {{t.text}}">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </a>
+      <h1 style="margin: 0; text-align: center; font-size: 17px; font-weight: 600">Share with trainer</h1>
+      <span></span>
+    </div>
+
+    <div style="margin-top: 18px; background: {{t.sheetCard}}; border-radius: 24px; padding: 4px 18px">
+      <label for="trainer" style="display: block; font-size: 13px; font-weight: 600; color: {{t.text2}}; padding-top: 10px">Trainer</label>
+      <input id="trainer" placeholder="Name, for your list" style="width: 100%; border: none; outline: none; font: 400 17px -apple-system, Inter, sans-serif; padding: 4px 0 12px; background: transparent; color: {{t.text}}">
+    </div>
+
+    <h2 style="margin: 20px 18px 8px; font-size: 13px; font-weight: 600; color: {{t.text2}}; letter-spacing: 0.3px">PERIOD</h2>
+    <div style="background: {{t.sheetCard}}; border-radius: 24px; padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; gap: 12px">
+      <div style="width: 150px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); background: {{t.segTrack}}; border-radius: 10px; padding: 2px">
+        <button aria-pressed="true" style="border: none; background: {{t.segSel}}; padding: 6px 0; font: 600 13px -apple-system, Inter, sans-serif; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.12); color: {{t.text}}">Month</button>
+        <button style="border: none; background: transparent; padding: 6px 0; font: 500 13px -apple-system, Inter, sans-serif; border-radius: 8px; color: {{t.text}}">Year</button>
+      </div>
+      <span style="background: {{t.fill}}; border-radius: 8px; padding: 6px 10px; font-size: 15px; font-weight: 500; color: {{t.tintText}}">November 2026</span>
+    </div>
+
+    <h2 style="margin: 20px 18px 8px; font-size: 13px; font-weight: 600; color: {{t.text2}}; letter-spacing: 0.3px">INCLUDE</h2>
+    <div style="background: {{t.sheetCard}}; border-radius: 24px; overflow: hidden">
+      <sc-for list="{{items}}" as="it" hint-placeholder-count="4">
+        <div style="display: flex; align-items: center; gap: 12px; padding: 0 16px; min-height: 52px; border-bottom: 0.5px solid {{t.sep}}">
+          <span style="width: 10px; height: 10px; border-radius: 5px; background: {{it.dot}}"></span>
+          <span style="flex: 1; font-size: 17px">{{it.name}}</span>
+          <sc-if value="{{it.on}}" hint-placeholder-val="{{true}}">
+            <button role="switch" aria-checked="true" aria-label="{{it.name}}" onClick="{{it.toggle}}" style="width: 51px; height: 31px; border-radius: 16px; border: none; padding: 2px; background: {{t.on}}; display: flex; justify-content: flex-end"><span style="width: 27px; height: 27px; border-radius: 14px; background: #FFFFFF; box-shadow: 0 2px 4px rgba(0,0,0,0.2)"></span></button>
+          </sc-if>
+          <sc-if value="{{it.off}}" hint-placeholder-val="{{false}}">
+            <button role="switch" aria-checked="false" aria-label="{{it.name}}" onClick="{{it.toggle}}" style="width: 51px; height: 31px; border-radius: 16px; border: none; padding: 2px; background: {{t.offSw}}; display: flex; justify-content: flex-start"><span style="width: 27px; height: 27px; border-radius: 14px; background: #FFFFFF; box-shadow: 0 2px 4px rgba(0,0,0,0.2)"></span></button>
+          </sc-if>
+        </div>
+      </sc-for>
+    </div>
+
+    <h2 style="margin: 20px 18px 8px; font-size: 13px; font-weight: 600; color: {{t.text2}}; letter-spacing: 0.3px">EXPIRY</h2>
+    <div style="background: {{t.sheetCard}}; border-radius: 24px; overflow: hidden">
+      <div style="display: flex; align-items: center; justify-content: space-between; padding: 0 16px 0 18px; min-height: 52px">
+        <span style="font-size: 17px">Link expires</span>
+        <sc-if value="{{expires}}" hint-placeholder-val="{{true}}">
+          <button role="switch" aria-checked="true" aria-label="Link expires" onClick="{{toggleExpiry}}" style="width: 51px; height: 31px; border-radius: 16px; border: none; padding: 2px; background: {{t.on}}; display: flex; justify-content: flex-end"><span style="width: 27px; height: 27px; border-radius: 14px; background: #FFFFFF; box-shadow: 0 2px 4px rgba(0,0,0,0.2)"></span></button>
+        </sc-if>
+        <sc-if value="{{noExpiry}}" hint-placeholder-val="{{false}}">
+          <button role="switch" aria-checked="false" aria-label="Link expires" onClick="{{toggleExpiry}}" style="width: 51px; height: 31px; border-radius: 16px; border: none; padding: 2px; background: {{t.offSw}}; display: flex; justify-content: flex-start"><span style="width: 27px; height: 27px; border-radius: 14px; background: #FFFFFF; box-shadow: 0 2px 4px rgba(0,0,0,0.2)"></span></button>
+        </sc-if>
+      </div>
+      <sc-if value="{{expires}}" hint-placeholder-val="{{true}}">
+        <div style="display: flex; align-items: center; justify-content: space-between; padding: 0 16px 0 18px; min-height: 52px; border-top: 0.5px solid {{t.sep}}">
+          <span style="font-size: 17px">Expires on</span>
+          <span style="background: {{t.fill}}; border-radius: 8px; padding: 6px 10px; font-size: 15px; font-weight: 500; color: {{t.tintText}}">31 Dec 2026</span>
+        </div>
+      </sc-if>
+    </div>
+    <p style="margin: 8px 18px 0; font-size: 13px; line-height: 18px; color: {{t.text2}}">{{expiryNote}}</p>
+
+    <div style="margin-top: 16px; background: {{t.warnBg}}; border-radius: 18px; padding: 12px 16px; display: flex; gap: 10px; font-size: 13px; line-height: 18px; color: {{t.warnText}}">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0; margin-top: 1px"><path d="M12 3l9 16H3z"/><path d="M12 10v4M12 17h.01"/></svg>
+      <span>Your Apple Health summaries for this period will be copied to the server. Anyone with the link can see what you include until it expires or you revoke it.</span>
+    </div>
+
+    <a href="Review.dc.html" style="margin-top: 16px; height: 52px; border-radius: 26px; background: {{t.tint}}; color: #FFFFFF; text-decoration: none; display: flex; align-items: center; justify-content: center; font-size: 17px; font-weight: 600">I agree, create link</a>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"dark":{"editor":"boolean","default":true},"$preview":{"width":390,"height":1000}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { on: { activity: true, weight: true, weightPhotos: false, food: true }, expires: true };
+  }
+  renderVals() {
+    const dark = this.props.dark ?? true;
+    const t = dark ? {
+      backdrop: '#0B0B0C', sheet: '#1C1C1E', sheetCard: '#2C2C2E', fill: '#3A3A3C', grabber: '#5A5A5E', sep: '#48484A',
+      text: '#FFFFFF', text2: '#98989F', glassBorder: 'rgba(255,255,255,0.12)', tint: '#0A84FF', tintText: '#409CFF',
+      segTrack: 'rgba(118,118,128,0.24)', segSel: '#636366', on: '#30D158', offSw: '#39393D', warnBg: 'rgba(255,159,10,0.16)', warnText: '#FFD08A'
+    } : {
+      backdrop: '#8E8E93', sheet: '#F2F2F7', sheetCard: '#FFFFFF', fill: '#EEEEF0', grabber: '#C7C7CC', sep: '#E5E5EA',
+      text: '#1C1C1E', text2: '#6C6C70', glassBorder: 'rgba(0,0,0,0.08)', tint: '#007AFF', tintText: '#0062CC',
+      segTrack: 'rgba(118,118,128,0.12)', segSel: '#FFFFFF', on: '#34C759', offSw: '#E9E9EA', warnBg: '#FFF4E5', warnText: '#6B3E00'
+    };
+    const defs = [
+      ['activity', 'Activity and sleep', '#FA114F'], ['weight', 'Weight', '#0A84FF'],
+      ['weightPhotos', 'Weight photos', '#0A84FF'], ['food', 'Food photos', '#FFB000']
+    ];
+    const items = defs.map(([k, name, dot]) => ({
+      name, dot, on: this.state.on[k], off: !this.state.on[k],
+      toggle: () => this.setState({ on: { ...this.state.on, [k]: !this.state.on[k] } })
+    }));
+    const expires = this.state.expires;
+    return {
+      t, items, expires, noExpiry: !expires,
+      toggleExpiry: () => this.setState({ expires: !expires }),
+      expiryNote: expires ? 'The link stops working after this date. You can revoke it sooner.' : 'The link works until you revoke it in Review.'
+    };
+  }
+}
+</script>
+</body>
+</html>

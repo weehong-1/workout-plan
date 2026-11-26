@@ -9,7 +9,7 @@ Personal project, not Resetrix. This file is the record of decisions for the iOS
 * Turn the app into an iOS app. The workout module is dropped for now.
 * The app tracks only activity level, body weight and food intake photos.
 * Four modules:
-  1. **Activity level.** Layout screenshot to be provided later.
+  1. **Activity level.** Layout based on the reference image Vernon shared on 26 Nov 2026 (see 6.1).
   2. **Daily weight measurements.** A photo is optional, to track progress visually.
   3. **Food intake photos.** All meals are combined into one daily intake. Photos do not need a meal time; they can be organised with labels.
   4. **Sharing with an external party** (for example a trainer) for a monthly or yearly review.
@@ -23,8 +23,10 @@ Personal project, not Resetrix. This file is the record of decisions for the iOS
 | D1 | Native SwiftUI app built on the iOS 27 design system (Liquid Glass) as the main library | Vernon, 26 Nov 2026 |
 | D2 | Work happens on Windows, so for now only documentation and design. Building the app later needs a Mac with Xcode | Vernon, 26 Nov 2026 |
 | D3 | iOS documents live on branch `ios` of this repo, under `docs/ios/` | Vernon, 26 Nov 2026 |
-| D4 | Screens are drawn on a Claude Design canvas as a preview; its source is kept in this repo | Vernon, 26 Nov 2026 |
+| D4 | Screens are drawn on a Claude Design canvas as a preview; its source is kept in this repo at `docs/ios/screens/` | Vernon, 26 Nov 2026 |
 | D5 | The trainer sees the shared data through a link. An expiry can be set or left off | Vernon, 26 Nov 2026 |
+| D6 | One design system for the app (section 3), with every screen in light and dark mode | Vernon, 26 Nov 2026 |
+| D7 | Code is written on Windows and pushed to this repo; the app is built in Xcode on a Mac after cloning. Xcode Cloud is not used | Vernon, 26 Nov 2026 |
 
 ## 3. Design rules for iOS 27
 
@@ -32,6 +34,30 @@ Personal project, not Resetrix. This file is the record of decisions for the iOS
 * Keep from the reference design: the coloured metric cards, rings and bar charts. They are the content under the glass.
 * The app must stay readable at every Liquid Glass slider setting and with Reduce Transparency and Increase Contrast on.
 * **Proposed:** charts with Swift Charts; minimum iOS version 27, since the app is for Vernon's own iPhone.
+
+### 3.1 Design system (D6)
+
+Full reference: `docs/ios/screens/DesignSystem.dc.html`.
+
+* Glass only on the tab bar, toolbars, sheets and floating buttons; cards stay solid.
+* System tint (blue) for buttons and the selected tab: #007AFF light, #0A84FF dark.
+* Surfaces, light / dark: background #F2F2F7 / #000000, card #FFFFFF / #1C1C1E, fill #EEEEF0 / #2C2C2E, separator #E5E5EA / #38383A, label #1C1C1E / #FFFFFF, secondary label #6C6C70 / #98989F.
+* One colour per metric everywhere (rings, charts, numbers, trainer page). Graphic colour for rings and charts; text colour (light / dark) for small text:
+
+| Metric | Graphic | Text light | Text dark |
+|---|---|---|---|
+| Move | #FA114F | #C8003C | #FF375F |
+| Exercise | #7ED321 | #3B7A00 | #9BE34A |
+| Stand | #00C7D9 | #00798A | #3DDCEA |
+| Steps | #FF9500 | #B25E00 | #FF9F0A |
+| Sleep | #8E5CF7 | #6A3BD1 | #A48BFF |
+| Heart | #FF3B30 | #C9201A | #FF453A |
+| Weight | #0A84FF | #0062CC | #409CFF |
+| Food | #FFB000 | #946200 | #FFC23D |
+
+* Type: SF Pro for words, SF Pro Rounded for numbers. Scale: Metric XL 44 bold, Metric L 30 bold, Large Title 34 bold, Title 2 22 bold, Headline 17 semibold, Body 17, Subheadline 15, Footnote 13, Caption 12.
+* Spacing on a 4 pt grid (4, 8, 12, 16, 20, 24, 32); 16 is the screen margin and card padding. Corner radius: 10 controls, 16 tiles, 24 cards, 28 hero cards.
+* Touch targets at least 44 pt. Every screen works in light and dark mode and at any Liquid Glass slider setting.
 
 ## 4. Screen map
 
@@ -58,12 +84,18 @@ Camera and photo library permissions are asked only when first used.
 
 ### 6.1 Activity
 
-* Today's cards from Apple Health: steps, sleep, heart, exercise minutes, active calories, Watch workouts (for example walking or cycling). Read only; nothing is logged in the app.
-* Tap a card for its detail: Day, Week, Month and Year views with a chart and key figures.
+* Read only from Apple Health; nothing is logged in the app. Design: `docs/ios/screens/Activity.dc.html` and `StepDetail.dc.html`.
+* Top: date caption and greeting ("Good day, Vernon").
+* Hero card: Activity rings (Move kcal, Exercise min, Stand hr) with value and goal for each, and a row of mini rings for the last 7 days.
+* Highlights, four equal cards: Steps (value, goal, progress bar), Sleep (total, start and end time, stage bar), Heart (latest and resting bpm, small chart), Workouts (today's minutes, latest workout).
+* Steps this week: daily bars against a dashed goal line, with the average.
+* Tap Steps for the Steps detail: progress gauge, active energy and distance, Day / Week / Month / Year chart, and an insight line.
 * Updates when Apple Health gets new data from the Watch; pull to refresh.
 * Empty states: no Watch data yet; Health access not given.
 * If only 30 days of history were shared, a banner explains how to change it in Settings › Privacy & Security › Health.
-* **Open:** final card set and layout, waiting for Vernon's screenshot.
+* Changes from the reference image: its own bottom bar replaced by the system tab bar; daily step goal 10,000 (the image's 1,000 was below the step count); calories shown as active energy (Move ring); sleep shown as hours and minutes.
+* **Open:** step goal and ring goals: read from Apple Health or set in the app.
+* **Open:** detail screens for Sleep, Heart and Workouts (only Steps is drawn).
 
 ### 6.2 Weight
 
@@ -82,6 +114,7 @@ Camera and photo library permissions are asked only when first used.
 * **+** opens the camera straight away; the photo library is one tap away. Adding a label or note is optional.
 * Tap a photo for full screen, to change its label or delete it.
 * **Open:** fixed labels (Breakfast, Lunch, Dinner, Snack) or labels Vernon creates.
+* **Open:** one label per photo (as drawn) or several. If several: the photo shows the first label plus a count ("Breakfast +1"), a filter chip shows every photo with that label, and labels are edited as chips on the photo's detail screen.
 
 ### 6.4 Review
 
@@ -111,6 +144,7 @@ Avatar in the top bar of every tab: units, Health access status, sign out, delet
 
 ## 9. Next steps
 
-1. Vernon reviews this file.
-2. Draw the screens on a Claude Design canvas (D4) and keep the source in this repo.
-3. Activity layout once Vernon sends the screenshot.
+1. Vernon reviews this file and the screens in `docs/ios/screens/`.
+2. Phase 1 in Claude Code on Windows: XcodeGen project under `ios/`, the design system, the tab bar, the Apple Health explainer and permission, and the Activity dashboard with Steps detail. Weight, Food and Review stay placeholders.
+3. Build phase 1 on a Mac (D7) and run it on Vernon's iPhone. **Open:** an owned or a rented Mac. A rented Mac cannot be connected to the iPhone, so installing there needs TestFlight and the paid Apple Developer Program.
+4. Later phases, one at a time: Weight, Food, Review and the trainer link (needs the backend decision in section 8).

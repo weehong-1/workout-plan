@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Food</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Nunito:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; position: relative; overflow: hidden; background: {{t.bg}}; font-family: -apple-system, 'SF Pro Text', Inter, system-ui, sans-serif; color: {{t.text}}; box-sizing: border-box">
+  <div style="padding: 54px 16px 0; display: flex; justify-content: flex-end; gap: 10px">
+    <button aria-label="Add food photo" style="width: 44px; height: 44px; border-radius: 22px; background: {{t.glass}}; backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 0.5px solid {{t.glassBorder}}; display: flex; align-items: center; justify-content: center; color: {{t.text}}">
+      <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l1.5-2h7L17 8h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>
+    </button>
+    <button aria-label="Account" style="width: 44px; height: 44px; border-radius: 22px; background: {{t.fill}}; border: 0.5px solid {{t.glassBorder}}; color: {{t.text}}; font: 600 17px -apple-system, Inter, sans-serif">V</button>
+  </div>
+  <h1 style="margin: 6px 20px 12px; font-size: 34px; line-height: 41px; font-weight: 700">Food</h1>
+
+  <div role="list" aria-label="Days" style="margin: 0 16px; display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px">
+    <sc-for list="{{days}}" as="d" hint-placeholder-count="7">
+      <sc-if value="{{d.on}}" hint-placeholder-val="{{false}}">
+        <button role="listitem" aria-pressed="true" style="border: none; border-radius: 16px; padding: 8px 0 7px; display: flex; flex-direction: column; align-items: center; gap: 3px; font-family: -apple-system, Inter, sans-serif; background: {{t.text}}; color: {{t.bg}}">
+          <span style="font-size: 11px; font-weight: 600">{{d.wd}}</span>
+          <span style="font: 700 18px 'SF Pro Rounded', ui-rounded, Nunito, sans-serif">{{d.n}}</span>
+          <span style="width: 5px; height: 5px; border-radius: 3px; background: #FFB000"></span>
+        </button>
+      </sc-if>
+      <sc-if value="{{d.off}}" hint-placeholder-val="{{true}}">
+        <button role="listitem" aria-pressed="false" style="border: none; border-radius: 16px; padding: 8px 0 7px; display: flex; flex-direction: column; align-items: center; gap: 3px; font-family: -apple-system, Inter, sans-serif; background: {{t.card}}; color: {{t.text}}">
+          <span style="font-size: 11px; font-weight: 600; color: {{t.text2}}">{{d.wd}}</span>
+          <span style="font: 700 18px 'SF Pro Rounded', ui-rounded, Nunito, sans-serif">{{d.n}}</span>
+          <span style="width: 5px; height: 5px; border-radius: 3px; background: {{d.dot}}"></span>
+        </button>
+      </sc-if>
+    </sc-for>
+  </div>
+
+  <div style="margin: 20px 20px 10px; display: flex; align-items: baseline; justify-content: space-between">
+    <h2 style="margin: 0; font-size: 22px; line-height: 28px; font-weight: 700">Thursday, 26 Nov</h2>
+    <span style="font-size: 15px; color: {{t.food}}; font-weight: 600">{{count}} photos</span>
+  </div>
+
+  <div style="margin: 0 0 12px; padding: 0 16px; display: flex; gap: 8px; overflow: hidden">
+    <sc-for list="{{chips}}" as="c" hint-placeholder-count="5">
+      <sc-if value="{{c.on}}" hint-placeholder-val="{{false}}">
+        <button onClick="{{c.pick}}" aria-pressed="true" style="flex-shrink: 0; border-radius: 17px; padding: 7px 14px; font: 600 14px -apple-system, Inter, sans-serif; border: none; background: {{t.text}}; color: {{t.bg}}">{{c.name}}</button>
+      </sc-if>
+      <sc-if value="{{c.off}}" hint-placeholder-val="{{true}}">
+        <button onClick="{{c.pick}}" aria-pressed="false" style="flex-shrink: 0; border-radius: 17px; padding: 7px 14px; font: 600 14px -apple-system, Inter, sans-serif; border: 0.5px solid {{t.sep}}; background: {{t.card}}; color: {{t.text}}">{{c.name}}</button>
+      </sc-if>
+    </sc-for>
+  </div>
+
+  <div style="margin: 0 16px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; border-radius: 20px; overflow: hidden">
+    <sc-for list="{{photos}}" as="p" hint-placeholder-count="6">
+      <button aria-label="Food photo at {{p.time}}" style="aspect-ratio: 1 / 1; position: relative; border: none; padding: 0; background: {{p.bg}}; display: flex; align-items: center; justify-content: center; color: {{t.text2}}">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-8 8"/></svg>
+        <span style="position: absolute; left: 6px; bottom: 6px; background: rgba(0,0,0,0.62); color: #FFFFFF; font: 600 11px -apple-system, Inter, sans-serif; padding: 3px 7px; border-radius: 9px">{{p.time}}</span>
+        <sc-if value="{{p.hasLabel}}" hint-placeholder-val="{{true}}">
+          <span style="position: absolute; right: 6px; top: 6px; background: rgba(255,176,0,0.92); color: #3D2800; font: 700 11px -apple-system, Inter, sans-serif; padding: 3px 7px; border-radius: 9px">{{p.label}}</span>
+        </sc-if>
+      </button>
+    </sc-for>
+  </div>
+  <p style="margin: 10px 20px 0; font-size: 13px; line-height: 18px; color: {{t.text2}}">All photos make up the day's intake. A label is optional; tap a photo to add or change one.</p>
+
+  <nav aria-label="Tabs" style="position: absolute; left: 20px; right: 20px; bottom: 28px; height: 64px; border-radius: 32px; background: {{t.glass}}; backdrop-filter: blur(20px) saturate(180%); -webkit-backdrop-filter: blur(20px) saturate(180%); border: 0.5px solid {{t.glassBorder}}; box-shadow: 0 8px 24px rgba(0,0,0,0.18); display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); padding: 4px; box-sizing: border-box">
+    <a href="Activity.dc.html" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; border-radius: 28px; text-decoration: none; color: {{t.tabText}}; font-size: 10px; font-weight: 600">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5.5"/><circle cx="12" cy="12" r="2"/></svg>Activity</a>
+    <a href="Main.dc.html" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; border-radius: 28px; text-decoration: none; color: {{t.tabText}}; font-size: 10px; font-weight: 600">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><rect x="3.5" y="3.5" width="17" height="17" rx="5"/><path d="M8.5 9.5a5 5 0 0 1 7 0M12 10l1.3-1.8"/></svg>Weight</a>
+    <a href="Food.dc.html" aria-current="page" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; border-radius: 28px; text-decoration: none; background: {{t.tabSel}}; color: {{t.tint}}; font-size: 10px; font-weight: 600">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 3v5a2 2 0 0 0 4 0V3M7 3v18M17 3c-2 1.5-2.5 4-2.5 7H17v11"/></svg>Food</a>
+    <a href="Review.dc.html" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; border-radius: 28px; text-decoration: none; color: {{t.tabText}}; font-size: 10px; font-weight: 600">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><rect x="3.5" y="4.5" width="17" height="16" rx="3"/><path d="M8 16v-3M12 16V9M16 16v-5"/></svg>Review</a>
+  </nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"dark":{"editor":"boolean","default":true},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { label: 'All' }; }
+  renderVals() {
+    const dark = this.props.dark ?? true;
+    const t = dark ? {
+      bg: '#000000', card: '#1C1C1E', fill: '#2C2C2E', sep: '#38383A', text: '#FFFFFF', text2: '#98989F', ph1: '#2C2C2E', ph2: '#3A3A3C',
+      glass: 'rgba(36,36,38,0.72)', glassBorder: 'rgba(255,255,255,0.12)', tint: '#0A84FF', tabSel: 'rgba(10,132,255,0.22)', tabText: '#D1D1D6', food: '#FFC23D'
+    } : {
+      bg: '#F2F2F7', card: '#FFFFFF', fill: '#E5E5EA', sep: '#D1D1D6', text: '#1C1C1E', text2: '#6C6C70', ph1: '#E5E5EA', ph2: '#DCDCE1',
+      glass: 'rgba(250,250,252,0.8)', glassBorder: 'rgba(0,0,0,0.08)', tint: '#007AFF', tabSel: 'rgba(0,122,255,0.14)', tabText: '#3A3A3C', food: '#946200'
+    };
+    const all = [
+      { time: '7:45', label: 'Breakfast' }, { time: '10:20', label: '' }, { time: '12:35', label: 'Lunch' },
+      { time: '15:10', label: 'Snack' }, { time: '19:05', label: 'Dinner' }, { time: '19:12', label: 'Dinner' }
+    ];
+    const sel = this.state.label;
+    const photos = all.filter((p) => sel === 'All' || p.label === sel)
+      .map((p, i) => ({ ...p, hasLabel: p.label !== '', bg: i % 2 ? t.ph2 : t.ph1 }));
+    const chips = ['All', 'Breakfast', 'Lunch', 'Dinner', 'Snack'].map((name) => ({
+      name, on: name === sel, off: name !== sel, pick: () => this.setState({ label: name })
+    }));
+    const days = [['Fri', 20, 1], ['Sat', 21, 1], ['Sun', 22, 0], ['Mon', 23, 1], ['Tue', 24, 1], ['Wed', 25, 1], ['Thu', 26, 1]]
+      .map(([wd, n, has]) => ({ wd, n, on: n === 26, off: n !== 26, dot: has ? '#FFB000' : 'transparent' }));
+    return { t, photos, chips, days, count: all.length };
+  }
+}
+</script>
+</body>
+</html>

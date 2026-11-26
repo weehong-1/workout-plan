@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Activity</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Nunito:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div style="width: 390px; height: 1200px; position: relative; overflow: hidden; background: {{t.bg}}; font-family: -apple-system, 'SF Pro Text', Inter, system-ui, sans-serif; color: {{t.text}}; box-sizing: border-box">
+  <div style="padding: 54px 16px 0; display: flex; justify-content: flex-end; gap: 10px">
+    <button aria-label="Pick a day" style="width: 44px; height: 44px; border-radius: 22px; background: {{t.glass}}; backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 0.5px solid {{t.glassBorder}}; display: flex; align-items: center; justify-content: center; color: {{t.text}}">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>
+    </button>
+    <button aria-label="Account" style="width: 44px; height: 44px; border-radius: 22px; background: {{t.fill}}; border: 0.5px solid {{t.glassBorder}}; color: {{t.text}}; font: 600 17px -apple-system, Inter, sans-serif">V</button>
+  </div>
+  <div style="margin: 6px 20px 0; font-size: 13px; font-weight: 600; letter-spacing: 0.4px; color: {{t.text2}}">THURSDAY, 26 NOVEMBER</div>
+  <h1 style="margin: 2px 20px 16px; font-size: 34px; line-height: 41px; font-weight: 700">Good day, Vernon</h1>
+
+  <section aria-label="Activity rings" style="margin: 0 16px; background: {{t.card}}; border-radius: 28px; padding: 20px">
+    <div style="display: flex; align-items: center; gap: 20px">
+      <svg width="150" height="150" viewBox="0 0 150 150" role="img" aria-label="Move 61 percent, Exercise closed, Stand 75 percent">
+        <circle cx="75" cy="75" r="62" fill="none" stroke="#FA114F" stroke-opacity="0.22" stroke-width="16"/>
+        <circle cx="75" cy="75" r="62" fill="none" stroke="#FA114F" stroke-width="16" stroke-linecap="round" pathLength="100" stroke-dasharray="61 100" transform="rotate(-90 75 75)"/>
+        <circle cx="75" cy="75" r="44" fill="none" stroke="#7ED321" stroke-opacity="0.22" stroke-width="16"/>
+        <circle cx="75" cy="75" r="44" fill="none" stroke="#7ED321" stroke-width="16" stroke-linecap="round" pathLength="100" stroke-dasharray="100 100" transform="rotate(-90 75 75)"/>
+        <circle cx="75" cy="75" r="26" fill="none" stroke="#00C7D9" stroke-opacity="0.22" stroke-width="16"/>
+        <circle cx="75" cy="75" r="26" fill="none" stroke="#00C7D9" stroke-width="16" stroke-linecap="round" pathLength="100" stroke-dasharray="75 100" transform="rotate(-90 75 75)"/>
+      </svg>
+      <div style="flex: 1; display: flex; flex-direction: column; gap: 10px">
+        <div>
+          <div style="font-size: 13px; font-weight: 600; color: {{t.move}}">Move</div>
+          <div><span style="font: 700 24px 'SF Pro Rounded', ui-rounded, Nunito, sans-serif">245</span><span style="font-size: 15px; color: {{t.text2}}">/400 kcal</span></div>
+        </div>
+        <div>
+          <div style="font-size: 13px; font-weight: 600; color: {{t.exercise}}">Exercise</div>
+          <div><span style="font: 700 24px 'SF Pro Rounded', ui-rounded, Nunito, sans-serif">42</span><span style="font-size: 15px; color: {{t.text2}}">/30 min</span></div>
+        </div>
+        <div>
+          <div style="font-size: 13px; font-weight: 600; color: {{t.stand}}">Stand</div>
+          <div><span style="font: 700 24px 'SF Pro Rounded', ui-rounded, Nunito, sans-serif">9</span><span style="font-size: 15px; color: {{t.text2}}">/12 hr</span></div>
+        </div>
+      </div>
+    </div>
+    <div style="height: 0.5px; background: {{t.sep}}; margin: 16px 0 12px"></div>
+    <div style="display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); text-align: center">
+      <sc-for list="{{week}}" as="d" hint-placeholder-count="7">
+        <div style="display: flex; flex-direction: column; align-items: center; gap: 4px">
+          <span style="font-size: 11px; font-weight: {{d.weight}}; color: {{d.color}}">{{d.l}}</span>
+          <svg width="32" height="32" viewBox="0 0 32 32" aria-hidden="true">
+            <circle cx="16" cy="16" r="13" fill="none" stroke="#FA114F" stroke-opacity="0.22" stroke-width="3.5"/>
+            <circle cx="16" cy="16" r="13" fill="none" stroke="#FA114F" stroke-width="3.5" stroke-linecap="round" pathLength="100" stroke-dasharray="{{d.m}} 100" transform="rotate(-90 16 16)"/>
+            <circle cx="16" cy="16" r="8.8" fill="none" stroke="#7ED321" stroke-opacity="0.22" stroke-width="3.5"/>
+            <circle cx="16" cy="16" r="8.8" fill="none" stroke="#7ED321" stroke-width="3.5" stroke-linecap="round" pathLength="100" stroke-dasharray="{{d.e}} 100" transform="rotate(-90 16 16)"/>
+            <circle cx="16" cy="16" r="4.6" fill="none" stroke="#00C7D9" stroke-opacity="0.22" stroke-width="3.5"/>
+            <circle cx="16" cy="16" r="4.6" fill="none" stroke="#00C7D9" stroke-width="3.5" stroke-linecap="round" pathLength="100" stroke-dasharray="{{d.s}} 100" transform="rotate(-90 16 16)"/>
+          </svg>
+        </div>
+      </sc-for>
+    </div>
+  </section>
+
+  <h2 style="margin: 24px 20px 10px; font-size: 22px; line-height: 28px; font-weight: 700">Highlights</h2>
+  <div style="margin: 0 16px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px">
+    <a href="StepDetail.dc.html" aria-label="Steps, 7,235 of 10,000. Open details" style="height: 172px; border-radius: 24px; background: {{t.card}}; padding: 16px; box-sizing: border-box; display: flex; flex-direction: column; text-decoration: none; color: {{t.text}}">
+      <div style="display: flex; align-items: center; gap: 6px; font-size: 15px; font-weight: 600; color: {{t.steps}}">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 17h12.5a3.5 3.5 0 0 0 3.5-3.5c0-1.5-1.2-2.3-2.8-2.7L13 9.5 11 6H8.5L9 9 6 10 4 9z"/></svg>
+        <span style="flex: 1">Steps</span>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="{{t.text2}}" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+      </div>
+      <div style="margin-top: auto; font: 700 30px 'SF Pro Rounded', ui-rounded, Nunito, sans-serif">7,235</div>
+      <div style="font-size: 13px; color: {{t.text2}}">of 10,000 steps</div>
+      <div style="margin-top: 10px; height: 6px; border-radius: 3px; background: rgba(255,149,0,0.22)"><div style="width: 72%; height: 6px; border-radius: 3px; background: #FF9500"></div></div>
+    </a>
+
+    <div style="height: 172px; border-radius: 24px; background: {{t.card}}; padding: 16px; box-sizing: border-box; display: flex; flex-direction: column">
+      <div style="display: flex; align-items: center; gap: 6px; font-size: 15px; font-weight: 600; color: {{t.sleep}}">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/></svg>Sleep</div>
+      <div style="margin-top: auto"><span style="font: 700 30px 'SF Pro Rounded', ui-rounded, Nunito, sans-serif">7</span><span style="font-size: 15px; color: {{t.text2}}"> hr </span><span style="font: 700 30px 'SF Pro Rounded', ui-rounded, Nunito, sans-serif">40</span><span style="font-size: 15px; color: {{t.text2}}"> min</span></div>
+      <div style="font-size: 13px; color: {{t.text2}}">11:25 PM – 7:05 AM</div>
+      <div role="img" aria-label="Sleep stages: awake 4 percent, REM 22, core 52, deep 22" style="margin-top: 10px; display: flex; gap: 2px; height: 6px">
+        <span style="width: 4%; border-radius: 3px; background: #FF7A59"></span>
+        <span style="width: 22%; border-radius: 3px; background: #5AC8FA"></span>
+        <span style="width: 52%; border-radius: 3px; background: #8E5CF7"></span>
+        <span style="width: 22%; border-radius: 3px; background: #4B2FA8"></span>
+      </div>
+    </div>
+
+    <div style="height: 172px; border-radius: 24px; background: {{t.card}}; padding: 16px; box-sizing: border-box; display: flex; flex-direction: column">
+      <div style="display: flex; align-items: center; gap: 6px; font-size: 15px; font-weight: 600; color: {{t.heart}}">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20s-7.5-4.6-7.5-10A4.3 4.3 0 0 1 12 7.3 4.3 4.3 0 0 1 19.5 10c0 5.4-7.5 10-7.5 10z"/></svg>Heart</div>
+      <svg width="141" height="34" viewBox="0 0 141 34" aria-hidden="true" style="margin-top: 10px"><polyline fill="none" stroke="#FF3B30" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" points="0,22 12,20 24,24 36,18 48,21 60,12 72,8 84,16 96,20 108,14 120,18 132,15 141,17"/></svg>
+      <div style="margin-top: auto"><span style="font: 700 30px 'SF Pro Rounded', ui-rounded, Nunito, sans-serif">73</span><span style="font-size: 15px; color: {{t.text2}}"> bpm</span></div>
+      <div style="font-size: 13px; color: {{t.text2}}">Resting 58 bpm</div>
+    </div>
+
+    <div style="height: 172px; border-radius: 24px; background: {{t.card}}; padding: 16px; box-sizing: border-box; display: flex; flex-direction: column">
+      <div style="display: flex; align-items: center; gap: 6px; font-size: 15px; font-weight: 600; color: {{t.exercise}}">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="6" cy="16" r="3.5"/><circle cx="18" cy="16" r="3.5"/><path d="M6 16l4-7h5l3 7M10 9l3 7M13 5h2"/></svg>Workouts</div>
+      <div style="margin-top: auto"><span style="font: 700 30px 'SF Pro Rounded', ui-rounded, Nunito, sans-serif">35</span><span style="font-size: 15px; color: {{t.text2}}"> min</span></div>
+      <div style="font-size: 13px; color: {{t.text2}}">Outdoor cycling · 7:10 AM</div>
+      <div style="margin-top: 10px; font-size: 12px; color: {{t.text2}}">From Apple Watch</div>
+    </div>
+  </div>
+
+  <section aria-label="Steps this week" style="margin: 12px 16px 0; background: {{t.card}}; border-radius: 24px; padding: 16px">
+    <div style="display: flex; justify-content: space-between; align-items: baseline">
+      <h3 style="margin: 0; font-size: 17px; font-weight: 600">Steps this week</h3>
+      <span style="font-size: 13px; color: {{t.text2}}">Average <span style="font: 700 15px 'SF Pro Rounded', ui-rounded, Nunito, sans-serif; color: {{t.text}}">8,120</span></span>
+    </div>
+    <div role="img" aria-label="Daily steps for the last 7 days against a 10,000 goal" style="margin-top: 14px; position: relative; height: 110px; display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); align-items: end; gap: 10px">
+      <div style="position: absolute; left: 0; right: 0; bottom: 92px; border-top: 1.5px dashed {{t.sep}}"></div>
+      <span style="position: absolute; right: 0; bottom: 96px; font-size: 11px; color: {{t.text2}}">Goal</span>
+      <sc-for list="{{bars}}" as="b" hint-placeholder-count="7">
+        <div style="height: {{b.h}}px; border-radius: 6px; background: {{b.c}}"></div>
+      </sc-for>
+    </div>
+    <div style="margin-top: 6px; display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 10px; text-align: center">
+      <sc-for list="{{bars}}" as="b" hint-placeholder-count="7">
+        <span style="font-size: 11px; font-weight: {{b.weight}}; color: {{b.label}}">{{b.d}}</span>
+      </sc-for>
+    </div>
+  </section>
+
+  <nav aria-label="Tabs" style="position: absolute; left: 20px; right: 20px; bottom: 28px; height: 64px; border-radius: 32px; background: {{t.glass}}; backdrop-filter: blur(20px) saturate(180%); -webkit-backdrop-filter: blur(20px) saturate(180%); border: 0.5px solid {{t.glassBorder}}; box-shadow: 0 8px 24px rgba(0,0,0,0.18); display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); padding: 4px; box-sizing: border-box">
+    <a href="Activity.dc.html" aria-current="page" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; border-radius: 28px; text-decoration: none; background: {{t.tabSel}}; color: {{t.tint}}; font-size: 10px; font-weight: 600">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5.5"/><circle cx="12" cy="12" r="2"/></svg>Activity</a>
+    <a href="Main.dc.html" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; border-radius: 28px; text-decoration: none; color: {{t.tabText}}; font-size: 10px; font-weight: 600">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><rect x="3.5" y="3.5" width="17" height="17" rx="5"/><path d="M8.5 9.5a5 5 0 0 1 7 0M12 10l1.3-1.8"/></svg>Weight</a>
+    <a href="Food.dc.html" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; border-radius: 28px; text-decoration: none; color: {{t.tabText}}; font-size: 10px; font-weight: 600">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 3v5a2 2 0 0 0 4 0V3M7 3v18M17 3c-2 1.5-2.5 4-2.5 7H17v11"/></svg>Food</a>
+    <a href="Review.dc.html" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; border-radius: 28px; text-decoration: none; color: {{t.tabText}}; font-size: 10px; font-weight: 600">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><rect x="3.5" y="4.5" width="17" height="16" rx="3"/><path d="M8 16v-3M12 16V9M16 16v-5"/></svg>Review</a>
+  </nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"dark":{"editor":"boolean","default":true},"$preview":{"width":390,"height":1200}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const dark = this.props.dark ?? true;
+    const t = dark ? {
+      bg: '#000000', card: '#1C1C1E', fill: '#2C2C2E', sep: '#38383A', text: '#FFFFFF', text2: '#98989F',
+      glass: 'rgba(36,36,38,0.72)', glassBorder: 'rgba(255,255,255,0.12)', tint: '#0A84FF', tabSel: 'rgba(10,132,255,0.22)', tabText: '#D1D1D6',
+      move: '#FF375F', exercise: '#9BE34A', stand: '#3DDCEA', steps: '#FF9F0A', sleep: '#A48BFF', heart: '#FF453A'
+    } : {
+      bg: '#F2F2F7', card: '#FFFFFF', fill: '#E5E5EA', sep: '#E5E5EA', text: '#1C1C1E', text2: '#6C6C70',
+      glass: 'rgba(250,250,252,0.8)', glassBorder: 'rgba(0,0,0,0.08)', tint: '#007AFF', tabSel: 'rgba(0,122,255,0.14)', tabText: '#3A3A3C',
+      move: '#C8003C', exercise: '#3B7A00', stand: '#00798A', steps: '#B25E00', sleep: '#6A3BD1', heart: '#C9201A'
+    };
+    const days = [['F', 80, 100, 90], ['S', 100, 100, 100], ['S', 45, 30, 60], ['M', 90, 100, 85], ['T', 100, 70, 90], ['W', 70, 100, 80], ['T', 61, 100, 75]];
+    const week = days.map(([l, m, e, s], i) => ({ l, m, e, s, weight: i === 6 ? 700 : 500, color: i === 6 ? t.text : t.text2 }));
+    const steps = [['F', 9200], ['S', 11400], ['S', 5200], ['M', 7800], ['T', 10300], ['W', 5700], ['T', 7235]];
+    const bars = steps.map(([d, v], i) => ({
+      d, h: Math.round(v / 12000 * 110), c: i === 6 ? '#FF9500' : 'rgba(255,149,0,0.42)',
+      weight: i === 6 ? 700 : 500, label: i === 6 ? t.text : t.text2
+    }));
+    return { t, week, bars };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Design system</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Nunito:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#007AFF}a:hover{color:#0062CC}
+</style>
+</helmet>
+<div style="width: 1280px; height: 1520px; box-sizing: border-box; padding: 56px; background: #F2F2F7; font-family: -apple-system, 'SF Pro Text', Inter, system-ui, sans-serif; color: #1C1C1E; display: flex; flex-direction: column; gap: 24px">
+  <div>
+    <div style="font-size: 13px; font-weight: 600; color: #6C6C70; letter-spacing: 0.4px; text-transform: uppercase">Workout Plan iOS · built on iOS 27</div>
+    <h1 style="margin: 6px 0 0; font-size: 44px; font-weight: 700; letter-spacing: -0.5px">Design system</h1>
+    <p style="margin: 8px 0 0; font-size: 17px; line-height: 24px; color: #3A3A3C; max-width: 820px">System components carry Liquid Glass; our content stays flat and calm underneath. Every metric owns one colour everywhere: rings, charts, numbers and the trainer page.</p>
+  </div>
+
+  <div style="display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 24px">
+    <section style="grid-column: span 7; background: #FFFFFF; border-radius: 24px; padding: 24px">
+      <h2 style="margin: 0 0 4px; font-size: 20px; font-weight: 700">Metric colours</h2>
+      <p style="margin: 0 0 16px; font-size: 13px; color: #6C6C70">Graphic colour for rings and charts · text-safe colour for numbers and labels on light backgrounds</p>
+      <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px">
+        <sc-for list="{{metrics}}" as="m" hint-placeholder-count="8">
+          <div>
+            <div style="height: 56px; border-radius: 14px; background: {{m.ring}}; display: flex; align-items: flex-end; padding: 8px 10px; box-sizing: border-box">
+              <span style="background: #FFFFFF; color: {{m.text}}; font: 700 13px 'SF Pro Rounded', ui-rounded, Nunito, sans-serif; padding: 2px 8px; border-radius: 8px">{{m.name}}</span>
+            </div>
+            <div style="margin-top: 6px; font-size: 12px; color: #3A3A3C">{{m.use}}</div>
+            <div style="font-size: 11px; color: #6C6C70; font-family: ui-monospace, Menlo, monospace">{{m.ring}} · {{m.text}}</div>
+          </div>
+        </sc-for>
+      </div>
+    </section>
+
+    <section style="grid-column: span 5; background: #FFFFFF; border-radius: 24px; padding: 24px">
+      <h2 style="margin: 0 0 16px; font-size: 20px; font-weight: 700">Surfaces and tint</h2>
+      <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px">
+        <div style="border-radius: 16px; background: #F2F2F7; padding: 12px; display: flex; flex-direction: column; gap: 6px">
+          <div style="font-size: 13px; font-weight: 600">Light</div>
+          <sc-for list="{{light}}" as="s" hint-placeholder-count="7">
+            <div style="display: flex; align-items: center; gap: 8px; font-size: 12px"><span style="width: 22px; height: 22px; border-radius: 6px; background: {{s.hex}}; border: 0.5px solid rgba(0,0,0,0.15)"></span><span style="flex: 1">{{s.name}}</span><span style="font-family: ui-monospace, Menlo, monospace; color: #6C6C70">{{s.hex}}</span></div>
+          </sc-for>
+        </div>
+        <div style="border-radius: 16px; background: #000000; color: #FFFFFF; padding: 12px; display: flex; flex-direction: column; gap: 6px">
+          <div style="font-size: 13px; font-weight: 600">Dark</div>
+          <sc-for list="{{dark}}" as="s" hint-placeholder-count="7">
+            <div style="display: flex; align-items: center; gap: 8px; font-size: 12px"><span style="width: 22px; height: 22px; border-radius: 6px; background: {{s.hex}}; border: 0.5px solid rgba(255,255,255,0.25)"></span><span style="flex: 1">{{s.name}}</span><span style="font-family: ui-monospace, Menlo, monospace; color: #98989F">{{s.hex}}</span></div>
+          </sc-for>
+        </div>
+      </div>
+    </section>
+
+    <section style="grid-column: span 7; background: #FFFFFF; border-radius: 24px; padding: 24px">
+      <h2 style="margin: 0 0 4px; font-size: 20px; font-weight: 700">Type</h2>
+      <p style="margin: 0 0 12px; font-size: 13px; color: #6C6C70">SF Pro for words, SF Pro Rounded for numbers. Dynamic Type sizes at Large (default)</p>
+      <div style="display: flex; flex-direction: column">
+        <sc-for list="{{type}}" as="t" hint-placeholder-count="10">
+          <div style="display: grid; grid-template-columns: 150px 110px 1fr; align-items: baseline; padding: 7px 0; border-bottom: 0.5px solid #E5E5EA">
+            <span style="font-size: 13px; color: #3A3A3C">{{t.name}}</span>
+            <span style="font-size: 12px; color: #6C6C70; font-family: ui-monospace, Menlo, monospace">{{t.spec}}</span>
+            <span style="font-size: {{t.size}}px; font-weight: {{t.weight}}; font-family: {{t.family}}; line-height: 1.15">{{t.sample}}</span>
+          </div>
+        </sc-for>
+      </div>
+    </section>
+
+    <section style="grid-column: span 5; background: #FFFFFF; border-radius: 24px; padding: 24px; display: flex; flex-direction: column; gap: 18px">
+      <div>
+        <h2 style="margin: 0 0 12px; font-size: 20px; font-weight: 700">Spacing · 4 pt grid</h2>
+        <div style="display: flex; flex-direction: column; gap: 6px">
+          <sc-for list="{{space}}" as="s" hint-placeholder-count="7">
+            <div style="display: flex; align-items: center; gap: 12px; font-size: 12px; color: #6C6C70"><span style="width: 28px; font-family: ui-monospace, Menlo, monospace">{{s.v}}</span><span style="height: 10px; width: {{s.w}}px; border-radius: 3px; background: #007AFF"></span><span>{{s.use}}</span></div>
+          </sc-for>
+        </div>
+      </div>
+      <div>
+        <h2 style="margin: 0 0 12px; font-size: 20px; font-weight: 700">Corner radius</h2>
+        <div style="display: flex; gap: 14px; align-items: flex-end">
+          <sc-for list="{{radius}}" as="r" hint-placeholder-count="5">
+            <div style="text-align: center; font-size: 12px; color: #6C6C70"><div style="width: 64px; height: 64px; background: #EEEEF0; border: 1.5px solid #C7C7CC; border-radius: {{r.v}}px; margin-bottom: 6px"></div>{{r.label}}</div>
+          </sc-for>
+        </div>
+      </div>
+      <div>
+        <h2 style="margin: 0 0 8px; font-size: 20px; font-weight: 700">Rules</h2>
+        <ul style="margin: 0; padding-left: 18px; font-size: 14px; line-height: 21px; color: #3A3A3C">
+          <li>Glass only on tab bar, toolbars, sheets and floating buttons; cards stay solid.</li>
+          <li>Small text uses the text-safe colour; rings and charts use the graphic colour.</li>
+          <li>Every screen in light and dark, at any Liquid Glass slider setting.</li>
+          <li>Touch targets at least 44 pt.</li>
+        </ul>
+      </div>
+    </section>
+
+    <section style="grid-column: span 12; background: #FFFFFF; border-radius: 24px; padding: 24px">
+      <h2 style="margin: 0 0 16px; font-size: 20px; font-weight: 700">Components</h2>
+      <div style="display: flex; gap: 28px; align-items: flex-start; flex-wrap: wrap">
+        <div style="width: 173px; height: 168px; border-radius: 24px; background: #F2F2F7; padding: 14px; box-sizing: border-box; display: flex; flex-direction: column">
+          <div style="display: flex; align-items: center; gap: 6px; font-size: 15px; font-weight: 600; color: #B25E00"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 17h12.5a3.5 3.5 0 0 0 3.5-3.5c0-1.5-1.2-2.3-2.8-2.7L13 9.5 11 6H8.5L9 9 6 10 4 9z"/></svg>Steps</div>
+          <div style="margin-top: auto; font: 700 30px 'SF Pro Rounded', ui-rounded, Nunito, sans-serif">7,235</div>
+          <div style="font-size: 13px; color: #6C6C70">of 10,000</div>
+          <div style="margin-top: 8px; height: 6px; border-radius: 3px; background: rgba(255,149,0,0.2)"><div style="width: 72%; height: 6px; border-radius: 3px; background: #FF9500"></div></div>
+        </div>
+        <div style="text-align: center; font-size: 12px; color: #6C6C70">
+          <svg width="120" height="120" viewBox="0 0 120 120" role="img" aria-label="Activity rings">
+            <circle cx="60" cy="60" r="50" fill="none" stroke="#FA114F" stroke-opacity="0.2" stroke-width="13"/><circle cx="60" cy="60" r="50" fill="none" stroke="#FA114F" stroke-width="13" stroke-linecap="round" pathLength="100" stroke-dasharray="61 100" transform="rotate(-90 60 60)"/>
+            <circle cx="60" cy="60" r="35" fill="none" stroke="#7ED321" stroke-opacity="0.2" stroke-width="13"/><circle cx="60" cy="60" r="35" fill="none" stroke="#7ED321" stroke-width="13" stroke-linecap="round" pathLength="100" stroke-dasharray="100 100" transform="rotate(-90 60 60)"/>
+            <circle cx="60" cy="60" r="20" fill="none" stroke="#00C7D9" stroke-opacity="0.2" stroke-width="13"/><circle cx="60" cy="60" r="20" fill="none" stroke="#00C7D9" stroke-width="13" stroke-linecap="round" pathLength="100" stroke-dasharray="75 100" transform="rotate(-90 60 60)"/>
+          </svg>
+          <div>Activity rings</div>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 14px; width: 260px">
+          <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); background: #EEEEF0; border-radius: 10px; padding: 2px">
+            <button style="border: none; background: transparent; padding: 6px 0; font: 500 13px -apple-system, Inter, sans-serif; border-radius: 8px; color: #1C1C1E">Week</button>
+            <button aria-pressed="true" style="border: none; background: #FFFFFF; padding: 6px 0; font: 600 13px -apple-system, Inter, sans-serif; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.12); color: #1C1C1E">Month</button>
+            <button style="border: none; background: transparent; padding: 6px 0; font: 500 13px -apple-system, Inter, sans-serif; border-radius: 8px; color: #1C1C1E">Year</button>
+          </div>
+          <button style="height: 50px; border: none; border-radius: 25px; background: #007AFF; color: #FFFFFF; font: 600 17px -apple-system, Inter, sans-serif">Primary action</button>
+          <div style="display: flex; gap: 8px">
+            <button aria-pressed="true" style="border: none; border-radius: 16px; padding: 7px 14px; background: #1C1C1E; color: #FFFFFF; font: 600 14px -apple-system, Inter, sans-serif">All</button>
+            <button style="border: 0.5px solid #D1D1D6; border-radius: 16px; padding: 7px 14px; background: #FFFFFF; color: #1C1C1E; font: 600 14px -apple-system, Inter, sans-serif">Lunch</button>
+          </div>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 14px; align-items: flex-start">
+          <div style="display: flex; gap: 10px">
+            <button aria-label="Add" style="width: 44px; height: 44px; border-radius: 22px; background: rgba(255,255,255,0.75); border: 0.5px solid rgba(0,0,0,0.1); box-shadow: 0 2px 10px rgba(0,0,0,0.08); display: flex; align-items: center; justify-content: center; color: #1C1C1E"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
+            <button aria-label="Account" style="width: 44px; height: 44px; border-radius: 22px; background: #1C1C1E; border: none; color: #FFFFFF; font: 600 17px -apple-system, Inter, sans-serif">V</button>
+          </div>
+          <button role="switch" aria-checked="true" aria-label="Example switch" style="width: 51px; height: 31px; border-radius: 16px; border: none; padding: 2px; background: #34C759; display: flex; justify-content: flex-end"><span style="width: 27px; height: 27px; border-radius: 14px; background: #FFFFFF; box-shadow: 0 2px 4px rgba(0,0,0,0.2)"></span></button>
+          <span style="font-size: 12px; color: #6C6C70">Glass buttons · switch</span>
+        </div>
+        <div style="width: 350px; height: 64px; border-radius: 32px; background: rgba(250,250,252,0.85); border: 0.5px solid rgba(0,0,0,0.08); box-shadow: 0 8px 24px rgba(0,0,0,0.10); display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); padding: 4px; box-sizing: border-box; align-self: center">
+          <span style="border-radius: 28px; background: rgba(0,122,255,0.14); color: #007AFF; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600">Activity</span>
+          <span style="display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; color: #3A3A3C">Weight</span>
+          <span style="display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; color: #3A3A3C">Food</span>
+          <span style="display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; color: #3A3A3C">Review</span>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":1520}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const R = "'SF Pro Rounded', ui-rounded, Nunito, sans-serif";
+    const S = "-apple-system, 'SF Pro Text', Inter, sans-serif";
+    return {
+      metrics: [
+        { name: 'Move', use: 'Active energy · ring', ring: '#FA114F', text: '#C8003C' },
+        { name: 'Exercise', use: 'Exercise minutes · ring', ring: '#7ED321', text: '#3B7A00' },
+        { name: 'Stand', use: 'Stand hours · ring', ring: '#00C7D9', text: '#00798A' },
+        { name: 'Steps', use: 'Steps and distance', ring: '#FF9500', text: '#B25E00' },
+        { name: 'Sleep', use: 'Sleep and stages', ring: '#8E5CF7', text: '#6A3BD1' },
+        { name: 'Heart', use: 'Heart rate', ring: '#FF3B30', text: '#C9201A' },
+        { name: 'Weight', use: 'Weight tab', ring: '#0A84FF', text: '#0062CC' },
+        { name: 'Food', use: 'Food tab', ring: '#FFB000', text: '#946200' }
+      ],
+      light: [
+        { name: 'Background', hex: '#F2F2F7' }, { name: 'Card', hex: '#FFFFFF' }, { name: 'Fill', hex: '#EEEEF0' },
+        { name: 'Separator', hex: '#E5E5EA' }, { name: 'Label', hex: '#1C1C1E' }, { name: 'Secondary', hex: '#6C6C70' }, { name: 'Tint', hex: '#007AFF' }
+      ],
+      dark: [
+        { name: 'Background', hex: '#000000' }, { name: 'Card', hex: '#1C1C1E' }, { name: 'Fill', hex: '#2C2C2E' },
+        { name: 'Separator', hex: '#38383A' }, { name: 'Label', hex: '#FFFFFF' }, { name: 'Secondary', hex: '#98989F' }, { name: 'Tint', hex: '#0A84FF' }
+      ],
+      type: [
+        { name: 'Metric XL', spec: '44 · Bold', size: 44, weight: 700, family: R, sample: '7,235' },
+        { name: 'Metric L', spec: '30 · Bold', size: 30, weight: 700, family: R, sample: '78.4 kg' },
+        { name: 'Large Title', spec: '34/41 · Bold', size: 34, weight: 700, family: S, sample: 'Good day, Vernon' },
+        { name: 'Title 2', spec: '22/28 · Bold', size: 22, weight: 700, family: S, sample: 'Highlights' },
+        { name: 'Headline', spec: '17/22 · Semibold', size: 17, weight: 600, family: S, sample: 'Steps' },
+        { name: 'Body', spec: '17/22 · Regular', size: 17, weight: 400, family: S, sample: 'Log your weigh-in' },
+        { name: 'Subheadline', spec: '15/20 · Regular', size: 15, weight: 400, family: S, sample: 'Today, 7:12 AM' },
+        { name: 'Footnote', spec: '13/18 · Regular', size: 13, weight: 400, family: S, sample: 'Up to 6 photos' },
+        { name: 'Caption', spec: '12/16 · Medium', size: 12, weight: 500, family: S, sample: 'THU 26 NOV' }
+      ],
+      space: [
+        { v: '4', w: 4, use: 'icon to label' }, { v: '8', w: 8, use: 'inside a row' }, { v: '12', w: 12, use: 'between cards' },
+        { v: '16', w: 16, use: 'card padding, screen margin' }, { v: '20', w: 20, use: 'hero padding' }, { v: '24', w: 24, use: 'above a section' }, { v: '32', w: 32, use: 'between sections' }
+      ],
+      radius: [
+        { v: 10, label: '10 control' }, { v: 16, label: '16 tile' }, { v: 24, label: '24 card' }, { v: 28, label: '28 hero' }, { v: 32, label: 'full pill' }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

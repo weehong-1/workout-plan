@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Weight</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Nunito:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; position: relative; overflow: hidden; background: {{t.bg}}; font-family: -apple-system, 'SF Pro Text', Inter, system-ui, sans-serif; color: {{t.text}}; box-sizing: border-box">
+  <div style="padding: 54px 16px 0; display: flex; justify-content: flex-end; gap: 10px">
+    <a href="WeighIn.dc.html" aria-label="Log weigh-in" style="width: 44px; height: 44px; border-radius: 22px; background: {{t.glass}}; backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 0.5px solid {{t.glassBorder}}; display: flex; align-items: center; justify-content: center; color: {{t.text}}">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+    </a>
+    <button aria-label="Account" style="width: 44px; height: 44px; border-radius: 22px; background: {{t.fill}}; border: 0.5px solid {{t.glassBorder}}; color: {{t.text}}; font: 600 17px -apple-system, Inter, sans-serif">V</button>
+  </div>
+  <h1 style="margin: 6px 20px 14px; font-size: 34px; line-height: 41px; font-weight: 700">Weight</h1>
+
+  <section style="margin: 0 16px; background: {{t.card}}; border-radius: 28px; padding: 18px 20px 14px">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start">
+      <div>
+        <div style="font-size: 13px; font-weight: 600; color: {{t.weight}}">Latest</div>
+        <div><span style="font: 700 44px 'SF Pro Rounded', ui-rounded, Nunito, sans-serif">78.4</span><span style="font-size: 20px; font-weight: 600; color: {{t.text2}}"> kg</span></div>
+        <div style="font-size: 13px; color: {{t.text2}}">Today, 7:12 AM</div>
+      </div>
+      <span style="margin-top: 4px; background: {{t.chipBg}}; color: {{t.weight}}; border-radius: 14px; padding: 5px 10px; font: 700 14px 'SF Pro Rounded', ui-rounded, Nunito, sans-serif">−0.6 kg this week</span>
+    </div>
+    <div style="margin-top: 14px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); background: {{t.segTrack}}; border-radius: 10px; padding: 2px">
+      <button style="border: none; background: transparent; padding: 6px 0; font: 500 13px -apple-system, Inter, sans-serif; border-radius: 8px; color: {{t.text}}">Week</button>
+      <button aria-pressed="true" style="border: none; background: {{t.segSel}}; padding: 6px 0; font: 600 13px -apple-system, Inter, sans-serif; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.12); color: {{t.text}}">Month</button>
+      <button style="border: none; background: transparent; padding: 6px 0; font: 500 13px -apple-system, Inter, sans-serif; border-radius: 8px; color: {{t.text}}">Year</button>
+    </div>
+    <svg width="318" height="150" viewBox="0 0 318 150" role="img" aria-label="Weight in November, falling from 80.2 to 78.4 kg" style="display: block; margin-top: 12px">
+      <path d="M0 20H318M0 65H318M0 110H318" stroke="{{t.sep}}" stroke-width="1"/>
+      <text x="318" y="16" text-anchor="end" font-size="11" fill="{{t.text2}}" font-family="-apple-system, Inter, sans-serif">80</text>
+      <text x="318" y="61" text-anchor="end" font-size="11" fill="{{t.text2}}" font-family="-apple-system, Inter, sans-serif">79</text>
+      <text x="318" y="106" text-anchor="end" font-size="11" fill="{{t.text2}}" font-family="-apple-system, Inter, sans-serif">78</text>
+      <polyline fill="none" stroke="#0A84FF" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" points="4,30 36,38 68,34 100,50 132,58 164,55 196,70 228,80 260,86 292,92"/>
+      <circle cx="292" cy="92" r="5.5" fill="#0A84FF" stroke="{{t.card}}" stroke-width="2.5"/>
+      <text x="0" y="144" font-size="11" fill="{{t.text2}}" font-family="-apple-system, Inter, sans-serif">2 Nov</text>
+      <text x="292" y="144" font-size="11" fill="{{t.text2}}" text-anchor="middle" font-family="-apple-system, Inter, sans-serif">26 Nov</text>
+    </svg>
+  </section>
+
+  <h2 style="margin: 22px 20px 8px; font-size: 22px; line-height: 28px; font-weight: 700">History</h2>
+  <div style="margin: 0 16px; background: {{t.card}}; border-radius: 24px; overflow: hidden">
+    <sc-for list="{{rows}}" as="row" hint-placeholder-count="3">
+      <a href="WeighIn.dc.html" style="display: flex; align-items: center; gap: 12px; padding: 11px 16px; text-decoration: none; color: {{t.text}}; border-bottom: 0.5px solid {{t.sep}}">
+        <div style="flex: 1">
+          <div><span style="font: 700 19px 'SF Pro Rounded', ui-rounded, Nunito, sans-serif">{{row.weight}}</span><span style="font-size: 14px; color: {{t.text2}}"> kg</span></div>
+          <div style="font-size: 13px; color: {{t.text2}}; margin-top: 1px">{{row.date}}</div>
+        </div>
+        <sc-if value="{{row.hasPhoto}}" hint-placeholder-val="{{true}}">
+          <div aria-label="Progress photo" style="width: 40px; height: 40px; border-radius: 10px; background: {{t.ph}}; display: flex; align-items: center; justify-content: center; color: {{t.text2}}">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-8 8"/></svg>
+          </div>
+        </sc-if>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="{{t.text2}}" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+      </a>
+    </sc-for>
+  </div>
+
+  <nav aria-label="Tabs" style="position: absolute; left: 20px; right: 20px; bottom: 28px; height: 64px; border-radius: 32px; background: {{t.glass}}; backdrop-filter: blur(20px) saturate(180%); -webkit-backdrop-filter: blur(20px) saturate(180%); border: 0.5px solid {{t.glassBorder}}; box-shadow: 0 8px 24px rgba(0,0,0,0.18); display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); padding: 4px; box-sizing: border-box">
+    <a href="Activity.dc.html" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; border-radius: 28px; text-decoration: none; color: {{t.tabText}}; font-size: 10px; font-weight: 600">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5.5"/><circle cx="12" cy="12" r="2"/></svg>Activity</a>
+    <a href="Main.dc.html" aria-current="page" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; border-radius: 28px; text-decoration: none; background: {{t.tabSel}}; color: {{t.tint}}; font-size: 10px; font-weight: 600">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><rect x="3.5" y="3.5" width="17" height="17" rx="5"/><path d="M8.5 9.5a5 5 0 0 1 7 0M12 10l1.3-1.8"/></svg>Weight</a>
+    <a href="Food.dc.html" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; border-radius: 28px; text-decoration: none; color: {{t.tabText}}; font-size: 10px; font-weight: 600">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 3v5a2 2 0 0 0 4 0V3M7 3v18M17 3c-2 1.5-2.5 4-2.5 7H17v11"/></svg>Food</a>
+    <a href="Review.dc.html" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; border-radius: 28px; text-decoration: none; color: {{t.tabText}}; font-size: 10px; font-weight: 600">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><rect x="3.5" y="4.5" width="17" height="16" rx="3"/><path d="M8 16v-3M12 16V9M16 16v-5"/></svg>Review</a>
+  </nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"dark":{"editor":"boolean","default":true},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const dark = this.props.dark ?? true;
+    const t = dark ? {
+      bg: '#000000', card: '#1C1C1E', fill: '#2C2C2E', sep: '#38383A', text: '#FFFFFF', text2: '#98989F', ph: '#2C2C2E',
+      glass: 'rgba(36,36,38,0.72)', glassBorder: 'rgba(255,255,255,0.12)', tint: '#0A84FF', tabSel: 'rgba(10,132,255,0.22)', tabText: '#D1D1D6',
+      segTrack: 'rgba(118,118,128,0.24)', segSel: '#636366', weight: '#409CFF', chipBg: 'rgba(10,132,255,0.2)'
+    } : {
+      bg: '#F2F2F7', card: '#FFFFFF', fill: '#E5E5EA', sep: '#E5E5EA', text: '#1C1C1E', text2: '#6C6C70', ph: '#E5E5EA',
+      glass: 'rgba(250,250,252,0.8)', glassBorder: 'rgba(0,0,0,0.08)', tint: '#007AFF', tabSel: 'rgba(0,122,255,0.14)', tabText: '#3A3A3C',
+      segTrack: 'rgba(118,118,128,0.12)', segSel: '#FFFFFF', weight: '#0062CC', chipBg: 'rgba(10,132,255,0.12)'
+    };
+    return {
+      t,
+      rows: [
+        { weight: '78.4', date: 'Thu, 26 Nov', hasPhoto: true },
+        { weight: '78.7', date: 'Tue, 24 Nov', hasPhoto: false },
+        { weight: '79.0', date: 'Sat, 21 Nov', hasPhoto: true }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>
