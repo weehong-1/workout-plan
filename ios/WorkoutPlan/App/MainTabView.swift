@@ -7,23 +7,22 @@ enum AppTab: Hashable {
 /// System tab bar with the four modules (spec 4). The system tab bar carries
 /// the iOS 27 Liquid Glass look; there is no custom tab bar.
 struct MainTabView: View {
-    let store: any HealthStore
-    let weightStore: any WeightStore
+    @Environment(AppServices.self) private var services
     @State private var selection: AppTab = .activity
 
     var body: some View {
         TabView(selection: $selection) {
             Tab("Activity", systemImage: "circle.circle", value: AppTab.activity) {
-                ActivityDashboardView(store: store)
+                ActivityDashboardView(store: services.health)
             }
             Tab("Weight", systemImage: "scalemass", value: AppTab.weight) {
-                WeightTabView(store: weightStore)
+                WeightTabView(store: services.weight)
             }
             Tab("Food", systemImage: "fork.knife", value: AppTab.food) {
-                PlaceholderTabView(title: "Food")
+                FoodTabView(store: services.food)
             }
             Tab("Review", systemImage: "chart.bar.doc.horizontal", value: AppTab.review) {
-                PlaceholderTabView(title: "Review")
+                ReviewTabView()
             }
         }
         .tint(Color.appTint)
@@ -31,5 +30,6 @@ struct MainTabView: View {
 }
 
 #Preview {
-    MainTabView(store: SampleHealthStore(), weightStore: InMemoryWeightStore.sample())
+    MainTabView()
+        .environment(AppServices.preview)
 }
