@@ -27,6 +27,8 @@ Personal project, not Resetrix. This file is the record of decisions for the iOS
 | D5 | The trainer sees the shared data through a link. An expiry can be set or left off | Vernon, 26 Nov 2026 |
 | D6 | One design system for the app (section 3), with every screen in light and dark mode | Vernon, 26 Nov 2026 |
 | D7 | Code is written on Windows and pushed to this repo; the app is built in Xcode on a Mac after cloning. Xcode Cloud is not used | Vernon, 26 Nov 2026 |
+| D8 | Until the backend is decided (section 8), weigh-ins and progress photos are stored on the phone only (SwiftData and app files), behind a store that a synced one can replace | Vernon, 26 Nov 2026 |
+| D9 | Weigh-ins are not written to Apple Health for now; the app stays read only for Health | Vernon, 26 Nov 2026 |
 
 ## 3. Design rules for iOS 27
 
@@ -103,7 +105,7 @@ Camera and photo library permissions are asked only when first used.
 * History list, newest first, with photo thumbnails.
 * **+** opens the Log weigh-in sheet: weight, date (today by default), optional photos from camera or library, Save. One entry per day; logging a date that already has an entry edits it.
 * Tap an entry to edit or delete it.
-* **Open:** whether weigh-ins are also written to Apple Health.
+* Weigh-ins are not written to Apple Health for now (D9).
 * **Proposed:** a side-by-side view of two dates' photos to compare progress.
 
 ### 6.3 Food
@@ -139,7 +141,7 @@ Avatar in the top bar of every tab: units, Health access status, sign out, delet
 ## 8. Data
 
 * Activity, sleep and heart data stay in Apple Health. The app reads them on the phone. Only the summaries included in a trainer link are copied to the server, after consent.
-* Weight entries, weight photos and food photos are stored in the backend.
+* Weight entries, weight photos and food photos are stored in the backend. Until the backend is decided, weight entries and photos stay on the phone (D8).
 * **Open:** keep the existing Supabase project (weight history and photos carry over) or start a new one.
 
 ## 9. Next steps
