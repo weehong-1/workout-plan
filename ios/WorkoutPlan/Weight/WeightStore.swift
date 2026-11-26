@@ -5,7 +5,7 @@ import SwiftData
 ///
 /// Phase 2 keeps everything on the phone (spec D8). The backend is still open
 /// (spec 8); a synced store can replace this one behind the same protocol.
-protocol WeightStore: Sendable {
+protocol WeightStore: PhotoSource {
     /// All weigh-ins, newest day first.
     func entries() async throws -> [WeighIn]
 
@@ -20,18 +20,22 @@ protocol WeightStore: Sendable {
 
     /// Stored JPEG data of a progress photo.
     func photoData(_ id: UUID) async -> Data?
+
+    /// Removes every weigh-in and photo (account deletion).
+    func deleteAll() async throws
 }
 
-enum WeightStoreFactory {
-    /// SwiftData store on disk. Falls back to memory only if the store cannot
-    /// be opened, so the app still runs (nothing is then kept).
-    static func make() -> any WeightStore {
+/// The on-phone stores for weight and food, sharing one SwiftData container.
+enum LocalStoresFactory {
+    /// Falls back to memory only if the container cannot be opened, so the app
+    /// still runs (nothing is then kept).
+    static func make() -> (weight: any WeightStore, food: any FoodStore) {
         do {
-            let container = try ModelContainer(for: WeighInRecord.self)
-            return SwiftDataWeightStore(modelContainer: container)
+            let container = try ModelContainer(for: WeighInRecord.self, FoodPhotoRecord.self)
+            return (SwiftDataWeightStore(modelContainer: container), SwiftDataFoodStore(modelContainer: container))
         } catch {
-            assertionFailure("Could not open the weight store: \(error)")
-            return InMemoryWeightStore()
+            assertionFailure("Could not open the on-phone store: \(error)")
+            return (InMemoryWeightStore(), InMemoryFoodStore())
         }
     }
 }

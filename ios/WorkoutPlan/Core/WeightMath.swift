@@ -53,7 +53,7 @@ enum WeightMath {
         let number = (try? Double(trimmed, format: .number.locale(locale)))
             ?? Double(trimmed.replacingOccurrences(of: ",", with: "."))
         guard let number, number.isFinite else { return nil }
-        let kilograms = kilograms(from: number, in: unit)
+        let kilograms = Self.kilograms(from: number, in: unit)
         return validKilograms.contains(kilograms) ? kilograms : nil
     }
 

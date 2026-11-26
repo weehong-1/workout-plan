@@ -1,10 +1,15 @@
 import SwiftUI
 import UIKit
 
+/// Anything that can hand out stored photo data by id.
+protocol PhotoSource: Sendable {
+    func photoData(_ id: UUID) async -> Data?
+}
+
 /// A progress photo, square-cropped to fill its frame. Decodes off the main actor.
 struct PhotoThumbnail: View {
     let photo: DraftPhoto
-    let store: any WeightStore
+    let store: any PhotoSource
     var maxPixelSize = 300
 
     @State private var image: UIImage?

@@ -104,4 +104,14 @@ actor SwiftDataWeightStore: WeightStore {
     func photoData(_ id: UUID) async -> Data? {
         photoFiles.read(id)
     }
+
+    func deleteAll() async throws {
+        let records = try modelContext.fetch(FetchDescriptor<WeighInRecord>())
+        let photoIDs = records.flatMap(\.photoIDs)
+        for record in records {
+            modelContext.delete(record)
+        }
+        try modelContext.save()
+        photoFiles.delete(photoIDs)
+    }
 }

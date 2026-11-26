@@ -52,6 +52,11 @@ actor InMemoryWeightStore: WeightStore {
         photos[id]
     }
 
+    func deleteAll() async throws {
+        records = []
+        photos = [:]
+    }
+
     /// A month of sample weigh-ins, for previews.
     static func sample(now: Date = Date(), calendar: Calendar = .current) -> InMemoryWeightStore {
         let today = calendar.startOfDay(for: now)

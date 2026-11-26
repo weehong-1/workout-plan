@@ -16,6 +16,26 @@ enum PhotoProcessing {
         return jpeg(image, quality: jpegQuality)
     }
 
+    /// Capture date from the photo's metadata (EXIF DateTimeOriginal), read
+    /// before the metadata is stripped. Interpreted in the current time zone
+    /// unless the photo records its offset.
+    static func captureDate(_ data: Data) -> Date? {
+        guard let source = CGImageSourceCreateWithData(data as CFData, nil),
+              let properties = CGImageSourceCopyPropertiesAtIndex(source, 0, nil) as? [CFString: Any],
+              let exif = properties[kCGImagePropertyExifDictionary] as? [CFString: Any],
+              let original = exif[kCGImagePropertyExifDateTimeOriginal] as? String
+        else { return nil }
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        if let offset = exif[kCGImagePropertyExifOffsetTimeOriginal] as? String {
+            formatter.dateFormat = "yyyy:MM:dd HH:mm:ssxxx"
+            if let date = formatter.date(from: original + offset) { return date }
+        }
+        formatter.dateFormat = "yyyy:MM:dd HH:mm:ss"
+        formatter.timeZone = .current
+        return formatter.date(from: original)
+    }
+
     /// Small image for thumbnails.
     static func thumbnail(_ data: Data, maxPixelSize: Int) -> UIImage? {
         downsample(data, maxPixelSize: maxPixelSize).map { UIImage(cgImage: $0) }

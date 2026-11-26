@@ -194,4 +194,5 @@ private struct HistoryRow: View {
 
 #Preview {
     WeightTabView(store: InMemoryWeightStore.sample())
+        .environment(AppServices.preview)
 }
