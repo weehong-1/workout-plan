@@ -4,4 +4,12 @@
         <item quantity="one">%d weigh-in</item>
         <item quantity="other">%d weigh-ins</item>
     </plurals>
+    <plurals name="weight_streak_down">
+        <item quantity="one">%d week down</item>
+        <item quantity="other">%d weeks down in a row</item>
+    </plurals>
+    <plurals name="weight_streak_up">
+        <item quantity="one">%d week up</item>
+        <item quantity="other">%d weeks up in a row</item>
+    </plurals>
 </resources>

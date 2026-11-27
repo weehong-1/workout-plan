@@ -91,13 +91,21 @@ data class MetricColor(
     val onStrong: Color,
 )
 
-/** Change pills: a fall reads as good, a rise as a warning (weight). */
+/**
+ * Weight changes: a fall reads as good, a rise as a warning. Text on
+ * containers for pills; dots for chart points; [goodStrong] and [upStrong]
+ * fill the change badge with white text.
+ */
 @Immutable
 data class TrendColors(
     val goodText: Color,
     val goodContainer: Color,
     val upText: Color,
     val upContainer: Color,
+    val goodDot: Color,
+    val upDot: Color,
+    val goodStrong: Color,
+    val upStrong: Color,
 )
 
 @Immutable
@@ -147,9 +155,17 @@ private fun metricColors(dark: Boolean) = MetricColors(
     ),
     food = metric(0xFFFFB000, 0xFF946200, 0xFFFFC23D, 0xFFFFF0CF, 0xFF352A10, dark),
     trend = if (dark) {
-        TrendColors(Color(0xFF30D158), Color(0x3334C759), Color(0xFFFFB4AB), Color(0x2EFF3B30))
+        TrendColors(
+            Color(0xFF30D158), Color(0x3334C759), Color(0xFFFFB4AB), Color(0x2EFF3B30),
+            goodDot = Color(0xFF30D158), upDot = Color(0xFFFF453A),
+            goodStrong = Color(0xFF1E8E3E), upStrong = Color(0xFFC9201A),
+        )
     } else {
-        TrendColors(Color(0xFF1E7B34), Color(0x2934C759), Color(0xFFB3261E), Color(0x1FFF3B30))
+        TrendColors(
+            Color(0xFF1E7B34), Color(0x2934C759), Color(0xFFB3261E), Color(0x1FFF3B30),
+            goodDot = Color(0xFF1E9E45), upDot = Color(0xFFE5342A),
+            goodStrong = Color(0xFF1E7B34), upStrong = Color(0xFFB3261E),
+        )
     },
 )
 

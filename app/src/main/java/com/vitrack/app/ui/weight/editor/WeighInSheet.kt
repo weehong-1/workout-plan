@@ -123,7 +123,7 @@ fun WeighInSheet(
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
                     stringResource(if (state.isEditing) R.string.weighin_title_edit else R.string.weighin_title_new),
-                    style = MaterialTheme.typography.headlineSmall.copy(fontSize = 26.sp, fontWeight = FontWeight.ExtraBold),
+                    style = MaterialTheme.typography.titleLarge,
                     modifier = Modifier.weight(1f).padding(horizontal = Spacing.xs).semantics { heading() },
                 )
                 if (state.isEditing) {
@@ -156,7 +156,7 @@ fun WeighInSheet(
                         append(" " + stringResource(R.string.weighin_optional))
                     }
                 },
-                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.ExtraBold),
+                style = MaterialTheme.typography.titleMedium,
                 modifier = Modifier.padding(start = Spacing.xs, top = Spacing.xl, bottom = 10.dp),
             )
             PhotoGrid(
@@ -196,7 +196,7 @@ fun WeighInSheet(
                         containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
                         contentColor = MaterialTheme.colorScheme.onSurface,
                     ),
-                ) { Text(stringResource(R.string.weighin_cancel), style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)) }
+                ) { Text(stringResource(R.string.weighin_cancel), style = MaterialTheme.typography.titleMedium) }
                 Button(
                     onClick = viewModel::save,
                     enabled = state.canSave,
@@ -206,7 +206,7 @@ fun WeighInSheet(
                     Icon(painterResource(R.drawable.ic_check), contentDescription = null, modifier = Modifier.size(20.dp))
                     Text(
                         stringResource(R.string.weighin_save),
-                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.ExtraBold),
+                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                         modifier = Modifier.padding(start = Spacing.s),
                     )
                 }
@@ -249,7 +249,7 @@ private fun WeightHero(state: WeighInEditorState, viewModel: WeighInEditorViewMo
     val fieldLabel = stringResource(R.string.weighin_weight)
     Surface(modifier = modifier.fillMaxWidth(), shape = RoundedCornerShape(32.dp), color = weight.hero) {
         Column(Modifier.padding(horizontal = Spacing.l, vertical = 18.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(fieldLabel, style = MaterialTheme.typography.labelLarge.copy(fontSize = 13.sp, fontWeight = FontWeight.Bold), color = weight.text)
+            Text(fieldLabel, style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.SemiBold), color = weight.text)
             Row(
                 modifier = Modifier.fillMaxWidth().padding(top = Spacing.xs),
                 verticalAlignment = Alignment.CenterVertically,
@@ -262,21 +262,21 @@ private fun WeightHero(state: WeighInEditorState, viewModel: WeighInEditorViewMo
                         onValueChange = viewModel::onWeightChange,
                         singleLine = true,
                         textStyle = NumberStyles.Hero.copy(
-                            fontSize = 60.sp,
-                            lineHeight = 68.sp,
+                            fontSize = 45.sp,
+                            lineHeight = 52.sp,
                             letterSpacing = (-1).sp,
                             textAlign = TextAlign.Center,
                             color = if (showError) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface,
                         ),
                         cursorBrush = SolidColor(weight.graphic),
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal, imeAction = ImeAction.Done),
-                        modifier = Modifier.width(168.dp).semantics { contentDescription = "$fieldLabel, $unitLabel" },
+                        modifier = Modifier.width(132.dp).semantics { contentDescription = "$fieldLabel, $unitLabel" },
                     )
                     Text(
                         unitLabel,
-                        style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                        style = MaterialTheme.typography.titleLarge,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(bottom = 10.dp),
+                        modifier = Modifier.padding(bottom = 6.dp),
                     )
                 }
                 StepButton(R.drawable.ic_add, stringResource(R.string.weighin_increase, unitLabel)) { viewModel.nudge(1) }
@@ -446,7 +446,7 @@ private fun ActionTile(
             verticalArrangement = Arrangement.spacedBy(Spacing.s, Alignment.CenterVertically),
         ) {
             Icon(painterResource(icon), contentDescription = null, modifier = Modifier.size(28.dp))
-            Text(label, style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.ExtraBold))
+            Text(label, style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold))
         }
     }
 }

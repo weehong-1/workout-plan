@@ -1,7 +1,8 @@
 package com.vitrack.app.ui.weight
 
 import com.vitrack.app.data.settings.WeightUnit
-import com.vitrack.app.data.weight.groupByWeek
+import com.vitrack.app.data.weight.WeightZoom
+import com.vitrack.app.data.weight.groupWeighIns
 import com.vitrack.app.testing.FIXED_CLOCK
 import com.vitrack.app.testing.FakeProfileRepository
 import com.vitrack.app.testing.FakeSettingsRepository
@@ -9,7 +10,6 @@ import com.vitrack.app.testing.FakeWeightRepository
 import com.vitrack.app.testing.MainDispatcherRule
 import com.vitrack.app.testing.TODAY
 import com.vitrack.app.testing.weighIn
-import com.vitrack.app.ui.common.ChartPeriod
 import java.time.LocalDate
 import java.time.temporal.WeekFields
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -41,13 +41,14 @@ class WeightViewModelTest {
 
     private fun WeightViewModel.ready() = uiState.value as WeightUiState.Ready
 
-    /** Two weigh-ins this week, two last week, one three weeks back. */
+    /** Two weigh-ins this week, two last week, one four weeks back (26 Oct), one last year. */
     private val sample = listOf(
         weighIn(TODAY, 78.4),
         weighIn(thisMonday, 78.8),
         weighIn(thisMonday.minusDays(2), 79.2),
         weighIn(thisMonday.minusDays(6), 79.4),
-        weighIn(thisMonday.minusWeeks(3), 81.0),
+        weighIn(thisMonday.minusWeeks(4), 81.0),
+        weighIn(LocalDate.of(2025, 6, 10), 85.0),
     )
 
     @Test
@@ -56,74 +57,90 @@ class WeightViewModelTest {
     }
 
     @Test
-    fun `the headline is this week's average, compared with last week's`() = runTest {
+    fun `weeks headline is this week's average against last week's`() = runTest {
         val state = viewModel(FakeWeightRepository(sample)).ready()
 
-        assertEquals(thisMonday, state.thisWeekStart)
-        assertEquals(thisMonday, state.currentWeek.weekStart)
-        assertEquals(78.6, state.currentWeek.averageKg, 0.0001)
-        assertEquals(2, state.currentWeek.count)
-        // 78.6 this week vs 79.3 last week.
-        assertEquals(-0.7, state.weeklyChangeKg!!, 0.0001)
-        assertEquals(TODAY, state.latest.date)
+        assertEquals(WeightZoom.Weeks, state.zoom)
+        assertEquals(thisMonday, state.todayPeriodStart)
+        assertEquals(thisMonday, state.current.start)
+        assertEquals(78.6, state.current.averageKg, 0.0001)
+        assertEquals(thisMonday.minusWeeks(1), state.previous?.start)
+        assertEquals(-0.7, state.changeKg!!, 0.0001)
     }
 
     @Test
-    fun `history is grouped by week, newest first, with each week's change`() = runTest {
-        val groups = viewModel(FakeWeightRepository(sample)).ready().weeks
+    fun `weeks chart holds the last 12 weeks, oldest first, with a streak`() = runTest {
+        val state = viewModel(FakeWeightRepository(sample)).ready()
 
-        assertEquals(listOf(thisMonday, thisMonday.minusWeeks(1), thisMonday.minusWeeks(3)), groups.map { it.week.weekStart })
-        assertEquals(listOf(2, 2, 1), groups.map { it.rows.size })
-        assertEquals(-0.7, groups[0].changeKg!!, 0.0001)
-        // Nothing logged two weeks back, so the gap week has no change.
-        assertNull(groups[1].changeKg)
-        assertNull(groups[2].changeKg)
-        // Row changes still run against the previous weigh-in, across weeks.
-        assertEquals(78.8 - 79.2, groups[0].rows.last().changeKg!!, 0.0001)
+        assertEquals(listOf(thisMonday.minusWeeks(4), thisMonday.minusWeeks(1), thisMonday), state.chart.map { it.start })
+        // 81.0 → 79.3 → 78.6: two weeks down in a row.
+        assertEquals(Trend.Streak(weeks = 2, down = true), state.trend)
     }
 
     @Test
-    fun `month and year chart weekly averages, week charts each weigh-in`() = runTest {
+    fun `history rows carry the change from the row below and open to their weigh-ins`() = runTest {
+        val rows = viewModel(FakeWeightRepository(sample)).ready().history
+
+        assertEquals(4, rows.size)
+        assertEquals(-0.7, rows[0].changeKg!!, 0.0001)
+        // Rows compare with the next listed period, even across a gap.
+        assertEquals(79.3 - 81.0, rows[1].changeKg!!, 0.0001)
+        assertNull(rows.last().changeKg)
+        val details = rows[0].details as PeriodDetails.Entries
+        assertEquals(listOf(TODAY, thisMonday), details.entries.map { it.date })
+    }
+
+    @Test
+    fun `months zoom averages by month and opens to weeks`() = runTest {
         val viewModel = viewModel(FakeWeightRepository(sample))
 
-        val month = viewModel.ready().chart
-        assertEquals(listOf(81.0, 79.3, 78.6), month.map { it.kg }.map { Math.round(it * 10) / 10.0 })
-        // This week's point sits mid-week (Thursday), never after today.
-        assertEquals(TODAY, month.last().date)
+        viewModel.selectZoom(WeightZoom.Months)
 
-        viewModel.selectPeriod(ChartPeriod.Week)
-        assertEquals(listOf(79.2, 78.8, 78.4), viewModel.ready().chart.map { it.kg })
+        val state = viewModel.ready()
+        assertEquals(LocalDate.of(2026, 11, 1), state.current.start)
+        assertEquals(LocalDate.of(2026, 10, 1), state.previous?.start)
+        // The chart covers Dec 2025 to Nov 2026, so June 2025 is left off.
+        assertEquals(listOf(LocalDate.of(2026, 10, 1), LocalDate.of(2026, 11, 1)), state.chart.map { it.start })
+        val weeksInNovember = (state.history[0].details as PeriodDetails.Weeks).weeks
+        assertEquals(listOf(thisMonday, thisMonday.minusWeeks(1)), weeksInNovember.map { it.start })
+    }
+
+    @Test
+    fun `years zoom compares with last year and opens to lowest and highest month`() = runTest {
+        val viewModel = viewModel(FakeWeightRepository(sample))
+
+        viewModel.selectZoom(WeightZoom.Years)
+
+        val state = viewModel.ready()
+        assertEquals(listOf(2025, 2026), state.chart.map { it.start.year })
+        assertTrue(state.changeKg!! < 0)
+        val trend = state.trend as Trend.FromYear
+        assertEquals(2025, trend.year)
+        val extremes = state.history[0].details as PeriodDetails.Extremes
+        assertEquals(11, extremes.lowestMonth.start.monthValue)
+        assertEquals(10, extremes.highestMonth.start.monthValue)
+    }
+
+    @Test
+    fun `month trend spans the chart`() {
+        val periods = groupWeighIns(sample, WeightZoom.Months, weeks)
+        val chart = chartWindow(WeightZoom.Months, LocalDate.of(2026, 11, 1), periods)
+
+        val trend = trendOf(WeightZoom.Months, chart) as Trend.OverMonths
+        assertEquals(2, trend.months)
+        assertTrue(trend.changeKg < 0)
+    }
+
+    @Test
+    fun `a single period has no trend and no change`() = runTest {
+        val state = viewModel(FakeWeightRepository(listOf(weighIn(TODAY, 80.0)))).ready()
+
+        assertNull(state.trend)
+        assertNull(state.changeKg)
     }
 
     @Test
     fun `unit setting is passed through`() = runTest {
         assertEquals(WeightUnit.Lb, viewModel(FakeWeightRepository(listOf(weighIn(TODAY, 80.0))), WeightUnit.Lb).ready().unit)
-    }
-
-    @Test
-    fun `chart points stay inside the window`() {
-        val start = TODAY.minusDays(29)
-        val weighIns = listOf(weighIn(start.plusDays(1), 80.0), weighIn(TODAY, 78.0))
-        val points = chartPoints(ChartPeriod.Month, start, TODAY, weighIns, groupByWeek(weighIns, weeks))
-
-        assertTrue(points.all { !it.date.isBefore(start) && !it.date.isAfter(TODAY) })
-    }
-
-    @Test
-    fun `each history row carries its change from the previous weigh-in`() {
-        val rows = historyRows(
-            listOf(weighIn(TODAY, 78.4), weighIn(TODAY.minusDays(2), 78.7), weighIn(TODAY.minusDays(5), 79.0)),
-        )
-
-        assertEquals(-0.3, rows[0].changeKg!!, 0.0001)
-        assertEquals(-0.3, rows[1].changeKg!!, 0.0001)
-        assertNull(rows[2].changeKg)
-    }
-
-    @Test
-    fun `axis covers the values on whole numbers with an even range`() {
-        assertEquals(WeightAxis(78.0, 80.0), weightAxis(listOf(78.4, 79.6)))
-        assertEquals(WeightAxis(77.0, 79.0), weightAxis(listOf(78.2, 78.4)))
-        assertEquals(WeightAxis(76.0, 82.0), weightAxis(listOf(76.5, 80.2)))
     }
 }

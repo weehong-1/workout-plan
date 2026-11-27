@@ -68,36 +68,50 @@ class SampleWeightSeeder @Inject constructor(
     }
 
     private companion object {
-        val SEEDED = booleanPreferencesKey("sample_weight_seeded")
+        // v2: three years instead of three months, so Months and Years have data.
+        val SEEDED = booleanPreferencesKey("sample_weight_seeded_v2")
     }
 }
 
 internal data class SampleWeighIn(val date: LocalDate, val weightKg: Double, val time: LocalTime, val photoCount: Int)
 
+/** Days of sample history. */
+internal const val SAMPLE_DAYS = 3 * 365
+
 /**
- * About 90 days of weigh-ins every 2 to 3 days, trending from about 84.6 kg
- * down to 78.4 kg today, with day-to-day noise. Photos on roughly every
- * sixth weigh-in and on today's. Deterministic, so every install looks the same.
+ * The underlying weight [daysBack] days ago: 80 kg three years ago, rising to
+ * a peak of 86 kg about 200 days ago, then down to 84.6 kg 90 days ago and
+ * 78.4 kg today.
+ */
+internal fun sampleTrendKg(daysBack: Int): Double = when {
+    daysBack <= 90 -> 78.4 + daysBack * (84.6 - 78.4) / 90.0
+    daysBack <= 200 -> 84.6 + (daysBack - 90) * (86.0 - 84.6) / 110.0
+    else -> 86.0 - (daysBack - 200) * (86.0 - 80.0) / (SAMPLE_DAYS - 200.0)
+}
+
+/**
+ * Three years of weigh-ins every 2 to 3 days following [sampleTrendKg], with
+ * day-to-day noise. Photos on roughly every sixth weigh-in in the last 90
+ * days and on today's. Deterministic, so every install looks the same.
  */
 internal fun sampleWeighIns(today: LocalDate): List<SampleWeighIn> {
     val random = Random(42)
     val days = mutableListOf<Int>()
     var back = 0
-    while (back <= 90) {
+    while (back <= SAMPLE_DAYS) {
         days += back
         back += if (random.nextBoolean()) 2 else 3
     }
     return days.sortedDescending().mapIndexed { i, daysBack ->
         val date = today.minusDays(daysBack.toLong())
-        val trend = 78.4 + daysBack * (84.6 - 78.4) / 90.0
         val noise = if (daysBack == 0) 0.0 else 0.35 * sin(daysBack * 1.3) + random.nextDouble(-0.2, 0.2)
         SampleWeighIn(
             date = date,
-            weightKg = ((trend + noise) * 10).roundToInt() / 10.0,
+            weightKg = ((sampleTrendKg(daysBack) + noise) * 10).roundToInt() / 10.0,
             time = LocalTime.of(7, 5 + random.nextInt(0, 20)),
             photoCount = when {
                 daysBack == 0 -> 1
-                i % 6 == 0 -> 1
+                daysBack <= 90 && i % 6 == 0 -> 1
                 else -> 0
             },
         )

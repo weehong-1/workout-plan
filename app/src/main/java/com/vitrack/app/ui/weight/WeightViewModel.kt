@@ -5,9 +5,9 @@ import androidx.lifecycle.viewModelScope
 import com.vitrack.app.data.profile.ProfileRepository
 import com.vitrack.app.data.settings.SettingsRepository
 import com.vitrack.app.data.weight.WeightRepository
-import com.vitrack.app.data.weight.groupByWeek
-import com.vitrack.app.data.weight.weekStartOf
-import com.vitrack.app.ui.common.ChartPeriod
+import com.vitrack.app.data.weight.WeightZoom
+import com.vitrack.app.data.weight.groupWeighIns
+import com.vitrack.app.data.weight.periodStartOf
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.time.Clock
 import java.time.LocalDate
@@ -28,35 +28,34 @@ class WeightViewModel @Inject constructor(
     private val weekFields: WeekFields,
 ) : ViewModel() {
 
-    private val period = MutableStateFlow(ChartPeriod.Month)
+    private val zoom = MutableStateFlow(WeightZoom.Weeks)
 
     val uiState: StateFlow<WeightUiState> = combine(
         weightRepository.observeWeighIns(),
         settingsRepository.weightUnit,
-        period,
+        zoom,
         profileRepository.observeDisplayName(),
-    ) { weighIns, unit, period, name ->
+    ) { weighIns, unit, zoom, name ->
         val latest = weighIns.firstOrNull() ?: return@combine WeightUiState.Empty(unit, name)
         val today = LocalDate.now(clock)
-        val start = chartStart(period, today)
-        val weeks = groupByWeek(weighIns, weekFields)
-        val changes = weekChanges(weeks)
-        // Each row's change is against the weigh-in before it, even across weeks.
-        val rows = historyRows(weighIns).associateBy { it.entry.date }
+        val todayStart = periodStartOf(today, zoom, weekFields)
+        val periods = groupWeighIns(weighIns, zoom, weekFields)
+        val current = periods.first()
+        val previous = previousOf(current, periods)
+        val chart = chartWindow(zoom, todayStart, periods)
         WeightUiState.Ready(
             displayName = name,
             today = today,
-            thisWeekStart = weekStartOf(today, weekFields),
             unit = unit,
+            zoom = zoom,
+            todayPeriodStart = todayStart,
             latest = latest,
-            currentWeek = weeks.first(),
-            weeklyChangeKg = changes.first(),
-            period = period,
-            chartStart = start,
-            chart = chartPoints(period, start, today, weighIns, weeks),
-            weeks = weeks.mapIndexed { i, week ->
-                WeekGroup(week, changes[i], week.entries.map { rows.getValue(it.date) })
-            },
+            current = current,
+            previous = previous,
+            changeKg = previous?.let { current.averageKg - it.averageKg },
+            chart = chart,
+            trend = trendOf(zoom, chart),
+            history = historyRows(periods, weekFields),
         )
     }.stateIn(
         scope = viewModelScope,
@@ -64,7 +63,7 @@ class WeightViewModel @Inject constructor(
         initialValue = WeightUiState.Loading,
     )
 
-    fun selectPeriod(newPeriod: ChartPeriod) {
-        period.value = newPeriod
+    fun selectZoom(newZoom: WeightZoom) {
+        zoom.value = newZoom
     }
 }
