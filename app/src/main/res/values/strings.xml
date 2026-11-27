@@ -55,4 +55,46 @@
     <string name="period_week">Week</string>
     <string name="period_month">Month</string>
     <string name="period_year">Year</string>
+
+    <!-- Weight -->
+    <string name="weight_title">Weight</string>
+    <string name="weight_latest">Latest · %1$s</string>
+    <string name="weight_today">Today</string>
+    <string name="weight_yesterday">Yesterday</string>
+    <string name="weight_day_time">%1$s, %2$s</string>
+    <string name="weight_change_week">%1$s %2$s this week</string>
+    <string name="weight_change_down">Down %1$s %2$s since last week</string>
+    <string name="weight_change_up">Up %1$s %2$s since last week</string>
+    <string name="weight_no_change">No change this week</string>
+    <string name="weight_history">History</string>
+    <string name="weight_log">Log weight</string>
+    <string name="weight_empty_title">No weigh-ins yet</string>
+    <string name="weight_empty_body">Log your first weigh-in to start your trend. Photos are optional.</string>
+    <string name="weight_chart_none">No weigh-ins in this period</string>
+    <string name="weight_chart_description">Weight from %1$s to %2$s %3$s, %4$d weigh-ins</string>
+    <string name="weight_row_description">%1$s %2$s on %3$s</string>
+    <string name="weight_has_photo">Has a progress photo</string>
+
+    <!-- Log weigh-in -->
+    <string name="weighin_title_new">Log weigh-in</string>
+    <string name="weighin_title_edit">Edit weigh-in</string>
+    <string name="weighin_weight">Weight</string>
+    <string name="weighin_last">Last: %1$s %2$s on %3$s</string>
+    <string name="weighin_invalid">Enter a weight between %1$s and %2$s %3$s</string>
+    <string name="weighin_date">Date</string>
+    <string name="weighin_one_per_day">One entry per day. Saving a date that has one updates it.</string>
+    <string name="weighin_replaces">This updates the %1$s %2$s weigh-in for %3$s. Its photos are kept.</string>
+    <string name="weighin_photos">Progress photos · optional</string>
+    <string name="weighin_photos_note">Up to %1$d photos. Photos are resized and location data is removed.</string>
+    <string name="weighin_camera">Camera</string>
+    <string name="weighin_gallery">Gallery</string>
+    <string name="weighin_remove_photo">Remove photo</string>
+    <string name="weighin_photo">Progress photo %1$d</string>
+    <string name="weighin_save">Save</string>
+    <string name="weighin_cancel">Cancel</string>
+    <string name="weighin_delete">Delete</string>
+    <string name="weighin_save_failed">Couldn\'t save. Check the photos and try again.</string>
+    <string name="weighin_delete_title">Delete this weigh-in?</string>
+    <string name="weighin_delete_body">The weigh-in for %1$s and its photos are removed from this phone.</string>
+    <string name="weighin_ok">OK</string>
 </resources>

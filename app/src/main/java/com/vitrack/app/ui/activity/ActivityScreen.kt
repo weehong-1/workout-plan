@@ -15,15 +15,12 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.ContainedLoadingIndicator
 import androidx.compose.material3.CircularWavyProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.LinearWavyProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -50,6 +47,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.vitrack.app.R
 import com.vitrack.app.data.activity.MAX_STRAIN
 import com.vitrack.app.data.activity.Workout
+import com.vitrack.app.ui.common.AccountAvatar
 import com.vitrack.app.ui.common.BarChart
 import com.vitrack.app.ui.common.BarSpec
 import com.vitrack.app.ui.common.Format
@@ -138,22 +136,7 @@ private fun Header(state: ActivityUiState.Ready) {
                     tint = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
-            FilledTonalIconButton(
-                onClick = {},
-                modifier = Modifier.size(40.dp),
-                shape = CircleShape,
-                colors = IconButtonDefaults.filledTonalIconButtonColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                ),
-            ) {
-                val accountLabel = stringResource(R.string.activity_account)
-                Text(
-                    text = state.displayName?.take(1)?.uppercase() ?: "?",
-                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                    modifier = Modifier.clearAndSetSemantics { contentDescription = accountLabel },
-                )
-            }
+            AccountAvatar(state.displayName)
         }
         Text(
             Format.dayHeading(state.date),

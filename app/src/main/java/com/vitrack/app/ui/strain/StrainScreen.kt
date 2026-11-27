@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.material3.ButtonGroupDefaults
 import androidx.compose.material3.CircularWavyProgressIndicator
 import androidx.compose.material3.ContainedLoadingIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -21,8 +20,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.ToggleButton
-import androidx.compose.material3.ToggleButtonDefaults
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -34,11 +31,9 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
-import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -51,6 +46,8 @@ import com.vitrack.app.data.activity.MAX_STRAIN
 import com.vitrack.app.data.activity.Workout
 import com.vitrack.app.ui.common.BarChart
 import com.vitrack.app.ui.common.BarSpec
+import com.vitrack.app.ui.common.ChartPeriod
+import com.vitrack.app.ui.common.PeriodSelector
 import com.vitrack.app.ui.common.Format
 import com.vitrack.app.ui.common.MetricCard
 import com.vitrack.app.ui.common.ValueWithUnit
@@ -205,46 +202,11 @@ private fun StatsGrid(today: DailyActivity) {
     }
 }
 
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun HistoryCard(state: StrainUiState.Ready, onSelectPeriod: (ChartPeriod) -> Unit) {
     val metric = VitrackTheme.metrics.strain
     MetricCard {
-        val periods = ChartPeriod.entries
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween),
-        ) {
-            periods.forEachIndexed { index, period ->
-                val selected = state.period == period
-                ToggleButton(
-                    checked = selected,
-                    onCheckedChange = { onSelectPeriod(period) },
-                    modifier = Modifier.weight(1f).semantics { role = Role.RadioButton },
-                    shapes = when (index) {
-                        0 -> ButtonGroupDefaults.connectedLeadingButtonShapes()
-                        periods.lastIndex -> ButtonGroupDefaults.connectedTrailingButtonShapes()
-                        else -> ButtonGroupDefaults.connectedMiddleButtonShapes()
-                    },
-                    colors = ToggleButtonDefaults.colors(
-                        containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                        contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
-                        checkedContainerColor = MaterialTheme.colorScheme.primary,
-                        checkedContentColor = MaterialTheme.colorScheme.onPrimary,
-                    ),
-                ) {
-                    Text(
-                        stringResource(
-                            when (period) {
-                                ChartPeriod.Week -> R.string.period_week
-                                ChartPeriod.Month -> R.string.period_month
-                                ChartPeriod.Year -> R.string.period_year
-                            },
-                        ),
-                    )
-                }
-            }
-        }
+        PeriodSelector(selected = state.period, onSelect = onSelectPeriod)
         val bars = state.bars.mapIndexed { i, bar ->
             BarSpec(
                 value = bar.strain.toFloat(),

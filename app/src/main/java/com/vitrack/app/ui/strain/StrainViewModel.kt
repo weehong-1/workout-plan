@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vitrack.app.data.activity.ActivityRepository
 import com.vitrack.app.data.activity.DailyActivity
+import com.vitrack.app.ui.common.ChartPeriod
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.time.YearMonth
 import javax.inject.Inject

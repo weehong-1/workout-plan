@@ -4,6 +4,7 @@ import com.vitrack.app.testing.FakeActivityRepository
 import com.vitrack.app.testing.MainDispatcherRule
 import com.vitrack.app.testing.TODAY
 import com.vitrack.app.testing.day
+import com.vitrack.app.ui.common.ChartPeriod
 import java.time.LocalDate
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch

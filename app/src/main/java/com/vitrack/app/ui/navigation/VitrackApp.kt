@@ -25,6 +25,7 @@ import com.vitrack.app.R
 import com.vitrack.app.ui.activity.ActivityRoute as ActivityScreenRoute
 import com.vitrack.app.ui.placeholder.ComingSoonScreen
 import com.vitrack.app.ui.strain.StrainRoute as StrainScreenRoute
+import com.vitrack.app.ui.weight.WeightRoute as WeightScreenRoute
 
 /** App shell: the navigation bar on every screen, and the nav graph. */
 @Composable
@@ -63,7 +64,7 @@ fun VitrackApp(navController: NavHostController = rememberNavController()) {
                 }
             }
             composable<WeightRoute> {
-                ComingSoonScreen(stringResource(R.string.tab_weight), R.drawable.ic_nav_weight)
+                WeightScreenRoute()
             }
             composable<FoodRoute> {
                 ComingSoonScreen(stringResource(R.string.tab_food), R.drawable.ic_nav_food)

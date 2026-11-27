@@ -2,13 +2,8 @@ package com.vitrack.app.ui.strain
 
 import com.vitrack.app.data.activity.DailyActivity
 import com.vitrack.app.data.activity.Workout
+import com.vitrack.app.ui.common.ChartPeriod
 import java.time.LocalDate
-
-enum class ChartPeriod(val days: Int) {
-    Week(7),
-    Month(30),
-    Year(365),
-}
 
 /** One bar: a day for Week and Month, a calendar month for Year. */
 data class StrainBar(
