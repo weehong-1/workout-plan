@@ -6,6 +6,8 @@ import com.vitrack.app.data.food.FoodRepository
 import com.vitrack.app.data.food.RoomFoodRepository
 import com.vitrack.app.data.profile.ProfileRepository
 import com.vitrack.app.data.profile.SampleProfileRepository
+import com.vitrack.app.data.share.NotConnectedShareRepository
+import com.vitrack.app.data.share.ShareRepository
 import com.vitrack.app.data.settings.DataStoreSettingsRepository
 import com.vitrack.app.data.settings.SettingsRepository
 import com.vitrack.app.data.weight.RoomWeightRepository
@@ -37,6 +39,10 @@ abstract class RepositoryModule {
 
     @Binds
     abstract fun bindFoodRepository(impl: RoomFoodRepository): FoodRepository
+
+    // Swap for the Supabase implementation once sign-in and the server are set up.
+    @Binds
+    abstract fun bindShareRepository(impl: NotConnectedShareRepository): ShareRepository
 
     companion object {
         @Provides

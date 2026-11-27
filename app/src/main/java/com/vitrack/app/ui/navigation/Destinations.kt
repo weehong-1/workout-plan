@@ -14,7 +14,11 @@ import kotlinx.serialization.Serializable
 
 @Serializable data object WeightRoute
 @Serializable data object FoodRoute
+@Serializable data object ReviewGraph
 @Serializable data object ReviewRoute
+
+/** Share with trainer, opened for a period: [month] 1–12, or 0 for the whole [year]. */
+@Serializable data class ShareRoute(val year: Int, val month: Int)
 
 enum class TopLevelDestination(
     val route: Any,
@@ -25,5 +29,5 @@ enum class TopLevelDestination(
     Activity(ActivityGraph, ActivityGraph::class, R.string.tab_activity, R.drawable.ic_nav_activity),
     Weight(WeightRoute, WeightRoute::class, R.string.tab_weight, R.drawable.ic_nav_weight),
     Food(FoodRoute, FoodRoute::class, R.string.tab_food, R.drawable.ic_nav_food),
-    Review(ReviewRoute, ReviewRoute::class, R.string.tab_review, R.drawable.ic_nav_review),
+    Review(ReviewGraph, ReviewGraph::class, R.string.tab_review, R.drawable.ic_nav_review),
 }

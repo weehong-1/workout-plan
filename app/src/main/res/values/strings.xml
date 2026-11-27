@@ -7,7 +7,6 @@
     <string name="tab_food">Food</string>
     <string name="tab_review">Review</string>
     <string name="action_back">Back</string>
-    <string name="coming_soon">This screen is coming next.</string>
 
     <!-- Metrics -->
     <string name="metric_sleep">Sleep</string>
@@ -173,4 +172,51 @@
     <string name="food_save_failed">Couldn\'t save. Check the photos and try again.</string>
     <string name="food_delete_title">Delete this photo?</string>
     <string name="food_delete_body">The photo and its note are removed from this phone.</string>
+
+    <!-- Review -->
+    <string name="review_month">Month</string>
+    <string name="review_year">Year</string>
+    <string name="review_previous_month">Previous month</string>
+    <string name="review_next_month">Next month</string>
+    <string name="review_previous_year">Previous year</string>
+    <string name="review_next_year">Next year</string>
+    <string name="review_per_day">/ day</string>
+    <string name="review_sleep_value">%1$d h %2$d</string>
+    <string name="review_from_whoop">Daily averages from WHOOP</string>
+    <string name="review_weight_meta">%1$s → %2$s %3$s · %4$s</string>
+    <string name="review_no_weighins">No weigh-ins in this period</string>
+    <string name="review_progress_photo">Progress photo, %1$s</string>
+    <string name="review_days_with_photos">Days with photos</string>
+    <string name="review_food_description">Days with food photos: %1$d of %2$d</string>
+    <string name="review_share">Share with trainer</string>
+    <string name="review_active_links">Active links</string>
+    <string name="review_no_links">No active links. Links you create show here, and you can revoke them at any time.</string>
+    <string name="review_links_not_set_up">No links yet. Sharing needs sign-in and the server, which this build doesn\'t connect to yet.</string>
+    <string name="review_link_expires">expires %1$s</string>
+    <string name="review_link_no_expiry">no expiry</string>
+    <string name="review_revoke">Revoke</string>
+
+    <!-- Share with trainer -->
+    <string name="share_close">Close</string>
+    <string name="share_subtitle">A private, read-only link to your progress.</string>
+    <string name="share_trainer">Trainer</string>
+    <string name="share_trainer_hint">Name, for your list</string>
+    <string name="share_period">Period</string>
+    <string name="share_include">Include</string>
+    <string name="share_include_activity">Activity, recovery and sleep</string>
+    <string name="share_include_weight_photos">Weight photos</string>
+    <string name="share_include_food_photos">Food photos</string>
+    <string name="share_expiry">Expiry</string>
+    <string name="share_link_expires">Link expires</string>
+    <string name="share_expires_on">Expires on</string>
+    <string name="share_expiry_note">The link stops working after this date. You can revoke it sooner.</string>
+    <string name="share_no_expiry_note">The link works until you revoke it in Review.</string>
+    <string name="share_consent">Your WHOOP summaries, weight and photos for this period are shared through a private link. Anyone with the link can see what you include until it expires or you revoke it. It never appears in search results.</string>
+    <string name="share_create">I agree, create link</string>
+    <string name="share_need_name">Add the trainer\'s name to create the link.</string>
+    <string name="share_need_content">Include at least one thing to share.</string>
+    <string name="share_not_set_up_title">Sharing isn\'t set up yet</string>
+    <string name="share_not_set_up_body">Creating a link needs sign-in and the Workout Plan server. This build doesn\'t connect to them yet, so no link was made and nothing left your phone.</string>
+    <string name="share_failed_title">Couldn\'t create the link</string>
+    <string name="share_failed_body">Check your connection and try again. Nothing was shared.</string>
 </resources>

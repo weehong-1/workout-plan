@@ -59,6 +59,7 @@ class SampleActivityRepository @Inject constructor(
                 calories = if (daysAgo == 0) 2_150 else 1_900 + i * 60,
                 averageHeartRate = if (daysAgo == 0) 74 else 70 + i,
                 maxHeartRate = if (daysAgo == 0) 152 else 140 + i * 3,
+                sleepMinutes = if (daysAgo == 0) 460 else 420 + i * 6,
             )
         }
         val random = Random(date.toEpochDay())
@@ -71,6 +72,7 @@ class SampleActivityRepository @Inject constructor(
             calories = random.nextInt(1_800, 2_700),
             averageHeartRate = random.nextInt(66, 82),
             maxHeartRate = random.nextInt(120, 175),
+            sleepMinutes = random.nextInt(360, 510),
         )
     }
 

@@ -23,7 +23,9 @@ import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
 import com.vitrack.app.R
 import com.vitrack.app.ui.activity.ActivityRoute as ActivityScreenRoute
-import com.vitrack.app.ui.placeholder.ComingSoonScreen
+import com.vitrack.app.data.share.SharePeriod
+import com.vitrack.app.ui.review.ReviewRoute as ReviewScreenRoute
+import com.vitrack.app.ui.review.share.TrainerLinkRoute
 import com.vitrack.app.ui.strain.StrainRoute as StrainScreenRoute
 import com.vitrack.app.ui.food.FoodRoute as FoodScreenRoute
 import com.vitrack.app.ui.weight.WeightRoute as WeightScreenRoute
@@ -70,8 +72,22 @@ fun VitrackApp(navController: NavHostController = rememberNavController()) {
             composable<FoodRoute> {
                 FoodScreenRoute()
             }
-            composable<ReviewRoute> {
-                ComingSoonScreen(stringResource(R.string.tab_review), R.drawable.ic_nav_review)
+            navigation<ReviewGraph>(startDestination = ReviewRoute) {
+                composable<ReviewRoute> {
+                    ReviewScreenRoute(
+                        onShare = { period ->
+                            navController.navigate(
+                                when (period) {
+                                    is SharePeriod.Month -> ShareRoute(period.month.year, period.month.monthValue)
+                                    is SharePeriod.Year -> ShareRoute(period.year, 0)
+                                },
+                            )
+                        },
+                    )
+                }
+                composable<ShareRoute> {
+                    TrainerLinkRoute(onClose = { navController.popBackStack() })
+                }
             }
         }
     }

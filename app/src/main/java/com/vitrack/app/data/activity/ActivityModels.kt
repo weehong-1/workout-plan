@@ -16,6 +16,8 @@ data class DailyActivity(
     val calories: Int,
     val averageHeartRate: Int,
     val maxHeartRate: Int,
+    /** Time asleep the night before, in minutes. */
+    val sleepMinutes: Int = 0,
 )
 
 data class HeartSummary(
