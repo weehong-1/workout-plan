@@ -213,7 +213,7 @@
     <string name="share_no_expiry_note">The link works until you revoke it in Review.</string>
     <string name="share_consent">Your WHOOP summaries, weight and photos for this period are shared through a private link. Anyone with the link can see what you include until it expires or you revoke it. It never appears in search results.</string>
     <string name="share_create">I agree, create link</string>
-    <string name="share_need_name">Add the trainer\'s name to create the link.</string>
+    <string name="share_need_name">Add trainer name to create the link.</string>
     <string name="share_need_content">Include at least one thing to share.</string>
     <string name="share_not_set_up_title">Sharing isn\'t set up yet</string>
     <string name="share_not_set_up_body">Creating a link needs sign-in and the Workout Plan server. This build doesn\'t connect to them yet, so no link was made and nothing left your phone.</string>
