@@ -33,6 +33,7 @@ import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -62,6 +63,7 @@ import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -79,7 +81,10 @@ import kotlinx.coroutines.launch
 @Composable
 fun LoginFlow() {
     var withEmail by rememberSaveable { mutableStateOf(false) }
-    if (withEmail) EmailSignInRoute(onBack = { withEmail = false }) else LoginRoute(onEmail = { withEmail = true })
+    // Sign in sits outside the app's Scaffold: the Surface gives text its colour on this background.
+    Surface(color = MaterialTheme.colorScheme.surface, contentColor = MaterialTheme.colorScheme.onSurface) {
+        if (withEmail) EmailSignInRoute(onBack = { withEmail = false }) else LoginRoute(onEmail = { withEmail = true })
+    }
 }
 
 @Composable
@@ -123,18 +128,11 @@ fun LoginScreen(state: LoginUiState, onGoogle: () -> Unit, onEmail: () -> Unit) 
                 Text(
                     stringResource(R.string.login_title),
                     style = MaterialTheme.typography.headlineLarge.copy(fontSize = 36.sp, lineHeight = 44.sp, fontWeight = FontWeight.SemiBold),
-                    modifier = Modifier.padding(top = Spacing.s).semantics { heading() },
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth().padding(top = Spacing.s).semantics { heading() },
                 )
             }
             Rise(1, !reducedMotion) {
-                Text(
-                    stringResource(R.string.login_subtitle),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(top = Spacing.m),
-                )
-            }
-            Rise(2, !reducedMotion) {
                 Column(Modifier.padding(top = 28.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     Button(
                         onClick = onGoogle,
@@ -178,7 +176,7 @@ fun LoginScreen(state: LoginUiState, onGoogle: () -> Unit, onEmail: () -> Unit) 
                     modifier = Modifier.padding(top = Spacing.m, start = Spacing.xs).semantics { liveRegion = LiveRegionMode.Polite },
                 )
             }
-            Rise(3, !reducedMotion) {
+            Rise(2, !reducedMotion) {
                 Row(Modifier.padding(top = 20.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                     Icon(
                         painterResource(R.drawable.ic_shield),
@@ -192,6 +190,15 @@ fun LoginScreen(state: LoginUiState, onGoogle: () -> Unit, onEmail: () -> Unit) 
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
+            }
+            Rise(3, !reducedMotion) {
+                Text(
+                    stringResource(R.string.login_subtitle),
+                    style = MaterialTheme.typography.bodySmall.copy(fontSize = 13.sp, lineHeight = 18.sp),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    // Lines up with the privacy text: past its 18 dp shield and 10 dp gap.
+                    modifier = Modifier.padding(start = 28.dp, top = Spacing.m),
+                )
             }
         }
     }
