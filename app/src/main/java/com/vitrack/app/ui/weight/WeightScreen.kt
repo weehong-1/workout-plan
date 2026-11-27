@@ -50,6 +50,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.toShape
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -84,6 +85,8 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
 import com.vitrack.app.R
+import com.vitrack.app.data.settings.GoalKind
+import com.vitrack.app.data.settings.WeightGoal
 import com.vitrack.app.data.settings.WeightUnit
 import com.vitrack.app.data.weight.WeighIn
 import com.vitrack.app.data.weight.WeightPeriod
@@ -159,6 +162,8 @@ fun WeightScreen(
         delay(900)
         entering = false
     }
+    val goal = (uiState as? WeightUiState.Ready)?.goal ?: WeightGoal()
+    CompositionLocalProvider(LocalWeightGoal provides goal) {
     Box(modifier.fillMaxSize().statusBarsPadding()) {
         when (uiState) {
             WeightUiState.Loading -> ContainedLoadingIndicator(Modifier.align(Alignment.Center))
@@ -228,6 +233,7 @@ fun WeightScreen(
                 modifier = Modifier.align(Alignment.BottomEnd).padding(Spacing.l),
             )
         }
+    }
     }
 }
 
@@ -400,13 +406,14 @@ private fun CountingWeight(kg: Double, fromKg: Double?, unit: WeightUnit, modifi
 @Composable
 private fun ChangeCookie(changeKg: Double, unit: WeightUnit, versus: String) {
     val trend = VitrackTheme.metrics.trend
+    val goal = LocalWeightGoal.current
     val reducedMotion = rememberReducedMotion()
     val unitLabel = Format.unitLabel(unit)
     val amount = Format.weight(abs(changeKg), unit)
     val steady = amount == Format.oneDecimal(0.0)
     val fill = when {
         steady -> VitrackTheme.metrics.weight.strong
-        changeKg < 0 -> trend.goodStrong
+        goal.isGoodChange(changeKg) -> trend.goodStrong
         else -> trend.upStrong
     }
     val description = when {
@@ -467,10 +474,12 @@ private fun TrendChip(trend: Trend, unit: WeightUnit) {
             Format.weight(abs(trend.changeKg), unit), unitLabel, trend.year,
         )
     }
+    // Direction sets the arrow; the goal sets the colour. A steady run either way is off a maintain goal.
+    val good = LocalWeightGoal.current.isGoodChange(if (down) -1.0 else 1.0)
     Row(
         modifier = Modifier
             .height(32.dp)
-            .background(if (down) colors.goodContainer else colors.upContainer, CircleShape)
+            .background(if (good) colors.goodContainer else colors.upContainer, CircleShape)
             .padding(start = Spacing.s, end = Spacing.m),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(6.dp),
@@ -478,10 +487,10 @@ private fun TrendChip(trend: Trend, unit: WeightUnit) {
         Icon(
             painterResource(if (down) R.drawable.ic_trend_down else R.drawable.ic_trend_up),
             contentDescription = null,
-            tint = if (down) colors.goodText else colors.upText,
+            tint = if (good) colors.goodText else colors.upText,
             modifier = Modifier.size(16.dp),
         )
-        Text(text, style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.SemiBold), color = if (down) colors.goodText else colors.upText)
+        Text(text, style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.SemiBold), color = if (good) colors.goodText else colors.upText)
     }
 }
 
@@ -496,10 +505,15 @@ private fun LegendChip() {
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(6.dp),
     ) {
+        val (goodLabel, offLabel) = when (LocalWeightGoal.current.kind) {
+            GoalKind.Lose -> R.string.weight_legend_lower to R.string.weight_legend_higher
+            GoalKind.Gain -> R.string.weight_legend_higher to R.string.weight_legend_lower
+            GoalKind.Maintain -> R.string.weight_legend_near to R.string.weight_legend_off
+        }
         Box(Modifier.size(8.dp).background(colors.goodDot, CircleShape))
-        Text(stringResource(R.string.weight_legend_lower), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text(stringResource(goodLabel), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
         Box(Modifier.padding(start = Spacing.xs).size(8.dp).background(colors.upDot, CircleShape))
-        Text(stringResource(R.string.weight_legend_higher), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text(stringResource(offLabel), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }
 
@@ -693,10 +707,11 @@ private fun DetailLine(label: String, value: String, photo: WeighIn? = null, onC
 @Composable
 private fun ChangePill(changeKg: Double?, unit: WeightUnit) {
     val trend = VitrackTheme.metrics.trend
+    val goal = LocalWeightGoal.current
     val steady = changeKg == null || Format.weight(abs(changeKg), unit) == Format.oneDecimal(0.0)
     val (fg, bg) = when {
         changeKg == null || steady -> MaterialTheme.colorScheme.onSurfaceVariant to MaterialTheme.colorScheme.surfaceContainerHighest
-        changeKg < 0 -> trend.goodText to trend.goodContainer
+        goal.isGoodChange(changeKg) -> trend.goodText to trend.goodContainer
         else -> trend.upText to trend.upContainer
     }
     Text(

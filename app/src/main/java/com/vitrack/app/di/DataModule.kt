@@ -65,7 +65,7 @@ object DataModule {
     @Provides
     @Singleton
     fun provideBackend(transport: UrlConnectionTransport, store: SecureStore, clock: Clock): Backend {
-        val config = BackendConfig.from(BuildConfig.SUPABASE_HOST, BuildConfig.SUPABASE_PUBLISHABLE_KEY, BuildConfig.WEB_APP_HOST)
+        val config = BackendConfig.from(BuildConfig.SUPABASE_HOST, BuildConfig.SUPABASE_PUBLISHABLE_KEY, BuildConfig.WEB_APP_HOST, BuildConfig.GOOGLE_WEB_CLIENT_ID)
         return Backend(config?.let { SupabaseClient(it, transport, store, clock) })
     }
 

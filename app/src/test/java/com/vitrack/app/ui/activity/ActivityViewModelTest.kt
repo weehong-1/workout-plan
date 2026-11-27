@@ -3,6 +3,7 @@ package com.vitrack.app.ui.activity
 import com.vitrack.app.testing.FIXED_CLOCK
 import com.vitrack.app.testing.FakeActivityRepository
 import com.vitrack.app.testing.FakeProfileRepository
+import com.vitrack.app.testing.FakeSettingsRepository
 import com.vitrack.app.testing.MainDispatcherRule
 import com.vitrack.app.testing.TODAY
 import com.vitrack.app.testing.day
@@ -32,7 +33,7 @@ class ActivityViewModelTest {
         activity: FakeActivityRepository = FakeActivityRepository(snapshot(week = drawnWeek)),
         profile: FakeProfileRepository = FakeProfileRepository(),
     ): ActivityViewModel {
-        val viewModel = ActivityViewModel(activity, profile, FIXED_CLOCK)
+        val viewModel = ActivityViewModel(activity, profile, FakeSettingsRepository(), FIXED_CLOCK)
         backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { viewModel.uiState.collect {} }
         return viewModel
     }

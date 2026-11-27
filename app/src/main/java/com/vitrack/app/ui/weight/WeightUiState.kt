@@ -1,5 +1,6 @@
 package com.vitrack.app.ui.weight
 
+import com.vitrack.app.data.settings.WeightGoal
 import com.vitrack.app.data.settings.WeightUnit
 import com.vitrack.app.data.weight.WeighIn
 import com.vitrack.app.data.weight.WeightPeriod
@@ -33,6 +34,8 @@ sealed interface WeightUiState {
         val trend: Trend?,
         /** Every period with weigh-ins, newest first. */
         val history: List<PeriodRow>,
+        /** The goal from Profile, for which changes show green. */
+        val goal: WeightGoal = WeightGoal(),
     ) : WeightUiState
 }
 

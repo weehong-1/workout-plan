@@ -16,6 +16,9 @@ interface SecureStore {
 
     /** Null removes the value. */
     fun put(key: String, value: String?)
+
+    /** Forgets everything (account deletion). */
+    fun clear()
 }
 
 /**
@@ -38,6 +41,10 @@ class KeystoreSecureStore(context: Context) : SecureStore {
             prefs.edit().remove(key).apply()
             null
         }
+    }
+
+    override fun clear() {
+        prefs.edit().clear().apply()
     }
 
     override fun put(key: String, value: String?) {

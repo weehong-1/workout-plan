@@ -6,6 +6,7 @@ import com.vitrack.app.data.activity.ActivityRepository
 import com.vitrack.app.data.activity.ActivitySnapshot
 import com.vitrack.app.data.activity.DailyActivity
 import com.vitrack.app.data.profile.ProfileRepository
+import com.vitrack.app.data.settings.SettingsRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.time.Clock
 import java.time.LocalDate
@@ -26,6 +27,7 @@ import kotlinx.coroutines.flow.stateIn
 class ActivityViewModel @Inject constructor(
     activityRepository: ActivityRepository,
     profileRepository: ProfileRepository,
+    settingsRepository: SettingsRepository,
     private val clock: Clock,
 ) : ViewModel() {
 
@@ -44,7 +46,11 @@ class ActivityViewModel @Inject constructor(
         activityRepository.observeSnapshot(),
         profileRepository.observeDisplayName(),
         stepsHistory,
-    ) { snapshot, name, (range, days) -> snapshot.toUiState(name, range, days) }
+        settingsRepository.stepGoal,
+    ) { snapshot, name, (range, days), stepGoal ->
+        // The goal set in Profile, over the one that came with the data.
+        snapshot.copy(stepGoal = stepGoal).toUiState(name, range, days)
+    }
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5_000),

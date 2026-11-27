@@ -23,7 +23,9 @@ import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
 import androidx.compose.runtime.CompositionLocalProvider
 import com.vitrack.app.R
-import com.vitrack.app.ui.account.AccountRoute as AccountScreenRoute
+import com.vitrack.app.data.reminders.ReminderNotifications
+import com.vitrack.app.ui.profile.ProfileRoute as ProfileScreenRoute
+import androidx.compose.runtime.LaunchedEffect
 import com.vitrack.app.ui.common.LocalOpenAccount
 import com.vitrack.app.ui.activity.ActivityRoute as ActivityScreenRoute
 import com.vitrack.app.data.share.SharePeriod
@@ -35,7 +37,23 @@ import com.vitrack.app.ui.weight.WeightRoute as WeightScreenRoute
 
 /** App shell: the navigation bar on every screen, and the nav graph. */
 @Composable
-fun VitrackApp(navController: NavHostController = rememberNavController()) {
+fun VitrackApp(
+    navController: NavHostController = rememberNavController(),
+    openTab: String? = null,
+    onTabOpened: () -> Unit = {},
+) {
+    // A reminder notification opens its tab.
+    LaunchedEffect(openTab) {
+        val tab = when (openTab) {
+            ReminderNotifications.TAB_WEIGHT -> TopLevelDestination.Weight
+            ReminderNotifications.TAB_FOOD -> TopLevelDestination.Food
+            else -> null
+        }
+        if (tab != null) {
+            navController.navigateToTab(tab)
+            onTabOpened()
+        }
+    }
     val backStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = backStackEntry?.destination
 
@@ -55,7 +73,7 @@ fun VitrackApp(navController: NavHostController = rememberNavController()) {
             }
         },
     ) { innerPadding ->
-        val openAccount = { navController.navigate(AccountRoute) { launchSingleTop = true } }
+        val openAccount = { navController.navigate(ProfileRoute) { launchSingleTop = true } }
         // Screens draw under the status bar themselves; only the nav bar is padded here.
         CompositionLocalProvider(LocalOpenAccount provides openAccount) {
             NavHost(
@@ -94,8 +112,11 @@ fun VitrackApp(navController: NavHostController = rememberNavController()) {
                         TrainerLinkRoute(onClose = { navController.popBackStack() }, onSignIn = openAccount)
                     }
                 }
-                composable<AccountRoute> {
-                    AccountScreenRoute(onBack = { navController.popBackStack() })
+                composable<ProfileRoute> {
+                    ProfileScreenRoute(
+                        onBack = { navController.popBackStack() },
+                        onOpenTrainerLinks = { navController.navigateToTab(TopLevelDestination.Review) },
+                    )
                 }
             }
         }

@@ -134,6 +134,39 @@ class SupabaseClientTest {
     }
 
     @Test
+    fun `Google's ID token is exchanged with the raw nonce, and the name kept`() = runTest {
+        transport.on("POST", "/auth/v1/token", 200,
+            """{"access_token":"a","refresh_token":"r","expires_in":3600,"user":{"id":"$USER_ID","email":"vernon@gmail.com","user_metadata":{"full_name":"Vernon Koh"},"app_metadata":{"provider":"google"}}}""")
+
+        val session = client().signInWithIdToken("google", "id-token", "raw-nonce")
+
+        val request = transport.sent("POST", "/auth/v1/token").single()
+        assertTrue(request.url.endsWith("?grant_type=id_token"))
+        val body = request.body!!.decodeToString()
+        assertTrue(body, body.contains("\"provider\":\"google\"") && body.contains("\"id_token\":\"id-token\"") && body.contains("\"nonce\":\"raw-nonce\""))
+        assertEquals("Vernon Koh", session.name)
+        assertEquals("google", session.provider)
+    }
+
+    @Test
+    fun `deleting the account removes its photos, then the account, then the session`() = runTest {
+        transport.on("POST", "/auth/v1/verify", 200, tokenJson())
+        transport.on("POST", "/storage/v1/object/list/photos", 200, """[{"name":"share-a-w1.jpg","id":"1"},{"name":"sub","id":null}]""")
+        transport.on("DELETE", "/storage/v1/object/photos", 200, "[]")
+        transport.on("POST", "/rest/v1/rpc/delete_own_account", 204, "")
+        val client = client()
+        client.verify("vernon@example.com", "123456")
+
+        com.vitrack.app.data.auth.SupabaseAuthRepository(Backend(client)).deleteAccount()
+
+        val removed = transport.sent("DELETE", "/storage/v1/object/photos").single().body!!.decodeToString()
+        assertEquals("""{"prefixes":["${USER_ID.lowercase()}/share-a-w1.jpg"]}""", removed)
+        val rpc = transport.sent("POST", "/rest/v1/rpc/delete_own_account").single().body!!.decodeToString()
+        assertEquals("""{"expected_account_id":"$USER_ID","confirmation":"DELETE"}""", rpc)
+        assertNull(client.session.value)
+    }
+
+    @Test
     fun `sign out forgets the session`() = runTest {
         transport.on("POST", "/auth/v1/verify", 200, tokenJson())
         transport.on("POST", "/auth/v1/logout", 204, "")

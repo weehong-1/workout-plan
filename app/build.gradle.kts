@@ -34,6 +34,7 @@ android {
         buildConfigField("String", "SUPABASE_HOST", "\"${backendValue("SUPABASE_HOST")}\"")
         buildConfigField("String", "SUPABASE_PUBLISHABLE_KEY", "\"${backendValue("SUPABASE_PUBLISHABLE_KEY")}\"")
         buildConfigField("String", "WEB_APP_HOST", "\"${backendValue("WEB_APP_HOST")}\"")
+        buildConfigField("String", "GOOGLE_WEB_CLIENT_ID", "\"${backendValue("GOOGLE_WEB_CLIENT_ID")}\"")
     }
 
     buildTypes {
@@ -75,6 +76,9 @@ dependencies {
     ksp(libs.androidx.room.compiler)
     implementation(libs.androidx.datastore.preferences)
     implementation(libs.coil.compose)
+    implementation(libs.androidx.credentials)
+    implementation(libs.androidx.credentials.play.services)
+    implementation(libs.googleid)
     ksp(libs.hilt.compiler)
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)

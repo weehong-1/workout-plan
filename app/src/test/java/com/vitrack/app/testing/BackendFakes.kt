@@ -2,6 +2,7 @@ package com.vitrack.app.testing
 
 import com.vitrack.app.data.auth.Account
 import com.vitrack.app.data.auth.AuthRepository
+import com.vitrack.app.data.auth.SignInMethod
 import com.vitrack.app.data.backend.BackendException
 import com.vitrack.app.data.backend.HttpRequest
 import com.vitrack.app.data.backend.HttpResponse
@@ -19,6 +20,7 @@ import kotlinx.coroutines.flow.map
 class InMemorySecureStore : SecureStore {
     val values = mutableMapOf<String, String>()
     override fun get(key: String): String? = values[key]
+    override fun clear() = values.clear()
     override fun put(key: String, value: String?) {
         if (value == null) values.remove(key) else values[key] = value
     }
@@ -110,6 +112,26 @@ class FakeAuthRepository(override val isAvailable: Boolean = true) : AuthReposit
     }
 
     override suspend fun signOut() {
+        current.value = null
+    }
+
+    override var googleWebClientId: String? = "client.apps.googleusercontent.com"
+    val googleSignIns = mutableListOf<Pair<String, String>>()
+
+    override suspend fun signInWithGoogle(idToken: String, nonce: String) {
+        failNext?.let { failNext = null; throw it }
+        googleSignIns += idToken to nonce
+        current.value = Account("user-1", "vernon@gmail.com", "Vernon Koh", SignInMethod.Google)
+    }
+
+    var deleted = false
+    /** Records the order of account and local deletion. */
+    val events = mutableListOf<String>()
+
+    override suspend fun deleteAccount() {
+        failNext?.let { failNext = null; throw it }
+        deleted = true
+        events += "server"
         current.value = null
     }
 }

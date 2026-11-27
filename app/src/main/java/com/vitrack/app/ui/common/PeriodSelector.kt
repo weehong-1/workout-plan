@@ -93,7 +93,7 @@ fun <T> ConnectedChoiceRow(
                     checkedContentColor = colors.checkedContent,
                 ),
             ) {
-                Text(label(option), fontWeight = if (checked) FontWeight.Bold else FontWeight.Medium)
+                Text(label(option), fontWeight = if (checked) FontWeight.Bold else FontWeight.Medium, maxLines = 1, softWrap = false)
             }
         }
     }

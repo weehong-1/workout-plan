@@ -35,7 +35,8 @@ class WeightViewModel @Inject constructor(
         settingsRepository.weightUnit,
         zoom,
         profileRepository.observeDisplayName(),
-    ) { weighIns, unit, zoom, name ->
+        settingsRepository.weightGoal,
+    ) { weighIns, unit, zoom, name, goal ->
         val latest = weighIns.firstOrNull() ?: return@combine WeightUiState.Empty(unit, name)
         val today = LocalDate.now(clock)
         val todayStart = periodStartOf(today, zoom, weekFields)
@@ -56,6 +57,7 @@ class WeightViewModel @Inject constructor(
             chart = chart,
             trend = trendOf(zoom, chart),
             history = historyRows(periods, weekFields),
+            goal = goal,
         )
     }.stateIn(
         scope = viewModelScope,

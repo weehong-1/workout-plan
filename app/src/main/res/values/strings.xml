@@ -17,7 +17,7 @@
 
     <!-- Activity -->
     <string name="activity_pick_day">Pick a day</string>
-    <string name="activity_account">Account</string>
+    <string name="activity_account">Profile</string>
     <string name="activity_greeting">Good day</string>
     <string name="activity_greeting_named">Good day, %1$s</string>
     <string name="activity_dial_percent">%1$s %2$d percent</string>
@@ -96,6 +96,8 @@
     <string name="weight_from_low">Up %1$s %2$s from the %3$d low</string>
     <string name="weight_legend_lower">lower</string>
     <string name="weight_legend_higher">higher than before</string>
+    <string name="weight_legend_near">near target</string>
+    <string name="weight_legend_off">off target</string>
     <string name="weight_chart_weeks">Weekly average weight for %1$d weeks, from %2$s to %3$s %4$s</string>
     <string name="weight_chart_months">Monthly average weight for %1$d months, from %2$s to %3$s %4$s</string>
     <string name="weight_chart_years">Yearly average weight for %1$d years, from %2$s to %3$s %4$s</string>
@@ -239,21 +241,119 @@
     <string name="share_send_link">Send link</string>
     <string name="share_done">Done</string>
 
-    <!-- Account -->
-    <string name="account_back">Back</string>
-    <string name="account_title">Account</string>
-    <string name="account_subtitle">Sign in to share your progress with a trainer.</string>
-    <string name="account_signed_in_subtitle">Signed in to Workout Plan.</string>
-    <string name="account_not_set_up">Sign-in needs the Workout Plan server, which isn\'t set up in this build. Everything else works without an account.</string>
-    <string name="account_email">Email</string>
-    <string name="account_send_code">Email me a code</string>
-    <string name="account_optional">Optional: only sharing needs an account. Weight and food stay on this phone; a link uploads only what you include.</string>
-    <string name="account_code_sent">We sent a code to %1$s. Enter it below.</string>
-    <string name="account_code">Code</string>
-    <string name="account_verify">Sign in</string>
-    <string name="account_change_email">Use a different email</string>
-    <string name="account_signed_in_as">Signed in as</string>
-    <string name="account_signed_in_note">Signing out keeps your weigh-ins and food photos on this phone. Links you made keep working until they expire or you revoke them.</string>
-    <string name="account_sign_out">Sign out</string>
-    <string name="account_error_network">Couldn\'t reach the server. Check your connection and try again.</string>
+    <!-- Sign in -->
+    <string name="login_title">Activity, weight and food in one place</string>
+    <string name="login_subtitle">Activity comes from your WHOOP. Weight and food photos come from you.</string>
+    <string name="login_google">Continue with Google</string>
+    <string name="login_with_email">Sign in with email</string>
+    <string name="login_private">Private by default. Nothing leaves your account until you create a trainer link.</string>
+    <string name="login_google_not_set_up">Google sign-in isn\'t set up in this build yet. Sign in with email instead.</string>
+    <string name="login_no_google_account">There\'s no Google account on this phone. Add one in Settings, or sign in with email.</string>
+    <string name="login_error_network">Couldn\'t reach the server. Check your connection and try again.</string>
+    <string name="login_error_failed">Couldn\'t sign in. Try again.</string>
+    <string name="login_back">Back</string>
+    <string name="login_email_title">Sign in with email</string>
+    <string name="login_email_subtitle">The same account as the Workout Plan web app. We\'ll email you a code.</string>
+    <string name="login_email">Email</string>
+    <string name="login_send_code">Email me a code</string>
+    <string name="login_code_sent">We sent a code to %1$s. Enter it below.</string>
+    <string name="login_code">Code</string>
+    <string name="login_verify">Sign in</string>
+    <string name="login_change_email">Use a different email</string>
+
+    <!-- Profile -->
+    <string name="profile_back">Back</string>
+    <string name="profile_title">Profile</string>
+    <string name="profile_no_name">Add your name</string>
+    <string name="profile_signed_in_google">Signed in with Google</string>
+    <string name="profile_signed_in_email">Signed in as %1$s</string>
+    <string name="profile_signed_in">Signed in</string>
+    <string name="profile_not_signed_in">Not signed in: no server in this build</string>
+    <string name="profile_edit_name">Edit name</string>
+    <string name="profile_name">Name</string>
+    <string name="profile_whoop_sample_chip">WHOOP sample data</string>
+    <plurals name="profile_links_chip">
+        <item quantity="one">%d trainer link</item>
+        <item quantity="other">%d trainer links</item>
+    </plurals>
+    <string name="profile_goal">Goal</string>
+    <string name="profile_goal_lose">Lose</string>
+    <string name="profile_goal_maintain">Maintain</string>
+    <string name="profile_goal_gain">Gain</string>
+    <string name="profile_goal_note_lose">Weeks that go down show green.</string>
+    <string name="profile_goal_note_maintain">Weeks within 0.5 kg of your target show green.</string>
+    <string name="profile_goal_note_gain">Weeks that go up show green.</string>
+    <string name="profile_goal_weight">Goal weight</string>
+    <string name="profile_goal_weight_hint">Your weekly average is %1$s %2$s.</string>
+    <string name="profile_goal_started">Started at %1$s %2$s in %3$s</string>
+    <string name="profile_goal_to_go">%1$s %2$s to go</string>
+    <string name="profile_goal_reached">Goal reached</string>
+    <string name="profile_change_goal">Change goal</string>
+    <string name="profile_set_goal">Set goal weight</string>
+    <string name="profile_set_goal_below">Set a goal weight below your current weekly average of %1$s %2$s.</string>
+    <string name="profile_set_goal_above">Set a goal weight above your current weekly average of %1$s %2$s.</string>
+    <string name="profile_set_goal_no_weighins">Log a weigh-in, then set a goal weight.</string>
+    <string name="profile_maintain_target">Target %1$s %2$s, your current weekly average.</string>
+    <string name="profile_maintain_no_weighins">Log a weigh-in and your weekly average becomes the target.</string>
+    <string name="profile_goal_wrong_way">That goal is the other way from your weekly average. Pick Lose or Gain to match, or another weight.</string>
+    <string name="profile_step_goal">Daily step goal</string>
+    <string name="profile_steps">Steps</string>
+    <string name="profile_step_goal_hint">Between %1$s and %2$s.</string>
+    <string name="profile_height">Height</string>
+    <string name="profile_height_cm">%1$d cm</string>
+    <string name="profile_height_ft_in">%1$d ft %2$d in</string>
+    <string name="profile_cm">cm</string>
+    <string name="profile_feet">ft</string>
+    <string name="profile_inches">in</string>
+    <string name="profile_add">Add</string>
+    <string name="profile_display">Display</string>
+    <string name="profile_units">Units</string>
+    <string name="profile_theme">Theme</string>
+    <string name="profile_theme_system">System</string>
+    <string name="profile_theme_light">Light</string>
+    <string name="profile_theme_dark">Dark</string>
+    <string name="profile_connected">Connected</string>
+    <string name="profile_whoop">WHOOP</string>
+    <string name="profile_whoop_status">Not connected yet · showing sample data</string>
+    <string name="profile_manage">Manage</string>
+    <string name="profile_whoop_data">Steps, strain, heart rate, recovery, sleep and workouts.</string>
+    <string name="profile_sharing">Sharing</string>
+    <string name="profile_trainer_links">Trainer links</string>
+    <string name="profile_links_none">None yet. Create one in Review.</string>
+    <plurals name="profile_links_active">
+        <item quantity="one">%d active</item>
+        <item quantity="other">%d active</item>
+    </plurals>
+    <plurals name="profile_links_active_expires">
+        <item quantity="one">%1$d active · expires %2$s</item>
+        <item quantity="other">%1$d active · next expires %2$s</item>
+    </plurals>
+    <string name="profile_reminders">Reminders</string>
+    <string name="profile_remind_weigh">Weigh-in</string>
+    <string name="profile_remind_weigh_when">Every morning, 7:00 AM</string>
+    <string name="profile_remind_food">Food photos</string>
+    <string name="profile_remind_food_when">8:00 PM, only if no photo that day</string>
+    <string name="profile_notifications_blocked">Notifications are off for Vitrack. Turn them on in the phone\'s Settings to get reminders.</string>
+    <string name="profile_your_data">Your data</string>
+    <string name="profile_export">Export my data</string>
+    <string name="profile_export_note">Weight, food photos and labels as one file</string>
+    <string name="profile_exported">Exported %1$d weigh-ins and %2$d food photos.</string>
+    <string name="profile_export_failed">Couldn\'t save the export. Try another place.</string>
+    <string name="profile_sign_out">Sign out</string>
+    <string name="profile_delete">Delete account</string>
+    <string name="profile_delete_note">Removes your weight, photos and trainer links. Your WHOOP data stays in WHOOP.</string>
+    <string name="profile_delete_note_local">Removes your weight, food photos and settings from this phone. No server is set up in this build.</string>
+    <string name="profile_delete_title">Delete your account?</string>
+    <string name="profile_delete_body">This deletes your account and trainer links on the server, and your weigh-ins, food photos and settings on this phone. It can\'t be undone; export your data first if you want a copy. Type %1$s to confirm.</string>
+    <string name="profile_delete_type">Type %1$s</string>
+    <string name="profile_error_network">Couldn\'t reach the server. Nothing was changed.</string>
+    <string name="profile_save">Save</string>
+    <string name="profile_cancel">Cancel</string>
+
+    <!-- Reminders -->
+    <string name="reminder_channel">Reminders</string>
+    <string name="reminder_weigh_title">Time to weigh in</string>
+    <string name="reminder_weigh_text">Step on the scale before breakfast and log it.</string>
+    <string name="reminder_food_title">No food photos today</string>
+    <string name="reminder_food_text">Add a photo of what you ate so your day is complete.</string>
 </resources>

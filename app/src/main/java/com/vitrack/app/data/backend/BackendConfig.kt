@@ -11,6 +11,12 @@ data class BackendConfig(
     val publishableKey: String,
     /** Base of trainer links, https://<host>. Null until set; sign-in still works. */
     val webAppUrl: String?,
+    /**
+     * The Google OAuth "Web application" client ID that Supabase's Google
+     * provider uses; Android asks Google for an ID token for it. Null: only
+     * the email code works.
+     */
+    val googleWebClientId: String? = null,
 ) {
     companion object {
         /**
@@ -18,13 +24,14 @@ data class BackendConfig(
          * host or key is empty or still a placeholder, so the app runs without
          * a server and says sharing isn't set up.
          */
-        fun from(supabaseHost: String, publishableKey: String, webAppHost: String): BackendConfig? {
+        fun from(supabaseHost: String, publishableKey: String, webAppHost: String, googleWebClientId: String = ""): BackendConfig? {
             val host = hostOrNull(supabaseHost) ?: return null
             val key = publishableKey.trim().takeUnless { isPlaceholder(it) } ?: return null
             return BackendConfig(
                 supabaseUrl = "https://$host",
                 publishableKey = key,
                 webAppUrl = hostOrNull(webAppHost)?.let { "https://$it" },
+                googleWebClientId = googleWebClientId.trim().takeUnless { isPlaceholder(it) },
             )
         }
 

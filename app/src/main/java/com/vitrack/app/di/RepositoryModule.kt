@@ -7,7 +7,11 @@ import com.vitrack.app.data.auth.SupabaseAuthRepository
 import com.vitrack.app.data.food.FoodRepository
 import com.vitrack.app.data.food.RoomFoodRepository
 import com.vitrack.app.data.profile.ProfileRepository
-import com.vitrack.app.data.profile.SampleProfileRepository
+import com.vitrack.app.data.profile.AccountProfileRepository
+import com.vitrack.app.data.account.LocalData
+import com.vitrack.app.data.account.RoomLocalData
+import com.vitrack.app.data.reminders.AlarmReminderScheduler
+import com.vitrack.app.data.reminders.ReminderScheduler
 import com.vitrack.app.data.settings.DataStoreSettingsRepository
 import com.vitrack.app.data.settings.SettingsRepository
 import com.vitrack.app.data.share.BitmapSharePhotoEncoder
@@ -35,7 +39,13 @@ abstract class RepositoryModule {
     abstract fun bindActivityRepository(impl: SampleActivityRepository): ActivityRepository
 
     @Binds
-    abstract fun bindProfileRepository(impl: SampleProfileRepository): ProfileRepository
+    abstract fun bindProfileRepository(impl: AccountProfileRepository): ProfileRepository
+
+    @Binds
+    abstract fun bindLocalData(impl: RoomLocalData): LocalData
+
+    @Binds
+    abstract fun bindReminderScheduler(impl: AlarmReminderScheduler): ReminderScheduler
 
     @Binds
     abstract fun bindWeightRepository(impl: RoomWeightRepository): WeightRepository

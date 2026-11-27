@@ -1,6 +1,13 @@
 package com.vitrack.app.testing
 
 import com.vitrack.app.data.settings.SettingsRepository
+import com.vitrack.app.data.settings.DEFAULT_STEP_GOAL
+import com.vitrack.app.data.settings.HEIGHT_CM_RANGE
+import com.vitrack.app.data.settings.ReminderKind
+import com.vitrack.app.data.settings.Reminders
+import com.vitrack.app.data.settings.STEP_GOAL_RANGE
+import com.vitrack.app.data.settings.ThemeMode
+import com.vitrack.app.data.settings.WeightGoal
 import com.vitrack.app.data.settings.WeightUnit
 import com.vitrack.app.data.weight.PhotoStore
 import com.vitrack.app.data.weight.WeighIn
@@ -51,6 +58,50 @@ class FakeSettingsRepository(unit: WeightUnit = WeightUnit.Kg) : SettingsReposit
     override suspend fun setWeightUnit(unit: WeightUnit) {
         weightUnit.value = unit
     }
+
+    override val weightGoal = MutableStateFlow(WeightGoal())
+    override suspend fun setWeightGoal(goal: WeightGoal) {
+        weightGoal.value = goal
+    }
+
+    override val stepGoal = MutableStateFlow(DEFAULT_STEP_GOAL)
+    override suspend fun setStepGoal(steps: Int) {
+        stepGoal.value = steps.coerceIn(STEP_GOAL_RANGE)
+    }
+
+    override val heightCm = MutableStateFlow<Int?>(null)
+    override suspend fun setHeightCm(cm: Int?) {
+        heightCm.value = cm?.coerceIn(HEIGHT_CM_RANGE)
+    }
+
+    override val themeMode = MutableStateFlow(ThemeMode.System)
+    override suspend fun setThemeMode(mode: ThemeMode) {
+        themeMode.value = mode
+    }
+
+    override val reminders = MutableStateFlow(Reminders())
+    override suspend fun setReminder(kind: ReminderKind, on: Boolean) {
+        reminders.value = when (kind) {
+            ReminderKind.WeighIn -> reminders.value.copy(weighIn = on)
+            ReminderKind.Food -> reminders.value.copy(food = on)
+        }
+    }
+
+    override val displayName = MutableStateFlow<String?>(null)
+    override suspend fun setDisplayName(name: String?) {
+        displayName.value = name?.trim()?.ifEmpty { null }
+    }
+
+    var cleared = false
+    override suspend fun clear() {
+        cleared = true
+        weightGoal.value = WeightGoal()
+        stepGoal.value = DEFAULT_STEP_GOAL
+        heightCm.value = null
+        themeMode.value = ThemeMode.System
+        reminders.value = Reminders()
+        displayName.value = null
+    }
 }
 
 class FakePhotoStore : PhotoStore {
@@ -59,4 +110,8 @@ class FakePhotoStore : PhotoStore {
     override fun newCaptureUri() = "content://test/capture-${++captures}.jpg"
     override suspend fun import(uri: String) = "imported-${uri.substringAfterLast('/')}"
     override suspend fun delete(fileNames: List<String>) = Unit
+    var deletedAll = false
+    override suspend fun deleteAll() {
+        deletedAll = true
+    }
 }

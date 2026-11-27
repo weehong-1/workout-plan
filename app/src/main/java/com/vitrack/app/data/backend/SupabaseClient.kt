@@ -25,6 +25,10 @@ data class AuthSession(
     val expiresAt: Long,
     val userId: String,
     val email: String? = null,
+    /** The account's name, from Google; null for an email-code account. */
+    val name: String? = null,
+    /** How the account signs in: "google" or "email". */
+    val provider: String? = null,
 ) {
     /** `auth.uid()::text` in Postgres and storage folder names are lowercase. */
     val userFolder: String get() = userId.lowercase()
@@ -51,6 +55,19 @@ class SupabaseClient(
 
     suspend fun sendCode(email: String) {
         send("POST", "/auth/v1/otp", body = json.encodeToString(OtpBody(email.trim(), createUser = true)), authorized = false)
+    }
+
+    /**
+     * Signs in with an ID token from Google (Android Credential Manager). [nonce]
+     * is the raw nonce whose SHA-256 was given to Google; Supabase checks it.
+     */
+    suspend fun signInWithIdToken(provider: String, idToken: String, nonce: String): AuthSession {
+        val response = send(
+            "POST", "/auth/v1/token", query = listOf("grant_type" to "id_token"),
+            body = json.encodeToString(IdTokenBody(provider, idToken, nonce)),
+            authorized = false,
+        )
+        return store(response)
     }
 
     suspend fun verify(email: String, code: String): AuthSession {
@@ -104,6 +121,8 @@ class SupabaseClient(
             expiresAt = clock.instant().epochSecond + token.expiresIn,
             userId = token.user.id,
             email = token.user.email,
+            name = token.user.userMetadata?.let { it.fullName ?: it.name }?.trim()?.ifEmpty { null },
+            provider = token.user.appMetadata?.provider,
         )
         _session.value = session
         store.put(SESSION_KEY, json.encodeToString(session))
@@ -111,6 +130,9 @@ class SupabaseClient(
     }
 
     // Database (PostgREST)
+
+    suspend fun rpc(function: String, body: String): String =
+        send("POST", "/rest/v1/rpc/$function", body = body, authorized = true)
 
     suspend fun select(table: String, query: List<Pair<String, String>>): String =
         send("GET", "/rest/v1/$table", query = query, authorized = true)
@@ -130,6 +152,28 @@ class SupabaseClient(
             "POST", "/storage/v1/object/photos/$path", bytes = jpeg, authorized = true,
             headers = mapOf("Content-Type" to "image/jpeg", "x-upsert" to "true"),
         )
+    }
+
+    /** Files directly inside [folder] (not sub-folders), as full paths. */
+    suspend fun listObjects(folder: String): List<String> {
+        val paths = mutableListOf<String>()
+        var offset = 0
+        while (true) {
+            val body = send(
+                "POST", "/storage/v1/object/list/photos",
+                body = json.encodeToString(ListBody(prefix = folder, limit = 1_000, offset = offset)),
+                authorized = true,
+            )
+            val items = try {
+                json.decodeFromString<List<ListItem>>(body)
+            } catch (e: Exception) {
+                throw BackendException.InvalidResponse(e)
+            }
+            paths += items.filter { it.id != null }.map { "$folder/${it.name}" }
+            if (items.size < 1_000) break
+            offset += items.size
+        }
+        return paths
     }
 
     suspend fun removeObjects(paths: List<String>) {
@@ -199,7 +243,27 @@ class SupabaseClient(
     private data class RemoveBody(val prefixes: List<String>)
 
     @Serializable
-    private data class TokenUser(val id: String, val email: String? = null)
+    private data class IdTokenBody(val provider: String, @SerialName("id_token") val idToken: String, val nonce: String)
+
+    @Serializable
+    private data class ListBody(val prefix: String, val limit: Int, val offset: Int)
+
+    @Serializable
+    private data class ListItem(val name: String, val id: String? = null)
+
+    @Serializable
+    private data class UserMetadata(@SerialName("full_name") val fullName: String? = null, val name: String? = null)
+
+    @Serializable
+    private data class AppMetadata(val provider: String? = null)
+
+    @Serializable
+    private data class TokenUser(
+        val id: String,
+        val email: String? = null,
+        @SerialName("user_metadata") val userMetadata: UserMetadata? = null,
+        @SerialName("app_metadata") val appMetadata: AppMetadata? = null,
+    )
 
     @Serializable
     private data class TokenResponse(

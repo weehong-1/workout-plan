@@ -43,6 +43,7 @@ fun WeightPeriodChart(
     modifier: Modifier = Modifier,
 ) {
     val weight = VitrackTheme.metrics.weight
+    val goal = LocalWeightGoal.current
     val trend = VitrackTheme.metrics.trend
     val gridColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f)
     val bandColor = weight.graphic.copy(alpha = 0.24f)
@@ -112,7 +113,7 @@ fun WeightPeriodChart(
             val radius = 6.dp.toPx() * dotAmount
             val ring = 2.5.dp.toPx() * dotAmount
             periods.forEachIndexed { i, period ->
-                val rose = i > 0 && period.averageKg > periods[i - 1].averageKg
+                val rose = !goal.isOnTrack(period.averageKg, periods.getOrNull(i - 1)?.averageKg)
                 val center = Offset(x(i), y(period.averageKg))
                 drawCircle(ringColor, radius = radius + ring / 2, center = center)
                 drawCircle(if (rose) trend.upDot else trend.goodDot, radius = radius - ring / 2, center = center)

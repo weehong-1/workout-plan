@@ -29,6 +29,9 @@ interface PhotoStore {
 
     suspend fun delete(fileNames: List<String>)
 
+    /** Removes every photo in this store (account deletion). */
+    suspend fun deleteAll()
+
     /** When the photo at [uri] was taken, if the system knows; read before import drops it. */
     suspend fun takenAtMillis(uri: String): Long? = null
 
@@ -72,6 +75,11 @@ class AppPhotoStore(
             File(captureDir, source.lastPathSegment.orEmpty()).delete()
         }
         name
+    }
+
+    override suspend fun deleteAll() = withContext(Dispatchers.IO) {
+        photoDir.deleteRecursively()
+        Unit
     }
 
     override suspend fun delete(fileNames: List<String>) = withContext(Dispatchers.IO) {
