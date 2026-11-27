@@ -2,12 +2,12 @@ package com.vitrack.app.di
 
 import com.vitrack.app.data.activity.ActivityRepository
 import com.vitrack.app.data.activity.SampleActivityRepository
+import com.vitrack.app.data.food.FoodRepository
+import com.vitrack.app.data.food.RoomFoodRepository
 import com.vitrack.app.data.profile.ProfileRepository
 import com.vitrack.app.data.profile.SampleProfileRepository
 import com.vitrack.app.data.settings.DataStoreSettingsRepository
 import com.vitrack.app.data.settings.SettingsRepository
-import com.vitrack.app.data.weight.AppPhotoStore
-import com.vitrack.app.data.weight.PhotoStore
 import com.vitrack.app.data.weight.RoomWeightRepository
 import com.vitrack.app.data.weight.WeightRepository
 import dagger.Binds
@@ -33,10 +33,10 @@ abstract class RepositoryModule {
     abstract fun bindWeightRepository(impl: RoomWeightRepository): WeightRepository
 
     @Binds
-    abstract fun bindPhotoStore(impl: AppPhotoStore): PhotoStore
+    abstract fun bindSettingsRepository(impl: DataStoreSettingsRepository): SettingsRepository
 
     @Binds
-    abstract fun bindSettingsRepository(impl: DataStoreSettingsRepository): SettingsRepository
+    abstract fun bindFoodRepository(impl: RoomFoodRepository): FoodRepository
 
     companion object {
         @Provides

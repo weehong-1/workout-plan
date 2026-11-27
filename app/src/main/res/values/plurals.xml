@@ -4,6 +4,22 @@
         <item quantity="one">%d weigh-in</item>
         <item quantity="other">%d weigh-ins</item>
     </plurals>
+    <plurals name="food_photos">
+        <item quantity="one">%d food photo</item>
+        <item quantity="other">%d food photos</item>
+    </plurals>
+    <plurals name="food_photos_today">
+        <item quantity="one">photo today</item>
+        <item quantity="other">photos today</item>
+    </plurals>
+    <plurals name="food_photos_word">
+        <item quantity="one">photo</item>
+        <item quantity="other">photos</item>
+    </plurals>
+    <plurals name="food_add_title">
+        <item quantity="one">Add food photo</item>
+        <item quantity="other">Add %d food photos</item>
+    </plurals>
     <plurals name="weight_streak_down">
         <item quantity="one">%d week down</item>
         <item quantity="other">%d weeks down in a row</item>

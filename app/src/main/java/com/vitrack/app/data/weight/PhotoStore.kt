@@ -4,18 +4,16 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.ImageDecoder
 import android.net.Uri
+import android.provider.MediaStore
 import androidx.core.content.FileProvider
-import dagger.hilt.android.qualifiers.ApplicationContext
 import java.io.File
 import java.util.UUID
-import javax.inject.Inject
-import javax.inject.Singleton
 import kotlin.math.max
 import kotlin.math.roundToInt
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
-/** Progress photos kept in app storage, on the phone only. */
+/** Photos kept in app storage, on the phone only. Each feature has its own folder. */
 interface PhotoStore {
     fun file(fileName: String): File
 
@@ -31,17 +29,21 @@ interface PhotoStore {
 
     suspend fun delete(fileNames: List<String>)
 
+    /** When the photo at [uri] was taken, if the system knows; read before import drops it. */
+    suspend fun takenAtMillis(uri: String): Long? = null
+
     companion object {
         const val MAX_SIDE_PX = 1600
     }
 }
 
-@Singleton
-class AppPhotoStore @Inject constructor(
-    @ApplicationContext private val context: Context,
+/** A [PhotoStore] in `files/<folder>`; one per feature (see DataModule). */
+class AppPhotoStore(
+    private val context: Context,
+    private val folder: String,
 ) : PhotoStore {
 
-    private val photoDir get() = File(context.filesDir, "weight_photos").apply { mkdirs() }
+    private val photoDir get() = File(context.filesDir, folder).apply { mkdirs() }
     private val captureDir get() = File(context.cacheDir, "camera").apply { mkdirs() }
     private val authority get() = "${context.packageName}.fileprovider"
 
@@ -74,5 +76,13 @@ class AppPhotoStore @Inject constructor(
 
     override suspend fun delete(fileNames: List<String>) = withContext(Dispatchers.IO) {
         fileNames.forEach { file(it).delete() }
+    }
+
+    /** The photo picker and MediaStore expose DATE_TAKEN; camera captures don't, so they use now. */
+    override suspend fun takenAtMillis(uri: String): Long? = withContext(Dispatchers.IO) {
+        runCatching {
+            context.contentResolver.query(Uri.parse(uri), arrayOf(MediaStore.MediaColumns.DATE_TAKEN), null, null, null)
+                ?.use { cursor -> if (cursor.moveToFirst() && !cursor.isNull(0)) cursor.getLong(0).takeIf { it > 0 } else null }
+        }.getOrNull()
     }
 }

@@ -1,6 +1,8 @@
 package com.vitrack.app.data.weight.db
 
 import androidx.room.Dao
+import com.vitrack.app.data.food.db.FoodDao
+import com.vitrack.app.data.food.db.FoodPhotoEntity
 import androidx.room.Database
 import androidx.room.Entity
 import androidx.room.Index
@@ -93,7 +95,13 @@ abstract class WeightDao {
     }
 }
 
-@Database(entities = [WeighInEntity::class, WeighInPhotoEntity::class], version = 1, exportSchema = false)
+/** The app's database. Version 2 adds food photos (see MIGRATION_1_2). */
+@Database(
+    entities = [WeighInEntity::class, WeighInPhotoEntity::class, FoodPhotoEntity::class],
+    version = 2,
+    exportSchema = false,
+)
 abstract class VitrackDatabase : RoomDatabase() {
     abstract fun weightDao(): WeightDao
+    abstract fun foodDao(): FoodDao
 }

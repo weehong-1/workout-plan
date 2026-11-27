@@ -151,4 +151,26 @@
     <string name="weighin_delete_title">Delete this weigh-in?</string>
     <string name="weighin_delete_body">The weigh-in for %1$s and its photos are removed from this phone.</string>
     <string name="weighin_ok">OK</string>
+
+    <!-- Food -->
+    <string name="food_add_photo">Add photo</string>
+    <string name="food_from_gallery">Add from gallery</string>
+    <string name="food_day_description">%1$s, %2$s</string>
+    <string name="food_timeline_description">Meals across the day, from %1$s to %2$s</string>
+    <string name="food_filter_all">All</string>
+    <string name="food_no_label">No label</string>
+    <string name="food_label_breakfast">Breakfast</string>
+    <string name="food_label_lunch">Lunch</string>
+    <string name="food_label_dinner">Dinner</string>
+    <string name="food_label_snack">Snack</string>
+    <string name="food_photo_at">Food photo at %1$s</string>
+    <string name="food_photo_labelled">%1$s photo at %2$s</string>
+    <string name="food_empty_day">No food photos on this day</string>
+    <string name="food_empty_filter">No %1$s photos on this day</string>
+    <string name="food_empty_hint">Add photo opens the camera; the smaller button picks from your gallery.</string>
+    <string name="food_label_title">Label · optional</string>
+    <string name="food_note_optional">Note (optional)</string>
+    <string name="food_save_failed">Couldn\'t save. Check the photos and try again.</string>
+    <string name="food_delete_title">Delete this photo?</string>
+    <string name="food_delete_body">The photo and its note are removed from this phone.</string>
 </resources>
