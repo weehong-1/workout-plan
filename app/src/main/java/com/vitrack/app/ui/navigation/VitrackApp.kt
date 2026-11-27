@@ -21,7 +21,10 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
+import androidx.compose.runtime.CompositionLocalProvider
 import com.vitrack.app.R
+import com.vitrack.app.ui.account.AccountRoute as AccountScreenRoute
+import com.vitrack.app.ui.common.LocalOpenAccount
 import com.vitrack.app.ui.activity.ActivityRoute as ActivityScreenRoute
 import com.vitrack.app.data.share.SharePeriod
 import com.vitrack.app.ui.review.ReviewRoute as ReviewScreenRoute
@@ -52,41 +55,47 @@ fun VitrackApp(navController: NavHostController = rememberNavController()) {
             }
         },
     ) { innerPadding ->
+        val openAccount = { navController.navigate(AccountRoute) { launchSingleTop = true } }
         // Screens draw under the status bar themselves; only the nav bar is padded here.
-        NavHost(
-            navController = navController,
-            startDestination = ActivityGraph,
-            modifier = Modifier.padding(bottom = innerPadding.calculateBottomPadding()),
-        ) {
-            navigation<ActivityGraph>(startDestination = ActivityRoute) {
-                composable<ActivityRoute> {
-                    ActivityScreenRoute(onOpenStrain = { navController.navigate(StrainRoute) })
+        CompositionLocalProvider(LocalOpenAccount provides openAccount) {
+            NavHost(
+                navController = navController,
+                startDestination = ActivityGraph,
+                modifier = Modifier.padding(bottom = innerPadding.calculateBottomPadding()),
+            ) {
+                navigation<ActivityGraph>(startDestination = ActivityRoute) {
+                    composable<ActivityRoute> {
+                        ActivityScreenRoute(onOpenStrain = { navController.navigate(StrainRoute) })
+                    }
+                    composable<StrainRoute> {
+                        StrainScreenRoute(onBack = { navController.popBackStack() })
+                    }
                 }
-                composable<StrainRoute> {
-                    StrainScreenRoute(onBack = { navController.popBackStack() })
+                composable<WeightRoute> {
+                    WeightScreenRoute()
                 }
-            }
-            composable<WeightRoute> {
-                WeightScreenRoute()
-            }
-            composable<FoodRoute> {
-                FoodScreenRoute()
-            }
-            navigation<ReviewGraph>(startDestination = ReviewRoute) {
-                composable<ReviewRoute> {
-                    ReviewScreenRoute(
-                        onShare = { period ->
-                            navController.navigate(
-                                when (period) {
-                                    is SharePeriod.Month -> ShareRoute(period.month.year, period.month.monthValue)
-                                    is SharePeriod.Year -> ShareRoute(period.year, 0)
-                                },
-                            )
-                        },
-                    )
+                composable<FoodRoute> {
+                    FoodScreenRoute()
                 }
-                composable<ShareRoute> {
-                    TrainerLinkRoute(onClose = { navController.popBackStack() })
+                navigation<ReviewGraph>(startDestination = ReviewRoute) {
+                    composable<ReviewRoute> {
+                        ReviewScreenRoute(
+                            onShare = { period ->
+                                navController.navigate(
+                                    when (period) {
+                                        is SharePeriod.Month -> ShareRoute(period.month.year, period.month.monthValue)
+                                        is SharePeriod.Year -> ShareRoute(period.year, 0)
+                                    },
+                                )
+                            },
+                        )
+                    }
+                    composable<ShareRoute> {
+                        TrainerLinkRoute(onClose = { navController.popBackStack() }, onSignIn = openAccount)
+                    }
+                }
+                composable<AccountRoute> {
+                    AccountScreenRoute(onBack = { navController.popBackStack() })
                 }
             }
         }

@@ -20,6 +20,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ContainedLoadingIndicator
@@ -31,8 +32,12 @@ import androidx.compose.material3.LinearWavyProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -41,6 +46,7 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
@@ -49,6 +55,7 @@ import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -103,6 +110,18 @@ fun ReviewScreen(
     onRevoke: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    var confirmRevoke by remember { mutableStateOf<ShareLink?>(null) }
+    confirmRevoke?.let { link ->
+        AlertDialog(
+            onDismissRequest = { confirmRevoke = null },
+            title = { Text(stringResource(R.string.review_revoke_title, link.trainerName)) },
+            text = { Text(stringResource(R.string.review_revoke_body)) },
+            confirmButton = {
+                TextButton(onClick = { onRevoke(link.id); confirmRevoke = null }) { Text(stringResource(R.string.review_revoke)) }
+            },
+            dismissButton = { TextButton(onClick = { confirmRevoke = null }) { Text(stringResource(R.string.share_cancel)) } },
+        )
+    }
     Box(modifier.fillMaxSize().statusBarsPadding()) {
         if (state.isLoading) {
             ContainedLoadingIndicator(Modifier.align(Alignment.Center))
@@ -149,14 +168,20 @@ fun ReviewScreen(
             if (state.links.isEmpty()) {
                 item {
                     Text(
-                        stringResource(if (state.sharingAvailable) R.string.review_no_links else R.string.review_links_not_set_up),
+                        stringResource(
+                            when {
+                                !state.sharingAvailable -> R.string.review_links_not_set_up
+                                !state.isSignedIn -> R.string.review_links_sign_in
+                                else -> R.string.review_no_links
+                            },
+                        ),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(horizontal = Spacing.xs),
                     )
                 }
             } else {
-                items(state.links, key = { it.id }) { link -> LinkRow(link, onRevoke = { onRevoke(link.id) }) }
+                items(state.links, key = { it.id }) { link -> LinkRow(link, onRevoke = { confirmRevoke = link }) }
             }
         }
     }
@@ -412,9 +437,12 @@ private fun FoodCard(food: FoodSummary, isYear: Boolean) {
 
 @Composable
 private fun LinkRow(link: ShareLink, onRevoke: () -> Unit) {
-    val expiry = link.expiresOn?.let {
-        stringResource(R.string.review_link_expires, Format.dayMonth(it))
-    } ?: stringResource(R.string.review_link_no_expiry)
+    val clipboard = LocalClipboardManager.current
+    val expiry = when {
+        link.isExpired -> stringResource(R.string.review_link_expired)
+        link.expiresOn != null -> stringResource(R.string.review_link_expires, Format.dayMonth(link.expiresOn))
+        else -> stringResource(R.string.review_link_no_expiry)
+    }
     Surface(shape = RoundedCornerShape(24.dp), color = MaterialTheme.colorScheme.surfaceContainer, modifier = Modifier.fillMaxWidth()) {
         Row(
             Modifier.heightIn(min = 68.dp).padding(start = Spacing.m, end = Spacing.s),
@@ -438,6 +466,12 @@ private fun LinkRow(link: ShareLink, onRevoke: () -> Unit) {
                     style = MaterialTheme.typography.bodyMedium.copy(fontSize = 13.sp),
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
+            }
+            // The token lives only on the phone that made the link, so only there can it be copied again.
+            if (link.url != null && !link.isExpired) {
+                FilledTonalIconButton(onClick = { clipboard.setText(AnnotatedString(link.url)) }, modifier = Modifier.size(40.dp)) {
+                    Icon(painterResource(R.drawable.ic_link), contentDescription = stringResource(R.string.review_copy_link, link.trainerName), modifier = Modifier.size(20.dp))
+                }
             }
             Button(
                 onClick = onRevoke,

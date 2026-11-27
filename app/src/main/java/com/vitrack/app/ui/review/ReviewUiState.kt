@@ -21,6 +21,7 @@ data class ReviewUiState(
     val food: FoodSummary = FoodSummary(0, 0, emptyList()),
     val links: List<ShareLink> = emptyList(),
     val sharingAvailable: Boolean = false,
+    val isSignedIn: Boolean = false,
 ) {
     val isYear: Boolean get() = period is SharePeriod.Year
     /** No going past the period that holds today. */

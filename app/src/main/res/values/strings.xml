@@ -191,10 +191,15 @@
     <string name="review_share">Share with trainer</string>
     <string name="review_active_links">Active links</string>
     <string name="review_no_links">No active links. Links you create show here, and you can revoke them at any time.</string>
-    <string name="review_links_not_set_up">No links yet. Sharing needs sign-in and the server, which this build doesn\'t connect to yet.</string>
+    <string name="review_links_not_set_up">No links yet. Sharing needs the Workout Plan server, which isn\'t set up in this build.</string>
+    <string name="review_links_sign_in">Sign in to create trainer links and see the ones you have made.</string>
     <string name="review_link_expires">expires %1$s</string>
+    <string name="review_link_expired">expired</string>
     <string name="review_link_no_expiry">no expiry</string>
     <string name="review_revoke">Revoke</string>
+    <string name="review_revoke_title">Revoke the link for %1$s?</string>
+    <string name="review_revoke_body">The page stops working at once and its copied photos are deleted from the server. This can\'t be undone; you can create a new link.</string>
+    <string name="review_copy_link">Copy the link for %1$s</string>
 
     <!-- Share with trainer -->
     <string name="share_close">Close</string>
@@ -216,7 +221,39 @@
     <string name="share_need_name">Add trainer name to create the link.</string>
     <string name="share_need_content">Include at least one thing to share.</string>
     <string name="share_not_set_up_title">Sharing isn\'t set up yet</string>
-    <string name="share_not_set_up_body">Creating a link needs sign-in and the Workout Plan server. This build doesn\'t connect to them yet, so no link was made and nothing left your phone.</string>
+    <string name="share_not_set_up_body">Creating a link needs the Workout Plan server and web app, which aren\'t set up in this build. No link was made and nothing left your phone.</string>
     <string name="share_failed_title">Couldn\'t create the link</string>
     <string name="share_failed_body">Check your connection and try again. Nothing was shared.</string>
+    <string name="share_sign_in">Sign in to create link</string>
+    <string name="share_sign_in_hint">Use the same email as the Workout Plan web app.</string>
+    <string name="share_sign_in_title">Sign in to share</string>
+    <string name="share_sign_in_body">Your session has ended. Sign in again, then create the link. Nothing was shared.</string>
+    <string name="share_sign_in_action">Sign in</string>
+    <string name="share_cancel">Cancel</string>
+    <string name="share_creating">Creating the link…</string>
+    <string name="share_uploading">Uploading photos: %1$d of %2$d</string>
+    <string name="share_ready_title">Link ready</string>
+    <string name="share_ready_body">Send it to your trainer. You can copy it again or revoke it in Review.</string>
+    <string name="share_copy">Copy</string>
+    <string name="share_send">Share</string>
+    <string name="share_send_link">Send link</string>
+    <string name="share_done">Done</string>
+
+    <!-- Account -->
+    <string name="account_back">Back</string>
+    <string name="account_title">Account</string>
+    <string name="account_subtitle">Sign in to share your progress with a trainer.</string>
+    <string name="account_signed_in_subtitle">Signed in to Workout Plan.</string>
+    <string name="account_not_set_up">Sign-in needs the Workout Plan server, which isn\'t set up in this build. Everything else works without an account.</string>
+    <string name="account_email">Email</string>
+    <string name="account_send_code">Email me a code</string>
+    <string name="account_optional">Optional: only sharing needs an account. Weight and food stay on this phone; a link uploads only what you include.</string>
+    <string name="account_code_sent">We sent a code to %1$s. Enter it below.</string>
+    <string name="account_code">Code</string>
+    <string name="account_verify">Sign in</string>
+    <string name="account_change_email">Use a different email</string>
+    <string name="account_signed_in_as">Signed in as</string>
+    <string name="account_signed_in_note">Signing out keeps your weigh-ins and food photos on this phone. Links you made keep working until they expire or you revoke them.</string>
+    <string name="account_sign_out">Sign out</string>
+    <string name="account_error_network">Couldn\'t reach the server. Check your connection and try again.</string>
 </resources>

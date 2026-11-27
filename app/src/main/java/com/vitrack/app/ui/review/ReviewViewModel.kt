@@ -67,7 +67,8 @@ class ReviewViewModel @Inject constructor(
         settingsRepository.weightUnit,
         profileRepository.observeDisplayName(),
         shareRepository.observeLinks(),
-    ) { s, unit, name, links ->
+        shareRepository.isSignedIn,
+    ) { s, unit, name, links, signedIn ->
         ReviewUiState(
             isLoading = false,
             displayName = name,
@@ -79,6 +80,7 @@ class ReviewViewModel @Inject constructor(
             food = s.food,
             links = links,
             sharingAvailable = shareRepository.isAvailable,
+            isSignedIn = signedIn,
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), ReviewUiState())
 

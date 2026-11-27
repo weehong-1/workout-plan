@@ -17,6 +17,9 @@ import kotlinx.serialization.Serializable
 @Serializable data object ReviewGraph
 @Serializable data object ReviewRoute
 
+/** Account: optional sign-in with an emailed code (spec D11), opened from any tab's avatar. */
+@Serializable data object AccountRoute
+
 /** Share with trainer, opened for a period: [month] 1–12, or 0 for the whole [year]. */
 @Serializable data class ShareRoute(val year: Int, val month: Int)
 

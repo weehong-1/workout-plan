@@ -1,6 +1,8 @@
 package com.vitrack.app.ui.review.share
 
+import android.content.Intent
 import androidx.compose.foundation.background
+import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -22,6 +24,8 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.DropdownMenu
@@ -43,7 +47,6 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.toShape
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -51,9 +54,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
@@ -80,18 +88,16 @@ import java.util.Locale
 @Composable
 fun TrainerLinkRoute(
     onClose: () -> Unit,
+    onSignIn: () -> Unit,
     viewModel: TrainerLinkViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-    LaunchedEffect(state.result) {
-        if (state.result == CreateResult.Created) onClose()
-    }
-    TrainerLinkScreen(state, viewModel, onClose)
+    TrainerLinkScreen(state, viewModel, onClose, onSignIn)
 }
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-private fun TrainerLinkScreen(state: TrainerLinkState, viewModel: TrainerLinkViewModel, onClose: () -> Unit) {
+private fun TrainerLinkScreen(state: TrainerLinkState, viewModel: TrainerLinkViewModel, onClose: () -> Unit, onSignIn: () -> Unit) {
     val metrics = VitrackTheme.metrics
     var pickExpiry by remember { mutableStateOf(false) }
     Column(
@@ -201,34 +207,56 @@ private fun TrainerLinkScreen(state: TrainerLinkState, viewModel: TrainerLinkVie
                 }
             }
 
-            Button(
-                onClick = viewModel::create,
-                enabled = state.canCreate,
-                shape = RoundedCornerShape(32.dp),
-                modifier = Modifier.fillMaxWidth().padding(top = 14.dp).height(64.dp),
-            ) {
-                Icon(painterResource(R.drawable.ic_check), contentDescription = null, modifier = Modifier.size(20.dp))
-                Text(
-                    stringResource(R.string.share_create),
-                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                    modifier = Modifier.padding(start = Spacing.s),
-                )
-            }
-            if (!state.canCreate && !state.isCreating) {
-                Text(
-                    stringResource(if (state.contents.isEmpty) R.string.share_need_content else R.string.share_need_name),
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.fillMaxWidth().padding(top = Spacing.s),
-                )
+            if (state.needsSignIn) {
+                Button(
+                    onClick = onSignIn,
+                    shape = RoundedCornerShape(32.dp),
+                    modifier = Modifier.fillMaxWidth().padding(top = 14.dp).height(64.dp),
+                ) {
+                    Text(stringResource(R.string.share_sign_in), style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
+                }
+                Hint(stringResource(R.string.share_sign_in_hint))
+            } else {
+                Button(
+                    onClick = viewModel::create,
+                    enabled = state.canCreate,
+                    shape = RoundedCornerShape(32.dp),
+                    modifier = Modifier.fillMaxWidth().padding(top = 14.dp).height(64.dp),
+                ) {
+                    if (state.isCreating) {
+                        LoadingIndicator(modifier = Modifier.size(32.dp))
+                    } else {
+                        Icon(painterResource(R.drawable.ic_check), contentDescription = null, modifier = Modifier.size(20.dp))
+                        Text(
+                            stringResource(R.string.share_create),
+                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                            modifier = Modifier.padding(start = Spacing.s),
+                        )
+                    }
+                }
+                when {
+                    state.isCreating -> Hint(
+                        state.progress?.takeIf { it.second > 0 }
+                            ?.let { (done, total) -> stringResource(R.string.share_uploading, done, total) }
+                            ?: stringResource(R.string.share_creating),
+                    )
+                    !state.canCreate -> Hint(stringResource(if (state.contents.isEmpty) R.string.share_need_content else R.string.share_need_name))
+                }
             }
         }
     }
 
     if (pickExpiry) ExpiryPicker(state.expiresOn, state.today, onPick = { viewModel.setExpiresOn(it); pickExpiry = false }, onDismiss = { pickExpiry = false })
 
-    when (state.result) {
+    when (val result = state.result) {
+        is CreateResult.Created -> LinkReadyDialog(result.url, onDone = { viewModel.dismissResult(); onClose() })
+        CreateResult.NeedsSignIn -> AlertDialog(
+            onDismissRequest = viewModel::dismissResult,
+            title = { Text(stringResource(R.string.share_sign_in_title)) },
+            text = { Text(stringResource(R.string.share_sign_in_body)) },
+            confirmButton = { TextButton(onClick = { viewModel.dismissResult(); onSignIn() }) { Text(stringResource(R.string.share_sign_in_action)) } },
+            dismissButton = { TextButton(onClick = viewModel::dismissResult) { Text(stringResource(R.string.share_cancel)) } },
+        )
         CreateResult.NotSetUp -> AlertDialog(
             onDismissRequest = viewModel::dismissResult,
             title = { Text(stringResource(R.string.share_not_set_up_title)) },
@@ -243,6 +271,47 @@ private fun TrainerLinkScreen(state: TrainerLinkState, viewModel: TrainerLinkVie
         )
         else -> Unit
     }
+}
+
+@Composable
+private fun Hint(text: String) {
+    Text(
+        text,
+        style = MaterialTheme.typography.labelMedium,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        textAlign = TextAlign.Center,
+        modifier = Modifier.fillMaxWidth().padding(top = Spacing.s).semantics { liveRegion = LiveRegionMode.Polite },
+    )
+}
+
+/** The new link: copy it or send it with the share sheet. The token is kept only on this phone. */
+@Composable
+private fun LinkReadyDialog(url: String, onDone: () -> Unit) {
+    val context = LocalContext.current
+    val clipboard = LocalClipboardManager.current
+    val shareTitle = stringResource(R.string.share_send_link)
+    AlertDialog(
+        onDismissRequest = onDone,
+        title = { Text(stringResource(R.string.share_ready_title)) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(Spacing.m)) {
+                Text(stringResource(R.string.share_ready_body))
+                Surface(shape = RoundedCornerShape(16.dp), color = MaterialTheme.colorScheme.surfaceContainerHighest) {
+                    SelectionContainer {
+                        Text(url, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(Spacing.m))
+                    }
+                }
+                Row(horizontalArrangement = Arrangement.spacedBy(Spacing.s)) {
+                    FilledTonalButton(onClick = { clipboard.setText(AnnotatedString(url)) }) { Text(stringResource(R.string.share_copy)) }
+                    FilledTonalButton(onClick = {
+                        val send = Intent(Intent.ACTION_SEND).setType("text/plain").putExtra(Intent.EXTRA_TEXT, url)
+                        context.startActivity(Intent.createChooser(send, shareTitle))
+                    }) { Text(stringResource(R.string.share_send)) }
+                }
+            }
+        },
+        confirmButton = { TextButton(onClick = onDone) { Text(stringResource(R.string.share_done)) } },
+    )
 }
 
 @Composable

@@ -6,6 +6,14 @@ import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.preferencesDataStoreFile
 import androidx.room.Room
+import com.vitrack.app.BuildConfig
+import com.vitrack.app.data.backend.Backend
+import com.vitrack.app.data.backend.BackendConfig
+import com.vitrack.app.data.backend.KeystoreSecureStore
+import com.vitrack.app.data.backend.SecureStore
+import com.vitrack.app.data.backend.SupabaseClient
+import com.vitrack.app.data.backend.UrlConnectionTransport
+import java.time.Clock
 import com.vitrack.app.data.food.FoodPhotos
 import com.vitrack.app.data.food.db.FoodDao
 import com.vitrack.app.data.food.db.MIGRATION_1_2
@@ -48,6 +56,18 @@ object DataModule {
     @FoodPhotos
     fun provideFoodPhotoStore(@ApplicationContext context: Context): PhotoStore =
         AppPhotoStore(context, "food_photos")
+
+    @Provides
+    @Singleton
+    fun provideSecureStore(@ApplicationContext context: Context): SecureStore = KeystoreSecureStore(context)
+
+    /** The Supabase project from local.properties (spec D10), or none when it isn't set. */
+    @Provides
+    @Singleton
+    fun provideBackend(transport: UrlConnectionTransport, store: SecureStore, clock: Clock): Backend {
+        val config = BackendConfig.from(BuildConfig.SUPABASE_HOST, BuildConfig.SUPABASE_PUBLISHABLE_KEY, BuildConfig.WEB_APP_HOST)
+        return Backend(config?.let { SupabaseClient(it, transport, store, clock) })
+    }
 
     @Provides
     @Singleton

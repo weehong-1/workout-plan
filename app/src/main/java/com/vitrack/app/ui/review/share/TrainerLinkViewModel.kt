@@ -3,6 +3,7 @@ package com.vitrack.app.ui.review.share
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.vitrack.app.data.backend.BackendException
 import com.vitrack.app.data.share.NewShareLink
 import com.vitrack.app.data.share.ShareContents
 import com.vitrack.app.data.share.SharePeriod
@@ -28,15 +29,23 @@ data class TrainerLinkState(
     val contents: ShareContents = ShareContents(),
     val expires: Boolean = true,
     val expiresOn: LocalDate,
+    /** False when this build has no server: creating says so instead of signing in. */
+    val isAvailable: Boolean = false,
+    val isSignedIn: Boolean = false,
     val isCreating: Boolean = false,
+    /** Photos uploaded of the total, while creating. */
+    val progress: Pair<Int, Int>? = null,
     val result: CreateResult? = null,
 ) {
     val canCreate: Boolean get() = trainerName.isNotBlank() && !contents.isEmpty && !isCreating
+    /** Signing in comes first when the server is there but nobody is signed in. */
+    val needsSignIn: Boolean get() = isAvailable && !isSignedIn
 }
 
 sealed interface CreateResult {
-    data object Created : CreateResult
+    data class Created(val url: String) : CreateResult
     data object NotSetUp : CreateResult
+    data object NeedsSignIn : CreateResult
     data object Failed : CreateResult
 }
 
@@ -63,9 +72,22 @@ class TrainerLinkViewModel @Inject constructor(
             year = checkNotNull(savedStateHandle.get<Int>("year")),
             month = checkNotNull(savedStateHandle.get<Int>("month")),
         ).toPeriod()
-        MutableStateFlow(TrainerLinkState(today = today, period = period, expiresOn = defaultExpiry(period, today)))
+        MutableStateFlow(
+            TrainerLinkState(
+                today = today,
+                period = period,
+                expiresOn = defaultExpiry(period, today),
+                isAvailable = repository.isAvailable,
+            ),
+        )
     }
     val state: StateFlow<TrainerLinkState> = _state.asStateFlow()
+
+    init {
+        viewModelScope.launch {
+            repository.isSignedIn.collect { signedIn -> _state.update { it.copy(isSignedIn = signedIn) } }
+        }
+    }
 
     fun setTrainerName(name: String) = _state.update { it.copy(trainerName = name.take(60)) }
 
@@ -81,30 +103,35 @@ class TrainerLinkViewModel @Inject constructor(
 
     fun dismissResult() = _state.update { it.copy(result = null) }
 
-    /** Called after the consent the page shows; [canCreate] guards the button. */
+    /** Called after the consent the page shows; [TrainerLinkState.canCreate] guards the button. */
     fun create() {
         val current = _state.value
         if (!current.canCreate) return
-        _state.value = current.copy(isCreating = true)
+        _state.value = current.copy(isCreating = true, progress = null)
         viewModelScope.launch {
             val result = try {
-                repository.create(
+                val link = repository.create(
                     NewShareLink(
                         trainerName = current.trainerName.trim(),
                         period = current.period,
                         contents = current.contents,
                         expiresOn = current.expiresOn.takeIf { current.expires },
                     ),
+                    onProgress = { done, total -> _state.update { it.copy(progress = done to total) } },
                 )
-                CreateResult.Created
+                link.url?.let { CreateResult.Created(it) } ?: CreateResult.Failed
             } catch (e: CancellationException) {
                 throw e
             } catch (e: SharingNotSetUpException) {
                 CreateResult.NotSetUp
+            } catch (e: BackendException.NotConfigured) {
+                CreateResult.NotSetUp
+            } catch (e: BackendException.NotSignedIn) {
+                CreateResult.NeedsSignIn
             } catch (e: Exception) {
                 CreateResult.Failed
             }
-            _state.update { it.copy(isCreating = false, result = result) }
+            _state.update { it.copy(isCreating = false, progress = null, result = result) }
         }
     }
 }

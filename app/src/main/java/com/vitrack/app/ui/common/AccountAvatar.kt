@@ -7,25 +7,33 @@ import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.vitrack.app.R
 
-/** The account button in the top corner of every tab. Account is not built yet. */
+/** Opens Account; the app shell provides it so every tab's avatar leads there. */
+val LocalOpenAccount = staticCompositionLocalOf<() -> Unit> { {} }
+
+/** The account button in the top corner of every tab. */
 @Composable
 fun AccountAvatar(
     displayName: String?,
     modifier: Modifier = Modifier,
-    onClick: () -> Unit = {},
+    onClick: () -> Unit = LocalOpenAccount.current,
 ) {
     val label = stringResource(R.string.activity_account)
     FilledTonalIconButton(
         onClick = onClick,
-        modifier = modifier.size(40.dp).clearAndSetSemantics { contentDescription = label },
+        modifier = modifier.size(40.dp).clearAndSetSemantics {
+            contentDescription = label
+            onClick(label = null) { onClick(); true }
+        },
         shape = CircleShape,
         colors = IconButtonDefaults.filledTonalIconButtonColors(
             containerColor = MaterialTheme.colorScheme.primaryContainer,

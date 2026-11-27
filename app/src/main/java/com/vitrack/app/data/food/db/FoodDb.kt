@@ -33,6 +33,9 @@ interface FoodDao {
     @Query("SELECT epochDay, COUNT(*) AS count FROM food_photo WHERE epochDay >= :fromDay GROUP BY epochDay")
     fun observeCounts(fromDay: Long): Flow<List<DayCount>>
 
+    @Query("SELECT * FROM food_photo WHERE epochDay BETWEEN :fromDay AND :toDay ORDER BY epochDay, secondOfDay, id")
+    suspend fun between(fromDay: Long, toDay: Long): List<FoodPhotoEntity>
+
     @Query("SELECT * FROM food_photo WHERE id = :id")
     suspend fun get(id: Long): FoodPhotoEntity?
 

@@ -1,6 +1,6 @@
 package com.vitrack.app.ui.review
 
-import com.vitrack.app.data.share.NotConnectedShareRepository
+import com.vitrack.app.testing.FakeShareRepository
 import com.vitrack.app.data.share.SharePeriod
 import com.vitrack.app.testing.FIXED_CLOCK
 import com.vitrack.app.testing.FakeActivityRepository
@@ -55,7 +55,7 @@ class ReviewViewModelTest {
     ): ReviewViewModel {
         val viewModel = ReviewViewModel(
             FakeActivityRepository(), weight, food, FakeSettingsRepository(), FakeProfileRepository(),
-            NotConnectedShareRepository(), FIXED_CLOCK,
+            FakeShareRepository(isAvailable = false, signedIn = false), FIXED_CLOCK,
         )
         backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { viewModel.uiState.collect {} }
         return viewModel

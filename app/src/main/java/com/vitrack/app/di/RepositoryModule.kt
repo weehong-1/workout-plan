@@ -2,14 +2,20 @@ package com.vitrack.app.di
 
 import com.vitrack.app.data.activity.ActivityRepository
 import com.vitrack.app.data.activity.SampleActivityRepository
+import com.vitrack.app.data.auth.AuthRepository
+import com.vitrack.app.data.auth.SupabaseAuthRepository
 import com.vitrack.app.data.food.FoodRepository
 import com.vitrack.app.data.food.RoomFoodRepository
 import com.vitrack.app.data.profile.ProfileRepository
 import com.vitrack.app.data.profile.SampleProfileRepository
-import com.vitrack.app.data.share.NotConnectedShareRepository
-import com.vitrack.app.data.share.ShareRepository
 import com.vitrack.app.data.settings.DataStoreSettingsRepository
 import com.vitrack.app.data.settings.SettingsRepository
+import com.vitrack.app.data.share.BitmapSharePhotoEncoder
+import com.vitrack.app.data.share.RepositoryShareSourceLoader
+import com.vitrack.app.data.share.SharePhotoEncoder
+import com.vitrack.app.data.share.ShareRepository
+import com.vitrack.app.data.share.ShareSourceLoader
+import com.vitrack.app.data.share.SupabaseShareRepository
 import com.vitrack.app.data.weight.RoomWeightRepository
 import com.vitrack.app.data.weight.WeightRepository
 import dagger.Binds
@@ -40,9 +46,18 @@ abstract class RepositoryModule {
     @Binds
     abstract fun bindFoodRepository(impl: RoomFoodRepository): FoodRepository
 
-    // Swap for the Supabase implementation once sign-in and the server are set up.
     @Binds
-    abstract fun bindShareRepository(impl: NotConnectedShareRepository): ShareRepository
+    abstract fun bindAuthRepository(impl: SupabaseAuthRepository): AuthRepository
+
+    /** Without a server in the build, it reports sharing isn't set up and never fakes a link. */
+    @Binds
+    abstract fun bindShareRepository(impl: SupabaseShareRepository): ShareRepository
+
+    @Binds
+    abstract fun bindShareSourceLoader(impl: RepositoryShareSourceLoader): ShareSourceLoader
+
+    @Binds
+    abstract fun bindSharePhotoEncoder(impl: BitmapSharePhotoEncoder): SharePhotoEncoder
 
     companion object {
         @Provides

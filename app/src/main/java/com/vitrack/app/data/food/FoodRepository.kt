@@ -35,6 +35,9 @@ interface FoodRepository {
     /** Photo counts for days from [from] on; days without photos are left out. */
     fun observeCounts(from: LocalDate): Flow<Map<LocalDate, Int>>
 
+    /** Every photo taken from [from] to [to], inclusive, oldest first. */
+    suspend fun photosBetween(from: LocalDate, to: LocalDate): List<FoodPhoto>
+
     fun newCaptureUri(): String
 
     /** When a picked photo was taken, or null when unknown. */
@@ -59,6 +62,9 @@ class RoomFoodRepository @Inject constructor(
 
     override fun observeCounts(from: LocalDate): Flow<Map<LocalDate, Int>> =
         dao.observeCounts(from.toEpochDay()).map { counts -> counts.associate { LocalDate.ofEpochDay(it.epochDay) to it.count } }
+
+    override suspend fun photosBetween(from: LocalDate, to: LocalDate): List<FoodPhoto> =
+        dao.between(from.toEpochDay(), to.toEpochDay()).map { it.toModel() }
 
     override fun newCaptureUri(): String = photos.newCaptureUri()
 

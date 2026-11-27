@@ -2,10 +2,7 @@ package com.vitrack.app.data.share
 
 import java.time.LocalDate
 import java.time.YearMonth
-import javax.inject.Inject
-import javax.inject.Singleton
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flowOf
 
 /** The period a trainer link covers: a calendar month or a calendar year. */
 sealed interface SharePeriod {
@@ -37,7 +34,7 @@ data class NewShareLink(
     val trainerName: String,
     val period: SharePeriod,
     val contents: ShareContents,
-    /** Null: works until revoked (spec D13). */
+    /** Last day the link works. Null: works until revoked (spec D13). */
     val expiresOn: LocalDate?,
 )
 
@@ -45,34 +42,36 @@ data class ShareLink(
     val id: String,
     val trainerName: String,
     val period: SharePeriod,
+    /** Last day the link works, or null for no expiry. */
     val expiresOn: LocalDate?,
-    val url: String,
+    val isExpired: Boolean,
+    /** The link again, when this phone made it; the token is kept only here. */
+    val url: String?,
+    /** Photos copied for the link, removed when it is revoked. */
+    val photoPaths: List<String> = emptyList(),
 )
 
 /** Trainer links live on the server (spec D10): the existing Supabase project and web app. */
 interface ShareRepository {
-    /** False until sign-in and the server are set up in this build. */
+    /** False when this build has no server set up. */
     val isAvailable: Boolean
 
+    val isSignedIn: Flow<Boolean>
+
+    /** The account's links, newest first; refreshed from the server when collected. */
     fun observeLinks(): Flow<List<ShareLink>>
 
-    /** Uploads what [link] includes and returns the new link. */
-    suspend fun create(link: NewShareLink): ShareLink
+    suspend fun refresh()
 
-    /** Deletes the link and its uploaded photos. */
+    /**
+     * Uploads what [link] includes, after the consent the page shows, and
+     * returns the new link. [onProgress] reports photos uploaded of the total.
+     */
+    suspend fun create(link: NewShareLink, onProgress: (done: Int, total: Int) -> Unit = { _, _ -> }): ShareLink
+
+    /** Deletes the link and its uploaded photos; the page stops working at once. */
     suspend fun revoke(id: String)
 }
 
-class SharingNotSetUpException : IllegalStateException("Sharing needs sign-in and the server, which aren't set up yet")
-
-/**
- * Stands in until Supabase is connected: no links, and creating one fails
- * clearly. It never pretends a link was made.
- */
-@Singleton
-class NotConnectedShareRepository @Inject constructor() : ShareRepository {
-    override val isAvailable: Boolean = false
-    override fun observeLinks(): Flow<List<ShareLink>> = flowOf(emptyList())
-    override suspend fun create(link: NewShareLink): ShareLink = throw SharingNotSetUpException()
-    override suspend fun revoke(id: String) = throw SharingNotSetUpException()
-}
+/** No server, or no web app host for the links, in this build. */
+class SharingNotSetUpException : IllegalStateException("Sharing needs the server and web app, which aren't set up in this build")

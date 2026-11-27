@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
@@ -5,6 +7,14 @@ plugins {
     alias(libs.plugins.hilt)
     alias(libs.plugins.kotlin.serialization)
 }
+
+// Supabase and web app values for sign-in and trainer links (spec D10), from the
+// git-ignored local.properties. Empty means no server: sharing says it isn't set up.
+val localProperties = Properties().apply {
+    rootProject.file("local.properties").takeIf { it.exists() }?.inputStream()?.use { load(it) }
+}
+fun backendValue(name: String): String =
+    (localProperties.getProperty(name) ?: "").trim().replace("\\", "").replace("\"", "")
 
 android {
     namespace = "com.vitrack.app"
@@ -20,6 +30,10 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        buildConfigField("String", "SUPABASE_HOST", "\"${backendValue("SUPABASE_HOST")}\"")
+        buildConfigField("String", "SUPABASE_PUBLISHABLE_KEY", "\"${backendValue("SUPABASE_PUBLISHABLE_KEY")}\"")
+        buildConfigField("String", "WEB_APP_HOST", "\"${backendValue("WEB_APP_HOST")}\"")
     }
 
     buildTypes {
@@ -36,6 +50,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 

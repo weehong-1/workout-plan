@@ -28,6 +28,9 @@ class FakeFoodRepository(initial: List<FoodPhoto> = emptyList()) : FoodRepositor
     override fun observeCounts(from: LocalDate): Flow<Map<LocalDate, Int>> =
         photos.map { all -> all.filter { !it.takenAt.toLocalDate().isBefore(from) }.groupingBy { it.takenAt.toLocalDate() }.eachCount() }
 
+    override suspend fun photosBetween(from: LocalDate, to: LocalDate): List<FoodPhoto> =
+        photos.value.filter { it.takenAt.toLocalDate() in from..to }.sortedBy { it.takenAt }
+
     override fun newCaptureUri() = "content://test/capture.jpg"
 
     override suspend fun takenAt(uri: String): LocalDateTime? = takenAtByUri[uri]
