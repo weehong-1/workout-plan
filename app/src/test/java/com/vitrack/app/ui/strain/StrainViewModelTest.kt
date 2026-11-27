@@ -4,6 +4,7 @@ import com.vitrack.app.testing.FakeActivityRepository
 import com.vitrack.app.testing.MainDispatcherRule
 import com.vitrack.app.testing.TODAY
 import com.vitrack.app.testing.day
+import com.vitrack.app.testing.snapshot
 import com.vitrack.app.ui.common.ChartPeriod
 import java.time.LocalDate
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -77,6 +78,26 @@ class StrainViewModelTest {
         assertEquals(12, bars.size)
         assertEquals(LocalDate.of(2025, 12, 1), bars.first().start)
         assertEquals(LocalDate.of(2026, 11, 1), bars.last().start)
+    }
+
+    @Test
+    fun `weekly average covers the last 7 days including today`() = runTest {
+        val week = listOf(13.2, 15.8, 6.4, 10.9, 14.1, 8.7, 11.8)
+            .mapIndexed { i, s -> day(TODAY.minusDays((6 - i).toLong()), strain = s) }
+        val viewModel = StrainViewModel(FakeActivityRepository(snapshot(week = week)))
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { viewModel.uiState.collect {} }
+
+        val state = ready(viewModel)
+        assertEquals(11.557, state.weeklyAverageStrain, 0.001)
+        // 11.8 vs 11.6 as shown.
+        assertEquals(Comparison.Above, state.comparedToAverage)
+    }
+
+    @Test
+    fun `comparison is level when both round to the same tenth`() {
+        assertEquals(Comparison.Level, compare(11.56, 11.6))
+        assertEquals(Comparison.Below, compare(9.0, 11.6))
+        assertEquals(Comparison.Above, compare(11.7, 11.6))
     }
 
     @Test

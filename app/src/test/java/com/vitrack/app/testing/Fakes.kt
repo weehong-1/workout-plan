@@ -1,5 +1,6 @@
 package com.vitrack.app.testing
 
+import com.vitrack.app.data.activity.WorkoutKind
 import com.vitrack.app.data.activity.ActivityRepository
 import com.vitrack.app.data.activity.ActivitySnapshot
 import com.vitrack.app.data.activity.DailyActivity
@@ -28,7 +29,7 @@ fun day(date: LocalDate, strain: Double = 10.0, steps: Int = 8_000) = DailyActiv
 )
 
 fun workout(name: String, strain: Double) =
-    Workout(name, LocalTime.of(7, 0), 30, 130, 150, strain, listOf(0.2f, 0.2f, 0.2f, 0.2f, 0.2f))
+    Workout(WorkoutKind.Other, name, LocalTime.of(7, 0), 30, 130, 150, strain, listOf(0.2f, 0.2f, 0.2f, 0.2f, 0.2f))
 
 fun snapshot(
     week: List<DailyActivity> = (6 downTo 0).map { day(TODAY.minusDays(it.toLong())) },
@@ -51,9 +52,19 @@ class FakeActivityRepository(snapshot: ActivitySnapshot = snapshot()) : Activity
 
     override fun observeSnapshot(): Flow<ActivitySnapshot> = snapshots
 
+    /**
+     * Days ending [TODAY]. Days in the snapshot's week keep their values; older
+     * days get 1,000 steps per day back, so a range's days are easy to tell apart.
+     */
     override fun observeHistory(days: Int): Flow<List<DailyActivity>> {
         historyRequests += days
-        return flowOf((days - 1 downTo 0).map { day(TODAY.minusDays(it.toLong()), strain = it.toDouble() % 21) })
+        val week = snapshots.value.lastSevenDays.associateBy { it.date }
+        return flowOf(
+            (days - 1 downTo 0).map { back ->
+                val date = TODAY.minusDays(back.toLong())
+                week[date] ?: day(date, strain = back.toDouble() % 21, steps = back * 1_000)
+            },
+        )
     }
 }
 

@@ -38,7 +38,10 @@ data class SleepSummary(
     val stages: SleepStages,
 )
 
+enum class WorkoutKind { Cycling, Walking, Other }
+
 data class Workout(
+    val kind: WorkoutKind,
     val name: String,
     val start: LocalTime,
     val durationMinutes: Int,

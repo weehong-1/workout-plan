@@ -20,7 +20,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
@@ -29,12 +31,13 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.SelectableDates
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -50,14 +53,20 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
@@ -66,10 +75,12 @@ import com.vitrack.app.data.settings.WeightUnit
 import com.vitrack.app.data.weight.MAX_PHOTOS
 import com.vitrack.app.data.weight.MAX_WEIGHT_KG
 import com.vitrack.app.data.weight.MIN_WEIGHT_KG
+import com.vitrack.app.ui.common.ChoiceDefaults
 import com.vitrack.app.ui.common.ConnectedChoiceRow
 import com.vitrack.app.ui.common.Format
 import com.vitrack.app.ui.theme.NumberStyles
 import com.vitrack.app.ui.theme.Spacing
+import com.vitrack.app.ui.theme.VitrackTheme
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneOffset
@@ -82,6 +93,7 @@ fun WeighInSheet(
     state: WeighInEditorState,
     viewModel: WeighInEditorViewModel,
 ) {
+    val weight = VitrackTheme.metrics.weight
     var showDatePicker by remember { mutableStateOf(false) }
     var confirmDelete by remember { mutableStateOf(false) }
     var pendingCapture by rememberSaveable { mutableStateOf<String?>(null) }
@@ -98,45 +110,54 @@ fun WeighInSheet(
         onDismissRequest = viewModel::close,
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
         containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+        shape = RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp),
     ) {
         Column(
             Modifier
                 .verticalScroll(rememberScrollState())
                 .imePadding()
                 .navigationBarsPadding()
-                .padding(horizontal = Spacing.xxl)
-                .padding(bottom = Spacing.l),
+                .padding(horizontal = Spacing.xl)
+                .padding(bottom = Spacing.xl),
         ) {
-            Text(
-                stringResource(if (state.isEditing) R.string.weighin_title_edit else R.string.weighin_title_new),
-                style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.SemiBold),
-                modifier = Modifier.semantics { heading() },
-            )
-            WeightField(state, viewModel::onWeightChange, Modifier.padding(top = Spacing.xl))
-            ConnectedChoiceRow(
-                options = WeightUnit.entries,
-                selected = state.unit,
-                onSelect = viewModel::onUnitChange,
-                label = { Format.unitLabel(it) },
-                modifier = Modifier.width(180.dp).padding(top = Spacing.l),
-            )
-            DateField(state, onClick = { showDatePicker = true }, modifier = Modifier.padding(top = Spacing.xl))
-            Text(
-                state.replaces?.let {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    stringResource(if (state.isEditing) R.string.weighin_title_edit else R.string.weighin_title_new),
+                    style = MaterialTheme.typography.headlineSmall.copy(fontSize = 26.sp, fontWeight = FontWeight.ExtraBold),
+                    modifier = Modifier.weight(1f).padding(horizontal = Spacing.xs).semantics { heading() },
+                )
+                if (state.isEditing) {
+                    IconButton(onClick = { confirmDelete = true }, enabled = !state.isSaving) {
+                        Icon(
+                            painterResource(R.drawable.ic_delete),
+                            contentDescription = stringResource(R.string.weighin_delete),
+                            tint = MaterialTheme.colorScheme.error,
+                        )
+                    }
+                }
+            }
+            WeightHero(state, viewModel, Modifier.padding(top = Spacing.l))
+            DateRow(state, onClick = { showDatePicker = true }, modifier = Modifier.padding(top = Spacing.m))
+            state.replaces?.let {
+                Text(
                     stringResource(
                         R.string.weighin_replaces,
                         Format.weight(it.weightKg, state.unit), Format.unitLabel(state.unit), Format.shortDate(it.date),
-                    )
-                } ?: stringResource(R.string.weighin_one_per_day),
-                style = MaterialTheme.typography.bodySmall,
-                color = if (state.replaces != null) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(start = Spacing.l, top = 6.dp, end = Spacing.l),
-            )
+                    ),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = weight.text,
+                    modifier = Modifier.padding(start = Spacing.xs, top = 6.dp, end = Spacing.xs),
+                )
+            }
             Text(
-                stringResource(R.string.weighin_photos),
-                style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.SemiBold),
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(top = 22.dp, bottom = 10.dp),
+                buildAnnotatedString {
+                    append(stringResource(R.string.weighin_photos_title))
+                    withStyle(SpanStyle(fontWeight = FontWeight.Medium, color = MaterialTheme.colorScheme.onSurfaceVariant)) {
+                        append(" " + stringResource(R.string.weighin_optional))
+                    }
+                },
+                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.ExtraBold),
+                modifier = Modifier.padding(start = Spacing.xs, top = Spacing.xl, bottom = 10.dp),
             )
             PhotoGrid(
                 state = state,
@@ -154,7 +175,7 @@ fun WeighInSheet(
                 stringResource(R.string.weighin_photos_note, MAX_PHOTOS),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(start = Spacing.l, top = Spacing.s, end = Spacing.l),
+                modifier = Modifier.padding(start = Spacing.xs, top = Spacing.s, end = Spacing.xs),
             )
             if (state.saveFailed) {
                 Text(
@@ -167,25 +188,28 @@ fun WeighInSheet(
             Row(
                 modifier = Modifier.fillMaxWidth().padding(top = Spacing.xxl),
                 horizontalArrangement = Arrangement.spacedBy(Spacing.s),
-                verticalAlignment = Alignment.CenterVertically,
             ) {
-                if (state.isEditing) {
-                    TextButton(
-                        onClick = { confirmDelete = true },
-                        enabled = !state.isSaving,
-                        colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error),
-                    ) { Text(stringResource(R.string.weighin_delete)) }
-                }
-                Spacer(Modifier.weight(1f))
-                TextButton(onClick = viewModel::close, modifier = Modifier.height(48.dp)) {
-                    Text(stringResource(R.string.weighin_cancel))
-                }
+                Button(
+                    onClick = viewModel::close,
+                    modifier = Modifier.weight(1f).height(56.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+                        contentColor = MaterialTheme.colorScheme.onSurface,
+                    ),
+                ) { Text(stringResource(R.string.weighin_cancel), style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)) }
                 Button(
                     onClick = viewModel::save,
                     enabled = state.canSave,
-                    modifier = Modifier.height(48.dp),
-                    contentPadding = ButtonDefaults.ContentPadding,
-                ) { Text(stringResource(R.string.weighin_save), modifier = Modifier.padding(horizontal = Spacing.s)) }
+                    modifier = Modifier.weight(2f).height(56.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = weight.strong, contentColor = weight.onStrong),
+                ) {
+                    Icon(painterResource(R.drawable.ic_check), contentDescription = null, modifier = Modifier.size(20.dp))
+                    Text(
+                        stringResource(R.string.weighin_save),
+                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.ExtraBold),
+                        modifier = Modifier.padding(start = Spacing.s),
+                    )
+                }
             }
         }
     }
@@ -216,66 +240,125 @@ fun WeighInSheet(
     }
 }
 
+/** The weight on the weight colour: −/+ steppers, the number to type into, and the unit. */
 @Composable
-private fun WeightField(state: WeighInEditorState, onChange: (String) -> Unit, modifier: Modifier = Modifier) {
+private fun WeightHero(state: WeighInEditorState, viewModel: WeighInEditorViewModel, modifier: Modifier = Modifier) {
+    val weight = VitrackTheme.metrics.weight
     val unitLabel = Format.unitLabel(state.unit)
     val showError = state.weightText.isNotBlank() && !state.isWeightValid
-    OutlinedTextField(
-        value = state.weightText,
-        onValueChange = onChange,
-        modifier = modifier.fillMaxWidth(),
-        label = { Text(stringResource(R.string.weighin_weight)) },
-        textStyle = NumberStyles.Hero.copy(fontSize = 52.sp, lineHeight = 60.sp, color = MaterialTheme.colorScheme.onSurface),
-        suffix = { Text(unitLabel, style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.onSurfaceVariant) },
-        singleLine = true,
-        isError = showError,
-        shape = MaterialTheme.shapes.large,
-        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal, imeAction = ImeAction.Done),
-        supportingText = {
-            when {
-                showError -> Text(
-                    stringResource(
+    val fieldLabel = stringResource(R.string.weighin_weight)
+    Surface(modifier = modifier.fillMaxWidth(), shape = RoundedCornerShape(32.dp), color = weight.hero) {
+        Column(Modifier.padding(horizontal = Spacing.l, vertical = 18.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+            Text(fieldLabel, style = MaterialTheme.typography.labelLarge.copy(fontSize = 13.sp, fontWeight = FontWeight.Bold), color = weight.text)
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(top = Spacing.xs),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
+            ) {
+                StepButton(R.drawable.ic_minus, stringResource(R.string.weighin_decrease, unitLabel)) { viewModel.nudge(-1) }
+                Row(verticalAlignment = Alignment.Bottom) {
+                    BasicTextField(
+                        value = state.weightText,
+                        onValueChange = viewModel::onWeightChange,
+                        singleLine = true,
+                        textStyle = NumberStyles.Hero.copy(
+                            fontSize = 60.sp,
+                            lineHeight = 68.sp,
+                            letterSpacing = (-1).sp,
+                            textAlign = TextAlign.Center,
+                            color = if (showError) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface,
+                        ),
+                        cursorBrush = SolidColor(weight.graphic),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal, imeAction = ImeAction.Done),
+                        modifier = Modifier.width(168.dp).semantics { contentDescription = "$fieldLabel, $unitLabel" },
+                    )
+                    Text(
+                        unitLabel,
+                        style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(bottom = 10.dp),
+                    )
+                }
+                StepButton(R.drawable.ic_add, stringResource(R.string.weighin_increase, unitLabel)) { viewModel.nudge(1) }
+            }
+            Text(
+                when {
+                    showError -> stringResource(
                         R.string.weighin_invalid,
                         // Whole numbers inside the limits: 20–400 kg, 45–881 lb.
                         ceil(state.unit.fromKg(MIN_WEIGHT_KG)).toInt().toString(),
                         floor(state.unit.fromKg(MAX_WEIGHT_KG)).toInt().toString(),
                         unitLabel,
-                    ),
-                )
-                state.previous != null -> Text(
-                    stringResource(
-                        R.string.weighin_last,
+                    )
+                    state.previous != null -> stringResource(
+                        R.string.weighin_last_tap,
                         Format.weight(state.previous.weightKg, state.unit), unitLabel, Format.shortDate(state.previous.date),
-                    ),
-                )
-            }
-        },
-    )
+                    )
+                    else -> stringResource(R.string.weighin_tap_to_type)
+                },
+                style = MaterialTheme.typography.bodyMedium.copy(fontSize = 13.sp),
+                color = if (showError) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.padding(top = Spacing.xs),
+            )
+            ConnectedChoiceRow(
+                options = WeightUnit.entries,
+                selected = state.unit,
+                onSelect = viewModel::onUnitChange,
+                label = { Format.unitLabel(it) },
+                colors = ChoiceDefaults.metric(weight, unchecked = MaterialTheme.colorScheme.surfaceContainerLow),
+                modifier = Modifier.width(180.dp).padding(top = 14.dp),
+            )
+        }
+    }
 }
 
 @Composable
-private fun DateField(state: WeighInEditorState, onClick: () -> Unit, modifier: Modifier = Modifier) {
+private fun StepButton(icon: Int, description: String, onClick: () -> Unit) {
+    val weight = VitrackTheme.metrics.weight
+    FilledIconButton(
+        onClick = onClick,
+        modifier = Modifier.size(56.dp),
+        shape = CircleShape,
+        colors = IconButtonDefaults.filledIconButtonColors(containerColor = weight.badge, contentColor = weight.text),
+    ) {
+        Icon(painterResource(icon), contentDescription = description, modifier = Modifier.size(26.dp))
+    }
+}
+
+/** The date as an outlined chip, with the one-per-day rule beside it. */
+@Composable
+private fun DateRow(state: WeighInEditorState, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    val weight = VitrackTheme.metrics.weight
     val label = if (state.date == state.today) {
         stringResource(R.string.weight_day_time, stringResource(R.string.weight_today), Format.dayMonth(state.date))
     } else {
         Format.shortDate(state.date)
     }
-    Surface(
-        onClick = onClick,
-        modifier = modifier.fillMaxWidth().height(56.dp),
-        shape = MaterialTheme.shapes.large,
-        color = MaterialTheme.colorScheme.surfaceContainerLow,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
-    ) {
-        Row(
-            modifier = Modifier.padding(horizontal = Spacing.l),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(Spacing.m),
+    val description = stringResource(R.string.weighin_date_description, label)
+    Row(modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Spacing.s)) {
+        Surface(
+            onClick = onClick,
+            shape = RoundedCornerShape(12.dp),
+            color = MaterialTheme.colorScheme.surfaceContainerLow,
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
+            modifier = Modifier.height(40.dp).semantics { contentDescription = description },
         ) {
-            Icon(painterResource(R.drawable.ic_calendar), contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
-            Text(label, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
-            Text(stringResource(R.string.weighin_date), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Row(
+                modifier = Modifier.padding(start = Spacing.m, end = Spacing.l),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(Spacing.s),
+            ) {
+                Icon(painterResource(R.drawable.ic_calendar), contentDescription = null, tint = weight.text, modifier = Modifier.size(18.dp))
+                Text(label, style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.SemiBold))
+            }
         }
+        Text(
+            stringResource(R.string.weighin_one_per_day),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.weight(1f),
+        )
     }
 }
 
@@ -292,6 +375,7 @@ private fun PhotoGrid(
     onCamera: () -> Unit,
     onGallery: () -> Unit,
 ) {
+    val weight = VitrackTheme.metrics.weight
     val tiles = state.photos.mapIndexed { i, p -> Tile.Photo(p, i) } +
         if (state.remainingPhotoSlots > 0) listOf(Tile.Camera, Tile.Gallery) else emptyList()
     Column(verticalArrangement = Arrangement.spacedBy(Spacing.s)) {
@@ -301,8 +385,14 @@ private fun PhotoGrid(
                     val cell = Modifier.weight(1f).aspectRatio(3f / 4f)
                     when (tile) {
                         is Tile.Photo -> PhotoTile(tile.photo, tile.index, onRemove, cell)
-                        Tile.Camera -> ActionTile(R.drawable.ic_camera, stringResource(R.string.weighin_camera), onCamera, cell)
-                        Tile.Gallery -> ActionTile(R.drawable.ic_photo, stringResource(R.string.weighin_gallery), onGallery, cell)
+                        Tile.Camera -> ActionTile(
+                            R.drawable.ic_camera, stringResource(R.string.weighin_camera), onCamera, cell,
+                            container = weight.strong, content = weight.onStrong,
+                        )
+                        Tile.Gallery -> ActionTile(
+                            R.drawable.ic_photo, stringResource(R.string.weighin_gallery), onGallery, cell,
+                            container = weight.badge, content = weight.text,
+                        )
                     }
                 }
                 repeat(3 - row.size) { Spacer(Modifier.weight(1f)) }
@@ -313,7 +403,7 @@ private fun PhotoGrid(
 
 @Composable
 private fun PhotoTile(photo: EditorPhoto, index: Int, onRemove: (String) -> Unit, modifier: Modifier) {
-    Box(modifier.clip(RoundedCornerShape(20.dp)).background(MaterialTheme.colorScheme.surfaceContainerHigh)) {
+    Box(modifier.clip(RoundedCornerShape(24.dp)).background(MaterialTheme.colorScheme.surfaceContainerHigh)) {
         AsyncImage(
             model = when (photo) {
                 is EditorPhoto.Saved -> photo.photo.file
@@ -336,20 +426,27 @@ private fun PhotoTile(photo: EditorPhoto, index: Int, onRemove: (String) -> Unit
 }
 
 @Composable
-private fun ActionTile(icon: Int, label: String, onClick: () -> Unit, modifier: Modifier) {
+private fun ActionTile(
+    icon: Int,
+    label: String,
+    onClick: () -> Unit,
+    modifier: Modifier,
+    container: androidx.compose.ui.graphics.Color,
+    content: androidx.compose.ui.graphics.Color,
+) {
     Surface(
         onClick = onClick,
         modifier = modifier,
-        shape = RoundedCornerShape(20.dp),
-        color = MaterialTheme.colorScheme.secondaryContainer,
-        contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+        shape = RoundedCornerShape(24.dp),
+        color = container,
+        contentColor = content,
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterVertically),
+            verticalArrangement = Arrangement.spacedBy(Spacing.s, Alignment.CenterVertically),
         ) {
-            Icon(painterResource(icon), contentDescription = null)
-            Text(label, style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.SemiBold))
+            Icon(painterResource(icon), contentDescription = null, modifier = Modifier.size(28.dp))
+            Text(label, style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.ExtraBold))
         }
     }
 }

@@ -35,9 +35,11 @@ class StrainViewModel @Inject constructor(
     ) { snapshot, (p, days) ->
         StrainUiState.Ready(
             today = snapshot.today,
+            weeklyAverageStrain = snapshot.lastSevenDays.map { it.strain }.average().takeIf { !it.isNaN() } ?: snapshot.today.strain,
+            stepGoal = snapshot.stepGoal,
             period = p,
             bars = bars(p, days),
-            workouts = snapshot.workouts,
+            workouts = snapshot.workouts.sortedBy { it.start },
         )
     }.stateIn(
         scope = viewModelScope,

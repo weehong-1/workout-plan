@@ -86,6 +86,19 @@ class WeighInEditorViewModel @Inject constructor(
         _state.update { it?.copy(weightText = accepted, saveFailed = false) }
     }
 
+    /**
+     * Steps the weight by [tenths] × 0.1 in the shown unit. With nothing typed,
+     * starts from the last weigh-in.
+     */
+    fun nudge(tenths: Int) {
+        val current = _state.value ?: return
+        val base = parseWeight(current.weightText)
+            ?: current.previous?.let { current.unit.fromKg(it.weightKg) }
+            ?: return
+        val next = (Math.round(base * 10) + tenths).coerceAtLeast(0) / 10.0
+        _state.value = current.copy(weightText = Format.oneDecimal(next), saveFailed = false)
+    }
+
     /** Converts the typed value and remembers the unit for next time. */
     fun onUnitChange(newUnit: WeightUnit) {
         val current = _state.value ?: return

@@ -16,6 +16,8 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import java.time.Clock
+import java.time.temporal.WeekFields
+import java.util.Locale
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -39,5 +41,9 @@ abstract class RepositoryModule {
     companion object {
         @Provides
         fun provideClock(): Clock = Clock.systemDefaultZone()
+
+        /** Weeks follow the phone's calendar, like the date pickers. */
+        @Provides
+        fun provideWeekFields(): WeekFields = WeekFields.of(Locale.getDefault())
     }
 }

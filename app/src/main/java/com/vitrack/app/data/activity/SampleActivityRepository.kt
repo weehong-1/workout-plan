@@ -31,8 +31,8 @@ class SampleActivityRepository @Inject constructor(
                     stages = SleepStages(awake = 0.05f, light = 0.48f, deep = 0.24f, rem = 0.23f),
                 ),
                 workouts = listOf(
-                    Workout("Outdoor cycling", LocalTime.of(7, 10), 35, 138, 152, 9.4, listOf(0.10f, 0.22f, 0.38f, 0.22f, 0.08f)),
-                    Workout("Walking", LocalTime.of(12, 40), 22, 101, 118, 3.1, listOf(0.45f, 0.40f, 0.15f, 0f, 0f)),
+                    Workout(WorkoutKind.Cycling, "Outdoor cycling", LocalTime.of(7, 10), 35, 138, 152, 9.4, listOf(0.10f, 0.22f, 0.38f, 0.22f, 0.08f)),
+                    Workout(WorkoutKind.Walking, "Walking", LocalTime.of(12, 40), 22, 101, 118, 3.1, listOf(0.45f, 0.40f, 0.15f, 0f, 0f)),
                 ),
                 lastSevenDays = week,
                 syncedAt = LocalTime.of(8, 12),

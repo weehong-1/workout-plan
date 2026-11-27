@@ -6,6 +6,20 @@ import com.vitrack.app.data.activity.Workout
 import java.time.LocalDate
 import java.time.LocalTime
 
+/** Days shown in the Steps card. */
+sealed interface StepsRange {
+    data object Last7Days : StepsRange
+    data object Last30Days : StepsRange
+    data class Custom(val start: LocalDate, val end: LocalDate) : StepsRange
+
+    /** First and last day, both included. */
+    fun bounds(today: LocalDate): Pair<LocalDate, LocalDate> = when (this) {
+        Last7Days -> today.minusDays(6) to today
+        Last30Days -> today.minusDays(29) to today
+        is Custom -> start to end
+    }
+}
+
 sealed interface ActivityUiState {
     data object Loading : ActivityUiState
 
@@ -21,18 +35,21 @@ sealed interface ActivityUiState {
         val averageHeartRate: Int,
         val heart: HeartSummary,
         val sleep: SleepSummary,
-        /** The day's workout with the highest strain, if any. */
-        val topWorkout: Workout?,
-        val week: List<DaySteps>,
-        val weeklyAverageSteps: Int,
+        /** Today's workouts, earliest first. */
+        val workouts: List<Workout>,
+        val stepsRange: StepsRange,
+        /** One bar per day of [stepsRange], oldest first; the last is highlighted. */
+        val stepsDays: List<DaySteps>,
+        val averageSteps: Int,
         val syncedAt: LocalTime,
     ) : ActivityUiState {
         val stepProgress: Float get() = (steps.toFloat() / stepGoal).coerceIn(0f, 1f)
+        val workoutMinutes: Int get() = workouts.sumOf { it.durationMinutes }
     }
 }
 
 data class DaySteps(
     val date: LocalDate,
     val steps: Int,
-    val isToday: Boolean,
+    val highlighted: Boolean,
 )

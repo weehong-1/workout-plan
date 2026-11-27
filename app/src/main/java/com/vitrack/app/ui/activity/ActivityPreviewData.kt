@@ -4,6 +4,7 @@ import com.vitrack.app.data.activity.HeartSummary
 import com.vitrack.app.data.activity.SleepStages
 import com.vitrack.app.data.activity.SleepSummary
 import com.vitrack.app.data.activity.Workout
+import com.vitrack.app.data.activity.WorkoutKind
 import java.time.LocalDate
 import java.time.LocalTime
 
@@ -23,9 +24,13 @@ internal val PreviewActivityState: ActivityUiState.Ready = run {
         averageHeartRate = 74,
         heart = HeartSummary(58, 62, listOf(60, 59, 61, 57, 60, 57, 58)),
         sleep = SleepSummary(460, SleepStages(0.05f, 0.48f, 0.24f, 0.23f)),
-        topWorkout = Workout("Outdoor cycling", LocalTime.of(7, 10), 35, 138, 152, 9.4, listOf(0.10f, 0.22f, 0.38f, 0.22f, 0.08f)),
-        week = steps.mapIndexed { i, s -> DaySteps(today.minusDays((6 - i).toLong()), s, isToday = i == 6) },
-        weeklyAverageSteps = 8_120,
+        workouts = listOf(
+            Workout(WorkoutKind.Cycling, "Outdoor cycling", LocalTime.of(7, 10), 35, 138, 152, 9.4, listOf(0.10f, 0.22f, 0.38f, 0.22f, 0.08f)),
+            Workout(WorkoutKind.Walking, "Walking", LocalTime.of(12, 40), 22, 101, 118, 3.1, listOf(0.45f, 0.40f, 0.15f, 0f, 0f)),
+        ),
+        stepsRange = StepsRange.Last7Days,
+        stepsDays = steps.mapIndexed { i, s -> DaySteps(today.minusDays((6 - i).toLong()), s, highlighted = i == 6) },
+        averageSteps = 8_120,
         syncedAt = LocalTime.of(8, 12),
     )
 }

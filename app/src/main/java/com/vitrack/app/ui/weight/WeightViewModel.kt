@@ -5,10 +5,13 @@ import androidx.lifecycle.viewModelScope
 import com.vitrack.app.data.profile.ProfileRepository
 import com.vitrack.app.data.settings.SettingsRepository
 import com.vitrack.app.data.weight.WeightRepository
+import com.vitrack.app.data.weight.groupByWeek
+import com.vitrack.app.data.weight.weekStartOf
 import com.vitrack.app.ui.common.ChartPeriod
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.time.Clock
 import java.time.LocalDate
+import java.time.temporal.WeekFields
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -22,6 +25,7 @@ class WeightViewModel @Inject constructor(
     settingsRepository: SettingsRepository,
     profileRepository: ProfileRepository,
     private val clock: Clock,
+    private val weekFields: WeekFields,
 ) : ViewModel() {
 
     private val period = MutableStateFlow(ChartPeriod.Month)
@@ -35,16 +39,24 @@ class WeightViewModel @Inject constructor(
         val latest = weighIns.firstOrNull() ?: return@combine WeightUiState.Empty(unit, name)
         val today = LocalDate.now(clock)
         val start = chartStart(period, today)
+        val weeks = groupByWeek(weighIns, weekFields)
+        val changes = weekChanges(weeks)
+        // Each row's change is against the weigh-in before it, even across weeks.
+        val rows = historyRows(weighIns).associateBy { it.entry.date }
         WeightUiState.Ready(
             displayName = name,
             today = today,
+            thisWeekStart = weekStartOf(today, weekFields),
             unit = unit,
             latest = latest,
-            weeklyChangeKg = weeklyChangeKg(weighIns),
+            currentWeek = weeks.first(),
+            weeklyChangeKg = changes.first(),
             period = period,
             chartStart = start,
-            chart = weighIns.filter { !it.date.isBefore(start) && !it.date.isAfter(today) }.reversed(),
-            history = weighIns,
+            chart = chartPoints(period, start, today, weighIns, weeks),
+            weeks = weeks.mapIndexed { i, week ->
+                WeekGroup(week, changes[i], week.entries.map { rows.getValue(it.date) })
+            },
         )
     }.stateIn(
         scope = viewModelScope,

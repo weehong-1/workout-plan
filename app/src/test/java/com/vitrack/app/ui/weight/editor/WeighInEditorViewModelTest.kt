@@ -116,6 +116,29 @@ class WeighInEditorViewModelTest {
     }
 
     @Test
+    fun `minus and plus step by a tenth of the shown unit`() = runTest {
+        val viewModel = editor(FakeWeightRepository(listOf(weighIn(TODAY.minusDays(1), 78.4))))
+        viewModel.openNew()
+
+        viewModel.nudge(1)
+        assertEquals("78.5", viewModel.state.value!!.weightText)
+        viewModel.nudge(-1)
+        viewModel.nudge(-1)
+        assertEquals("78.3", viewModel.state.value!!.weightText)
+    }
+
+    @Test
+    fun `stepping from an empty field starts at the last weigh-in`() = runTest {
+        val viewModel = editor(FakeWeightRepository(listOf(weighIn(TODAY.minusDays(1), 80.0))))
+        viewModel.openNew()
+        viewModel.onWeightChange("")
+
+        viewModel.nudge(1)
+
+        assertEquals("80.1", viewModel.state.value!!.weightText)
+    }
+
+    @Test
     fun `switching unit converts the typed value and is remembered`() = runTest {
         val settings = FakeSettingsRepository()
         val viewModel = editor(settings = settings)

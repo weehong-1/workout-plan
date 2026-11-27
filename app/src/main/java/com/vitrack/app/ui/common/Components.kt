@@ -37,6 +37,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.Dp
@@ -50,9 +51,11 @@ fun MetricCard(
     modifier: Modifier = Modifier,
     shape: Shape = CardShapes.Card,
     contentPadding: Dp = Spacing.l,
+    /** surfaceContainer, or a metric's hero colour for its lead card. */
+    color: Color = MaterialTheme.colorScheme.surfaceContainer,
     content: @Composable ColumnScope.() -> Unit,
 ) {
-    Surface(modifier = modifier, shape = shape, color = MaterialTheme.colorScheme.surfaceContainer) {
+    Surface(modifier = modifier, shape = shape, color = color) {
         Column(modifier = Modifier.padding(contentPadding), content = content)
     }
 }
@@ -172,6 +175,10 @@ fun BarChart(
     goalColor: Color = MaterialTheme.colorScheme.outlineVariant,
     barSpacing: Dp = 10.dp,
     showLabels: Boolean = true,
+    /** Overrides the default bar shape, e.g. full pills. */
+    barShape: Shape? = null,
+    /** Text colour of the highlighted bar's value label, drawn on a pill of [color]. */
+    highlightedValueColor: Color? = null,
 ) {
     Column(modifier.semantics { this.contentDescription = contentDescription }) {
         BoxWithConstraints(Modifier.fillMaxWidth().height(chartHeight)) {
@@ -200,20 +207,28 @@ fun BarChart(
                         verticalArrangement = Arrangement.spacedBy(Spacing.xs),
                     ) {
                         bar.valueLabel?.let {
+                            val pill = bar.highlighted && highlightedValueColor != null
                             Text(
                                 it,
-                                style = MaterialTheme.typography.labelMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                style = MaterialTheme.typography.labelMedium.copy(
+                                    fontWeight = if (highlightedValueColor != null) FontWeight.ExtraBold else null,
+                                ),
+                                color = if (pill) highlightedValueColor!! else MaterialTheme.colorScheme.onSurfaceVariant,
                                 maxLines = 1,
+                                softWrap = false,
+                                modifier = Modifier
+                                    .wrapContentWidth(unbounded = true)
+                                    .then(if (pill) Modifier.clip(RoundedCornerShape(8.dp)).background(color) else Modifier)
+                                    .padding(horizontal = 5.dp, vertical = 1.dp),
                             )
                         }
                         val fraction = (bar.value / maxValue).coerceIn(0f, 1f)
-                        val labelSpace = if (bar.valueLabel != null) 20.dp else 0.dp
+                        val labelSpace = if (bar.valueLabel != null) 24.dp else 0.dp
                         Box(
                             Modifier
                                 .fillMaxWidth()
                                 .height((chartHeight - labelSpace) * fraction)
-                                .clip(if (barSpacing < 6.dp) RoundedCornerShape(3.dp) else CardShapes.Bar)
+                                .clip(barShape ?: if (barSpacing < 6.dp) RoundedCornerShape(3.dp) else CardShapes.Bar)
                                 .background(if (bar.highlighted) color else color.copy(alpha = 0.42f)),
                         )
                     }
@@ -232,7 +247,7 @@ fun BarChart(
                         modifier = Modifier.weight(1f).wrapContentWidth(unbounded = true),
                         softWrap = false,
                         style = MaterialTheme.typography.labelMedium.copy(
-                            fontWeight = if (bar.highlighted) androidx.compose.ui.text.font.FontWeight.Bold else null,
+                            fontWeight = if (bar.highlighted) FontWeight.Bold else null,
                         ),
                         color = if (bar.highlighted) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant,
                         textAlign = androidx.compose.ui.text.style.TextAlign.Center,

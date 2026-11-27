@@ -15,7 +15,6 @@
     <string name="metric_strain">Strain</string>
     <string name="metric_steps">Steps</string>
     <string name="metric_heart">Heart</string>
-    <string name="unit_steps">steps</string>
 
     <!-- Activity -->
     <string name="activity_pick_day">Pick a day</string>
@@ -34,38 +33,56 @@
     <string name="activity_workout_meta">%1$s · %2$d min · avg %3$d bpm</string>
     <string name="activity_strain_unit">strain</string>
     <string name="activity_zones">Time in heart rate zones 1–5</string>
-    <string name="activity_steps_week">Steps this week</string>
     <string name="activity_average">Average</string>
     <string name="activity_steps_chart">Daily steps for the last 7 days against a %1$s goal</string>
     <string name="activity_synced">From WHOOP · synced %1$s</string>
+    <string name="activity_range_chip">Steps range: %1$s. Change range</string>
+    <string name="activity_range_7">Last 7 days</string>
+    <string name="activity_range_30">Last 30 days</string>
+    <string name="activity_range_custom">Custom</string>
+    <string name="activity_range_title">Steps range</string>
+    <string name="activity_range_days">%1$d days</string>
+    <string name="activity_range_pick_end">Pick an end date</string>
+    <string name="activity_range_note">Tap a start and an end date. Days after today (%1$s) can\'t be picked.</string>
+    <string name="activity_range_apply">Apply</string>
+    <string name="activity_workouts_summary">%1$d · %2$d min</string>
+    <string name="activity_workout_details">Workout details</string>
 
     <!-- Strain -->
-    <string name="strain_of_max">of 21 · %1$s</string>
+    <string name="strain_of_max">of 21</string>
     <string name="strain_ring_description">Day strain %1$s of 21, %2$s</string>
-    <string name="strain_level_light">light</string>
-    <string name="strain_level_moderate">moderate</string>
-    <string name="strain_level_strenuous">strenuous</string>
-    <string name="strain_level_all_out">all out</string>
+    <string name="strain_level_light">Light</string>
+    <string name="strain_level_moderate">Moderate</string>
+    <string name="strain_level_strenuous">Strenuous</string>
+    <string name="strain_level_all_out">All out</string>
     <string name="strain_calories">Calories</string>
-    <string name="strain_avg_hr">Average heart rate</string>
-    <string name="strain_max_hr">Max heart rate</string>
+    <string name="strain_avg_hr_short">Avg HR</string>
+    <string name="strain_max_hr_short">Max HR</string>
+    <string name="strain_avg_above">Above your 7-day average of</string>
+    <string name="strain_avg_below">Below your 7-day average of</string>
+    <string name="strain_avg_level">Level with your 7-day average of</string>
+    <string name="strain_workout_value">%1$s strain</string>
     <string name="strain_chart_description">Day strain over the selected period</string>
     <string name="strain_todays_workouts">Today\'s workouts</string>
-    <string name="strain_workout_meta">%1$s · %2$d min · avg %3$d bpm · max %4$d bpm</string>
     <string name="period_week">Week</string>
     <string name="period_month">Month</string>
     <string name="period_year">Year</string>
 
     <!-- Weight -->
     <string name="weight_title">Weight</string>
-    <string name="weight_latest">Latest · %1$s</string>
     <string name="weight_today">Today</string>
     <string name="weight_yesterday">Yesterday</string>
     <string name="weight_day_time">%1$s, %2$s</string>
-    <string name="weight_change_week">%1$s %2$s this week</string>
-    <string name="weight_change_down">Down %1$s %2$s since last week</string>
-    <string name="weight_change_up">Up %1$s %2$s since last week</string>
-    <string name="weight_no_change">No change this week</string>
+    <string name="weight_change_down">Weekly average down %1$s %2$s from the week before</string>
+    <string name="weight_change_up">Weekly average up %1$s %2$s from the week before</string>
+    <string name="weight_no_change">Weekly average unchanged from the week before</string>
+    <string name="weight_this_week">This week</string>
+    <string name="weight_last_week">Last week</string>
+    <string name="weight_week_range">%1$s – %2$s</string>
+    <string name="weight_week_average_label">%1$s · %2$s</string>
+    <string name="weight_latest_line">Latest %1$s %2$s · %3$s</string>
+    <string name="weight_week_avg">avg %1$s %2$s</string>
+    <string name="weight_week_header_description">%1$s, average %2$s %3$s</string>
     <string name="weight_history">History</string>
     <string name="weight_log">Log weight</string>
     <string name="weight_empty_title">No weigh-ins yet</string>
@@ -74,17 +91,25 @@
     <string name="weight_chart_description">Weight from %1$s to %2$s %3$s, %4$d weigh-ins</string>
     <string name="weight_row_description">%1$s %2$s on %3$s</string>
     <string name="weight_has_photo">Has a progress photo</string>
+    <string name="weight_per_week">%1$s / week</string>
+    <string name="weight_row_down">down %1$s %2$s</string>
+    <string name="weight_row_up">up %1$s %2$s</string>
+    <string name="weight_row_same">no change</string>
 
     <!-- Log weigh-in -->
     <string name="weighin_title_new">Log weigh-in</string>
     <string name="weighin_title_edit">Edit weigh-in</string>
     <string name="weighin_weight">Weight</string>
-    <string name="weighin_last">Last: %1$s %2$s on %3$s</string>
     <string name="weighin_invalid">Enter a weight between %1$s and %2$s %3$s</string>
-    <string name="weighin_date">Date</string>
-    <string name="weighin_one_per_day">One entry per day. Saving a date that has one updates it.</string>
+    <string name="weighin_one_per_day">One entry per day; saving a date that has one updates it.</string>
     <string name="weighin_replaces">This updates the %1$s %2$s weigh-in for %3$s. Its photos are kept.</string>
-    <string name="weighin_photos">Progress photos · optional</string>
+    <string name="weighin_photos_title">Progress photos</string>
+    <string name="weighin_optional">· optional</string>
+    <string name="weighin_decrease">Decrease by 0.1 %1$s</string>
+    <string name="weighin_increase">Increase by 0.1 %1$s</string>
+    <string name="weighin_last_tap">Last: %1$s %2$s on %3$s · tap the number to type</string>
+    <string name="weighin_tap_to_type">Tap the number to type</string>
+    <string name="weighin_date_description">Date, %1$s. Change date</string>
     <string name="weighin_photos_note">Up to %1$d photos. Photos are resized and location data is removed.</string>
     <string name="weighin_camera">Camera</string>
     <string name="weighin_gallery">Gallery</string>

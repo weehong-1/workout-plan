@@ -76,6 +76,8 @@ internal val DarkColors = darkColorScheme(
  * [graphic] is for rings, bars and lines; [text] is for small text and
  * passes contrast on the current surface; [container] backs icon tiles;
  * [track] is the unfilled part of a ring or bar.
+ * [hero] fills a metric's lead card; [badge] backs icon badges and chips on
+ * it; [strong] with [onStrong] is the metric's filled button or pill.
  */
 @Immutable
 data class MetricColor(
@@ -83,6 +85,19 @@ data class MetricColor(
     val text: Color,
     val container: Color,
     val track: Color,
+    val hero: Color,
+    val badge: Color,
+    val strong: Color,
+    val onStrong: Color,
+)
+
+/** Change pills: a fall reads as good, a rise as a warning (weight). */
+@Immutable
+data class TrendColors(
+    val goodText: Color,
+    val goodContainer: Color,
+    val upText: Color,
+    val upContainer: Color,
 )
 
 @Immutable
@@ -94,26 +109,48 @@ data class MetricColors(
     val heart: MetricColor,
     val weight: MetricColor,
     val food: MetricColor,
+    val trend: TrendColors,
 )
 
-private fun metric(graphic: Long, textLight: Long, textDark: Long, dark: Boolean): MetricColor {
+private fun metric(
+    graphic: Long,
+    textLight: Long,
+    textDark: Long,
+    heroLight: Long,
+    heroDark: Long,
+    dark: Boolean,
+    strong: Color = Color(graphic),
+    onStrong: Color = Color.White,
+): MetricColor {
     val g = Color(graphic)
     return MetricColor(
         graphic = g,
         text = Color(if (dark) textDark else textLight),
         container = g.copy(alpha = if (dark) 0.2f else 0.14f),
         track = g.copy(alpha = 0.22f),
+        hero = Color(if (dark) heroDark else heroLight),
+        badge = g.copy(alpha = if (dark) 0.26f else 0.18f),
+        strong = strong,
+        onStrong = onStrong,
     )
 }
 
 private fun metricColors(dark: Boolean) = MetricColors(
-    steps = metric(0xFFFF9500, 0xFFB25E00, 0xFFFF9F0A, dark),
-    strain = metric(0xFFFA114F, 0xFFC8003C, 0xFFFF375F, dark),
-    recovery = metric(0xFF34C759, 0xFF1E7B34, 0xFF30D158, dark),
-    sleep = metric(0xFF8E5CF7, 0xFF6A3BD1, 0xFFA48BFF, dark),
-    heart = metric(0xFFFF3B30, 0xFFC9201A, 0xFFFF453A, dark),
-    weight = metric(0xFF0A84FF, 0xFF0062CC, 0xFF409CFF, dark),
-    food = metric(0xFFFFB000, 0xFF946200, 0xFFFFC23D, dark),
+    steps = metric(0xFFFF9500, 0xFFB25E00, 0xFFFF9F0A, 0xFFFFEBD1, 0xFF33230F, dark, onStrong = Color(0xFF3D2200)),
+    strain = metric(0xFFFA114F, 0xFFC8003C, 0xFFFF375F, 0xFFFFE1E8, 0xFF36141F, dark),
+    recovery = metric(0xFF34C759, 0xFF1E7B34, 0xFF30D158, 0xFFDDF5E4, 0xFF14301F, dark),
+    sleep = metric(0xFF8E5CF7, 0xFF6A3BD1, 0xFFA48BFF, 0xFFECE5FF, 0xFF261E3B, dark),
+    heart = metric(0xFFFF3B30, 0xFFC9201A, 0xFFFF453A, 0xFFFFE2DF, 0xFF3A1715, dark),
+    weight = metric(
+        0xFF0A84FF, 0xFF0062CC, 0xFF409CFF, 0xFFDDEBFF, 0xFF13263F, dark,
+        strong = Color(if (dark) 0xFF0A6FE0 else 0xFF0062CC),
+    ),
+    food = metric(0xFFFFB000, 0xFF946200, 0xFFFFC23D, 0xFFFFF0CF, 0xFF352A10, dark),
+    trend = if (dark) {
+        TrendColors(Color(0xFF30D158), Color(0x3334C759), Color(0xFFFFB4AB), Color(0x2EFF3B30))
+    } else {
+        TrendColors(Color(0xFF1E7B34), Color(0x2934C759), Color(0xFFB3261E), Color(0x1FFF3B30))
+    },
 )
 
 internal val LightMetricColors = metricColors(dark = false)
