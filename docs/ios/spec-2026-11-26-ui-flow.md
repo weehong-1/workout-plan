@@ -154,4 +154,4 @@ Avatar in the top bar of every tab: units, Health access status, sign out, delet
 1. Vernon reviews this file and the screens in `docs/ios/screens/`.
 2. Written in Claude Code on Windows, not yet compiled: phase 1 (project, design system, tab bar, Health explainer, Activity with Steps), phase 2 (Weight), then Food, Review, the trainer link with its web page, sign-in, Account and the Sleep, Heart and Workouts details.
 3. Build phase 1 on a Mac (D7) and run it on Vernon's iPhone. **Open:** an owned or a rented Mac. A rented Mac cannot be connected to the iPhone, so installing there needs TestFlight and the paid Apple Developer Program.
-4. Apply `supabase/schema.sql` and redeploy the web app so trainer links work; set the Supabase and web host values in `ios/project.yml` (`docs/ios/BUILD.md`).
+4. Apply `supabase/schema.sql` and redeploy the web app so trainer links work; set the Supabase and web host values in the WorkoutPlan target's build settings (`docs/ios/BUILD.md`).
