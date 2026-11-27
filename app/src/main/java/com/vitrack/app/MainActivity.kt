@@ -4,11 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
-import androidx.compose.ui.Modifier
-import com.vitrack.app.ui.home.HomeRoute
+import com.vitrack.app.ui.navigation.VitrackApp
 import com.vitrack.app.ui.theme.VitrackTheme
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -19,9 +15,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             VitrackTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    HomeRoute(modifier = Modifier.padding(innerPadding))
-                }
+                VitrackApp()
             }
         }
     }

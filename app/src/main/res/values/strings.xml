@@ -1,3 +1,58 @@
 <resources>
     <string name="app_name">Vitrack</string>
+
+    <!-- Navigation -->
+    <string name="tab_activity">Activity</string>
+    <string name="tab_weight">Weight</string>
+    <string name="tab_food">Food</string>
+    <string name="tab_review">Review</string>
+    <string name="action_back">Back</string>
+    <string name="coming_soon">This screen is coming next.</string>
+
+    <!-- Metrics -->
+    <string name="metric_sleep">Sleep</string>
+    <string name="metric_recovery">Recovery</string>
+    <string name="metric_strain">Strain</string>
+    <string name="metric_steps">Steps</string>
+    <string name="metric_heart">Heart</string>
+    <string name="unit_steps">steps</string>
+
+    <!-- Activity -->
+    <string name="activity_pick_day">Pick a day</string>
+    <string name="activity_account">Account</string>
+    <string name="activity_greeting">Good day</string>
+    <string name="activity_greeting_named">Good day, %1$s</string>
+    <string name="activity_dial_percent">%1$s %2$d percent</string>
+    <string name="activity_dial_strain">Strain %1$s of 21. Open details</string>
+    <string name="activity_steps_progress">%1$s of %2$s steps</string>
+    <string name="activity_today_summary">%1$s kcal burned · average heart rate %2$d bpm</string>
+    <string name="activity_highlights">Highlights</string>
+    <string name="activity_bpm_resting">bpm resting</string>
+    <string name="activity_hrv">HRV %1$d ms</string>
+    <string name="activity_resting_trend">Resting heart rate, last 7 days</string>
+    <string name="activity_sleep_stages">Sleep stages: awake %1$d percent, light %2$d, deep %3$d, REM %4$d</string>
+    <string name="activity_workout_meta">%1$s · %2$d min · avg %3$d bpm</string>
+    <string name="activity_strain_unit">strain</string>
+    <string name="activity_zones">Time in heart rate zones 1–5</string>
+    <string name="activity_steps_week">Steps this week</string>
+    <string name="activity_average">Average</string>
+    <string name="activity_steps_chart">Daily steps for the last 7 days against a %1$s goal</string>
+    <string name="activity_synced">From WHOOP · synced %1$s</string>
+
+    <!-- Strain -->
+    <string name="strain_of_max">of 21 · %1$s</string>
+    <string name="strain_ring_description">Day strain %1$s of 21, %2$s</string>
+    <string name="strain_level_light">light</string>
+    <string name="strain_level_moderate">moderate</string>
+    <string name="strain_level_strenuous">strenuous</string>
+    <string name="strain_level_all_out">all out</string>
+    <string name="strain_calories">Calories</string>
+    <string name="strain_avg_hr">Average heart rate</string>
+    <string name="strain_max_hr">Max heart rate</string>
+    <string name="strain_chart_description">Day strain over the selected period</string>
+    <string name="strain_todays_workouts">Today\'s workouts</string>
+    <string name="strain_workout_meta">%1$s · %2$d min · avg %3$d bpm · max %4$d bpm</string>
+    <string name="period_week">Week</string>
+    <string name="period_month">Month</string>
+    <string name="period_year">Year</string>
 </resources>
