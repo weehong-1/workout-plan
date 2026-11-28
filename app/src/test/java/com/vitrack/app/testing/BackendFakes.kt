@@ -124,6 +124,16 @@ class FakeAuthRepository(override val isAvailable: Boolean = true) : AuthReposit
         current.value = Account("user-1", "vernon@gmail.com", "Vernon Koh", SignInMethod.Google)
     }
 
+    val links = mutableListOf<String>()
+    /** Thrown by [completeSignInLink] when set. */
+    var linkError: Exception? = null
+
+    override suspend fun completeSignInLink(link: String) {
+        links += link
+        linkError?.let { throw it }
+        current.value = Account("user-1", "vernon@example.com")
+    }
+
     var deleted = false
     /** Records the order of account and local deletion. */
     val events = mutableListOf<String>()

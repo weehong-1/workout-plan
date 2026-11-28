@@ -23,11 +23,22 @@
             android:exported="true"
             android:label="@string/app_name"
             android:theme="@style/Theme.Vitrack"
-            android:windowSoftInputMode="adjustResize">
+            android:windowSoftInputMode="adjustResize"
+            android:launchMode="singleTask"
+            android:screenOrientation="portrait">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+            <!-- The emailed sign-in link returns here (SIGN_IN_REDIRECT); PKCE keeps it to this app. -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data android:scheme="vitrack" android:host="login-callback" />
             </intent-filter>
         </activity>
 

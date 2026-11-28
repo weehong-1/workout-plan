@@ -37,6 +37,36 @@ class AppViewModelTest {
     }
 
     @Test
+    fun `opening the emailed link signs in`() = runTest {
+        val auth = FakeAuthRepository()
+        val viewModel = AppViewModel(FakeSettingsRepository(), auth)
+
+        viewModel.openLink("vitrack://login-callback?code=abc")
+
+        assertEquals(listOf("vitrack://login-callback?code=abc"), auth.links)
+        assertEquals(AppGate.App, viewModel.state.value.gate)
+        assertEquals(null, viewModel.state.value.linkProblem)
+    }
+
+    @Test
+    fun `an expired link shows a problem and other links are ignored`() = runTest {
+        val auth = FakeAuthRepository().apply {
+            linkError = com.vitrack.app.data.auth.SignInLinkException(com.vitrack.app.data.auth.SignInLinkException.Reason.Expired)
+        }
+        val viewModel = AppViewModel(FakeSettingsRepository(), auth)
+
+        viewModel.openLink("https://example.com/?code=abc")
+        viewModel.openLink(null)
+        assertEquals(emptyList<String>(), auth.links)
+
+        viewModel.openLink("vitrack://login-callback?code=abc")
+        assertEquals(LinkProblem.Expired, viewModel.state.value.linkProblem)
+        assertEquals(AppGate.SignIn, viewModel.state.value.gate)
+        viewModel.dismissLinkProblem()
+        assertEquals(null, viewModel.state.value.linkProblem)
+    }
+
+    @Test
     fun `the theme follows Profile`() = runTest {
         val settings = FakeSettingsRepository()
         val viewModel = AppViewModel(settings, FakeAuthRepository(isAvailable = false))

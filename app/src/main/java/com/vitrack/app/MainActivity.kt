@@ -38,6 +38,8 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         openTab.value = intent?.getStringExtra(ReminderNotifications.EXTRA_OPEN_TAB)
+        // Opened from the emailed sign-in link (only on a fresh start, not after rotation).
+        if (savedInstanceState == null) appViewModel.openLink(intent?.dataString)
         setContent {
             val state by appViewModel.state.collectAsStateWithLifecycle()
             val dark = when (state.theme) {
@@ -54,7 +56,11 @@ class MainActivity : ComponentActivity() {
             VitrackTheme(darkTheme = dark) {
                 when (state.gate) {
                     AppGate.Loading -> Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.surface))
-                    AppGate.SignIn -> LoginFlow()
+                    AppGate.SignIn -> LoginFlow(
+                        openingLink = state.openingLink,
+                        linkProblem = state.linkProblem,
+                        onDismissLinkProblem = appViewModel::dismissLinkProblem,
+                    )
                     AppGate.App -> VitrackApp(openTab = openTab.value, onTabOpened = { openTab.value = null })
                 }
             }
@@ -64,5 +70,6 @@ class MainActivity : ComponentActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         intent.getStringExtra(ReminderNotifications.EXTRA_OPEN_TAB)?.let { openTab.value = it }
+        appViewModel.openLink(intent.dataString)
     }
 }

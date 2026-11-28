@@ -27,7 +27,10 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.ContainedLoadingIndicator
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
@@ -70,6 +73,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.vitrack.app.R
+import com.vitrack.app.ui.app.LinkProblem
 import com.vitrack.app.ui.common.rememberReducedMotion
 import com.vitrack.app.ui.theme.Spacing
 import kotlin.math.PI
@@ -78,12 +82,47 @@ import kotlin.math.sin
 import kotlinx.coroutines.launch
 
 /** Sign in, then (for email) the code screen. The app opens by itself once a session exists. */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-fun LoginFlow() {
+fun LoginFlow(
+    openingLink: Boolean = false,
+    linkProblem: LinkProblem? = null,
+    onDismissLinkProblem: () -> Unit = {},
+) {
     var withEmail by rememberSaveable { mutableStateOf(false) }
     // Sign in sits outside the app's Scaffold: the Surface gives text its colour on this background.
     Surface(color = MaterialTheme.colorScheme.surface, contentColor = MaterialTheme.colorScheme.onSurface) {
-        if (withEmail) EmailSignInRoute(onBack = { withEmail = false }) else LoginRoute(onEmail = { withEmail = true })
+        Box {
+            if (withEmail) EmailSignInRoute(onBack = { withEmail = false }) else LoginRoute(onEmail = { withEmail = true })
+            if (openingLink) {
+                Box(
+                    Modifier.fillMaxSize().background(MaterialTheme.colorScheme.scrim.copy(alpha = 0.5f)),
+                    contentAlignment = Alignment.Center,
+                ) { ContainedLoadingIndicator() }
+            }
+        }
+    }
+    linkProblem?.let { problem ->
+        AlertDialog(
+            onDismissRequest = onDismissLinkProblem,
+            title = { Text(stringResource(R.string.login_link_failed_title)) },
+            text = {
+                Text(
+                    stringResource(
+                        when (problem) {
+                            LinkProblem.Expired -> R.string.login_link_expired
+                            LinkProblem.OtherRequest -> R.string.login_link_other_request
+                            LinkProblem.Network -> R.string.login_error_network
+                            LinkProblem.Failed -> R.string.login_error_failed
+                        },
+                    ),
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = { onDismissLinkProblem(); withEmail = true }) { Text(stringResource(R.string.login_link_new)) }
+            },
+            dismissButton = { TextButton(onClick = onDismissLinkProblem) { Text(stringResource(R.string.login_link_close)) } },
+        )
     }
 }
 

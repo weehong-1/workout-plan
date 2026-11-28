@@ -157,7 +157,7 @@ class SupabaseClientTest {
         val client = client()
         client.verify("vernon@example.com", "123456")
 
-        com.vitrack.app.data.auth.SupabaseAuthRepository(Backend(client)).deleteAccount()
+        com.vitrack.app.data.auth.SupabaseAuthRepository(Backend(client), store).deleteAccount()
 
         val removed = transport.sent("DELETE", "/storage/v1/object/photos").single().body!!.decodeToString()
         assertEquals("""{"prefixes":["${USER_ID.lowercase()}/share-a-w1.jpg"]}""", removed)

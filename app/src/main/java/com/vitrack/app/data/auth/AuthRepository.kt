@@ -2,6 +2,7 @@ package com.vitrack.app.data.auth
 
 import com.vitrack.app.data.backend.Backend
 import com.vitrack.app.data.backend.BackendException
+import com.vitrack.app.data.backend.SecureStore
 import com.vitrack.app.data.backend.SupabaseClient
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -38,7 +39,14 @@ interface AuthRepository {
 
     suspend fun signInWithGoogle(idToken: String, nonce: String)
 
+    /** Emails a sign-in link that opens this app (and a code, when the email template shows one). */
     suspend fun sendCode(email: String)
+
+    /**
+     * Finishes sign-in from the emailed link ([SIGN_IN_REDIRECT] with a
+     * `code`). Throws [SignInLinkException] for an expired, used or foreign link.
+     */
+    suspend fun completeSignInLink(link: String)
 
     suspend fun verify(email: String, code: String)
 
@@ -53,7 +61,10 @@ interface AuthRepository {
 }
 
 @Singleton
-class SupabaseAuthRepository @Inject constructor(private val backend: Backend) : AuthRepository {
+class SupabaseAuthRepository @Inject constructor(
+    private val backend: Backend,
+    private val secureStore: SecureStore,
+) : AuthRepository {
 
     override val isAvailable: Boolean get() = backend.isConfigured
 
@@ -75,7 +86,30 @@ class SupabaseAuthRepository @Inject constructor(private val backend: Backend) :
         client().signInWithIdToken("google", idToken, nonce)
     }
 
-    override suspend fun sendCode(email: String) = client().sendCode(email)
+    override suspend fun sendCode(email: String) {
+        val client = client()
+        // A new verifier for every email: only the newest link signs in.
+        val verifier = Pkce.newVerifier()
+        secureStore.put(PKCE_VERIFIER_KEY, verifier)
+        client.sendCode(email, redirectTo = SIGN_IN_REDIRECT, codeChallenge = Pkce.challenge(verifier))
+    }
+
+    override suspend fun completeSignInLink(link: String) {
+        val client = client()
+        val params = signInLinkParams(link) ?: throw SignInLinkException(SignInLinkException.Reason.NotOurs)
+        params["error_code"]?.let { code ->
+            throw SignInLinkException(if (code == "otp_expired") SignInLinkException.Reason.Expired else SignInLinkException.Reason.Failed)
+        }
+        val code = params["code"] ?: throw SignInLinkException(SignInLinkException.Reason.Failed)
+        val verifier = secureStore.get(PKCE_VERIFIER_KEY) ?: throw SignInLinkException(SignInLinkException.Reason.OtherRequest)
+        try {
+            client.exchangeCode(code, verifier)
+        } catch (e: BackendException.Server) {
+            // A link from an earlier email, or one already used.
+            throw SignInLinkException(SignInLinkException.Reason.Expired)
+        }
+        secureStore.put(PKCE_VERIFIER_KEY, null)
+    }
 
     override suspend fun verify(email: String, code: String) {
         client().verify(email, code)
@@ -100,9 +134,60 @@ class SupabaseAuthRepository @Inject constructor(private val backend: Backend) :
 
     private fun client() = backend.client ?: throw BackendException.NotConfigured()
 
+    private companion object {
+        const val PKCE_VERIFIER_KEY = "auth.pkce_verifier"
+    }
+
     @Serializable
     private data class DeleteBody(
         @SerialName("expected_account_id") val expectedAccountId: String,
         val confirmation: String,
     )
+}
+
+/**
+ * Where the emailed sign-in link returns: Android opens this app for it
+ * (AndroidManifest). It must be in Supabase's Redirect URLs, or Supabase
+ * sends the link to the web app's Site URL instead.
+ */
+const val SIGN_IN_REDIRECT = "vitrack://login-callback"
+
+class SignInLinkException(val reason: Reason) : Exception("Sign-in link failed: $reason") {
+    enum class Reason {
+        /** Expired, already used, or from an earlier email. */
+        Expired,
+
+        /** This phone didn't ask for it (or the app was reinstalled since). */
+        OtherRequest,
+
+        /** Not a Vitrack sign-in link. */
+        NotOurs,
+        Failed,
+    }
+}
+
+/**
+ * The parameters of a sign-in link back to [SIGN_IN_REDIRECT], from its query
+ * (`?code=…`) and fragment (`#error_code=…`), or null when it isn't one.
+ */
+internal fun signInLinkParams(link: String): Map<String, String>? {
+    if (!link.startsWith(SIGN_IN_REDIRECT)) return null
+    val rest = link.removePrefix(SIGN_IN_REDIRECT)
+    val parts = rest.split('?', '#').drop(1).joinToString("&")
+    return parts.split('&').filter { '=' in it }.associate {
+        val (key, value) = it.split('=', limit = 2)
+        java.net.URLDecoder.decode(key, Charsets.UTF_8) to java.net.URLDecoder.decode(value, Charsets.UTF_8)
+    }
+}
+
+/** PKCE (RFC 7636, S256) for the emailed link. */
+internal object Pkce {
+    private val random = java.security.SecureRandom()
+
+    fun newVerifier(): String =
+        java.util.Base64.getUrlEncoder().withoutPadding().encodeToString(ByteArray(32).also(random::nextBytes))
+
+    fun challenge(verifier: String): String =
+        java.util.Base64.getUrlEncoder().withoutPadding()
+            .encodeToString(java.security.MessageDigest.getInstance("SHA-256").digest(verifier.toByteArray(Charsets.US_ASCII)))
 }

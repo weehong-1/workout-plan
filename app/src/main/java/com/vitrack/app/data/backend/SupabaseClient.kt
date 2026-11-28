@@ -53,8 +53,36 @@ class SupabaseClient(
 
     // Auth
 
-    suspend fun sendCode(email: String) {
-        send("POST", "/auth/v1/otp", body = json.encodeToString(OtpBody(email.trim(), createUser = true)), authorized = false)
+    /**
+     * Emails a sign-in link (and a code, if the project's template shows one).
+     * The link returns to [redirectTo] with a one-time `code`; [codeChallenge]
+     * is the SHA-256 of a verifier kept on this phone (PKCE), so only this app
+     * can turn that code into a session.
+     */
+    suspend fun sendCode(email: String, redirectTo: String? = null, codeChallenge: String? = null) {
+        send(
+            "POST", "/auth/v1/otp",
+            query = listOfNotNull(redirectTo?.let { "redirect_to" to it }),
+            body = json.encodeToString(
+                OtpBody(
+                    email = email.trim(),
+                    createUser = true,
+                    codeChallenge = codeChallenge,
+                    codeChallengeMethod = codeChallenge?.let { "s256" },
+                ),
+            ),
+            authorized = false,
+        )
+    }
+
+    /** Turns the `code` from a sign-in link into a session, with the verifier kept when the email was sent. */
+    suspend fun exchangeCode(authCode: String, codeVerifier: String): AuthSession {
+        val response = send(
+            "POST", "/auth/v1/token", query = listOf("grant_type" to "pkce"),
+            body = json.encodeToString(PkceBody(authCode, codeVerifier)),
+            authorized = false,
+        )
+        return store(response)
     }
 
     /**
@@ -231,7 +259,15 @@ class SupabaseClient(
     }
 
     @Serializable
-    private data class OtpBody(val email: String, @SerialName("create_user") val createUser: Boolean)
+    private data class OtpBody(
+        val email: String,
+        @SerialName("create_user") val createUser: Boolean,
+        @SerialName("code_challenge") val codeChallenge: String? = null,
+        @SerialName("code_challenge_method") val codeChallengeMethod: String? = null,
+    )
+
+    @Serializable
+    private data class PkceBody(@SerialName("auth_code") val authCode: String, @SerialName("code_verifier") val codeVerifier: String)
 
     @Serializable
     private data class VerifyBody(val type: String = "email", val email: String, val token: String)
