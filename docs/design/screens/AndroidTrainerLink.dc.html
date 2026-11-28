@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Android Share with trainer</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Flex:opsz,wght@8..144,400..800&display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div style="width: 412px; height: 1170px; position: relative; overflow: hidden; background: {{t.surface}}; font-family: 'Roboto Flex', Roboto, system-ui, sans-serif; color: {{t.onSurface}}; box-sizing: border-box">
+  <div style="padding: 40px 4px 0; height: 96px; box-sizing: border-box; display: flex; align-items: center">
+    <a href="AndroidReview.dc.html" aria-label="Close" style="width: 48px; height: 48px; border-radius: 24px; display: flex; align-items: center; justify-content: center; color: {{t.onSurface}}"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></a>
+  </div>
+
+  <div style="padding: 0 16px">
+    <section style="background: {{t.tertiaryContainer}}; color: {{t.onTertiaryContainer}}; border-radius: 36px; padding: 20px; display: flex; align-items: center; gap: 16px">
+      <svg width="84" height="84" viewBox="0 0 84 84" aria-hidden="true" style="flex-shrink: 0">
+        <path d="{{cookie}}" fill="{{t.onTertiaryContainer}}"/>
+        <g transform="translate(26 26)" fill="none" stroke="{{t.tertiaryContainer}}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M14 19a7 7 0 0 0 10 0l5-5a7 7 0 0 0-10-10l-2 2M18 13a7 7 0 0 0-10 0l-5 5a7 7 0 0 0 10 10l2-2"/></g>
+      </svg>
+      <div>
+        <h1 style="margin: 0; font-size: 22px; line-height: 28px; font-weight: 600">Share with trainer</h1>
+        <p style="margin: 4px 0 0; font-size: 14px; line-height: 20px">A private, read-only link to your progress.</p>
+      </div>
+    </section>
+
+    <div style="margin-top: 18px; border: 1px solid {{t.outline}}; border-radius: 18px; padding: 0 16px; height: 56px; position: relative; display: flex; align-items: center">
+      <label for="tn" style="position: absolute; top: -9px; left: 12px; padding: 0 4px; background: {{t.surface}}; font-size: 12px; font-weight: 600; color: {{t.onSurfaceVariant}}">Trainer</label>
+      <input id="tn" placeholder="Name, for your list" style="width: 100%; border: none; outline: none; background: transparent; font: 400 16px 'Roboto Flex', Roboto, sans-serif; color: {{t.onSurface}}">
+    </div>
+
+    <h2 style="margin: 20px 4px 10px; font-size: 16px; line-height: 24px; font-weight: 600">Period</h2>
+    <div style="display: flex; align-items: center; gap: 8px">
+      <div style="display: flex; gap: 2px; width: 176px">
+        <button aria-pressed="true" style="flex: 1; height: 44px; border: none; border-radius: 22px 6px 6px 22px; background: {{t.primary}}; color: {{t.onPrimary}}; font: 700 14px 'Roboto Flex', Roboto, sans-serif">Month</button>
+        <button style="flex: 1; height: 44px; border: none; border-radius: 6px 22px 22px 6px; background: {{t.secondaryContainer}}; color: {{t.onSecondaryContainer}}; font: 500 14px 'Roboto Flex', Roboto, sans-serif">Year</button>
+      </div>
+      <button style="flex: 1; height: 44px; border: none; border-radius: 22px; background: {{t.container}}; color: {{t.onSurface}}; font: 700 14px 'Roboto Flex', Roboto, sans-serif; display: flex; align-items: center; justify-content: center; gap: 6px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>November 2026</button>
+    </div>
+
+    <h2 style="margin: 20px 4px 10px; font-size: 16px; line-height: 24px; font-weight: 600">Include</h2>
+    <div style="display: flex; flex-direction: column; gap: 6px">
+      <sc-for list="{{items}}" as="it" hint-placeholder-count="4">
+        <div style="display: flex; align-items: center; gap: 12px; min-height: 64px; padding: 0 14px 0 12px; border-radius: 24px; background: {{it.bg}}">
+          <span style="width: 40px; height: 40px; border-radius: 20px; background: {{it.badge}}; color: {{it.txt}}; display: flex; align-items: center; justify-content: center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{it.icon}}"/></svg></span>
+          <span style="flex: 1; font-size: 16px; font-weight: 600">{{it.name}}</span>
+          <sc-if value="{{it.on}}" hint-placeholder-val="{{true}}">
+            <button role="switch" aria-checked="true" aria-label="{{it.name}}" onClick="{{it.toggle}}" style="width: 52px; height: 32px; border-radius: 16px; border: none; padding: 4px; background: {{it.color}}; display: flex; justify-content: flex-end; align-items: center"><span style="width: 24px; height: 24px; border-radius: 12px; background: #FFFFFF; display: flex; align-items: center; justify-content: center; color: {{it.color}}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7"/></svg></span></button>
+          </sc-if>
+          <sc-if value="{{it.off}}" hint-placeholder-val="{{false}}">
+            <button role="switch" aria-checked="false" aria-label="{{it.name}}" onClick="{{it.toggle}}" style="width: 52px; height: 32px; border-radius: 16px; border: 2px solid {{t.outline}}; padding: 6px; background: {{t.containerHighest}}; display: flex; justify-content: flex-start; align-items: center; box-sizing: border-box"><span style="width: 16px; height: 16px; border-radius: 8px; background: {{t.outline}}"></span></button>
+          </sc-if>
+        </div>
+      </sc-for>
+    </div>
+
+    <h2 style="margin: 20px 4px 10px; font-size: 16px; line-height: 24px; font-weight: 600">Expiry</h2>
+    <div style="border-radius: 24px; background: {{t.container}}; overflow: hidden">
+      <div style="display: flex; align-items: center; justify-content: space-between; min-height: 60px; padding: 0 14px 0 18px">
+        <span style="font-size: 16px; font-weight: 600">Link expires</span>
+        <sc-if value="{{expires}}" hint-placeholder-val="{{true}}">
+          <button role="switch" aria-checked="true" aria-label="Link expires" onClick="{{toggleExpiry}}" style="width: 52px; height: 32px; border-radius: 16px; border: none; padding: 4px; background: {{t.primary}}; display: flex; justify-content: flex-end; align-items: center"><span style="width: 24px; height: 24px; border-radius: 12px; background: {{t.onPrimary}}; display: flex; align-items: center; justify-content: center; color: {{t.primary}}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7"/></svg></span></button>
+        </sc-if>
+        <sc-if value="{{noExpiry}}" hint-placeholder-val="{{false}}">
+          <button role="switch" aria-checked="false" aria-label="Link expires" onClick="{{toggleExpiry}}" style="width: 52px; height: 32px; border-radius: 16px; border: 2px solid {{t.outline}}; padding: 6px; background: {{t.containerHighest}}; display: flex; justify-content: flex-start; align-items: center; box-sizing: border-box"><span style="width: 16px; height: 16px; border-radius: 8px; background: {{t.outline}}"></span></button>
+        </sc-if>
+      </div>
+      <sc-if value="{{expires}}" hint-placeholder-val="{{true}}">
+        <div style="display: flex; align-items: center; justify-content: space-between; min-height: 56px; padding: 0 14px 0 18px; border-top: 1px solid {{t.outlineVariant}}">
+          <span style="font-size: 16px">Expires on</span>
+          <span style="background: {{t.secondaryContainer}}; color: {{t.onSecondaryContainer}}; border-radius: 999px; padding: 8px 14px; font-size: 14px; font-weight: 700">31 Dec 2026</span>
+        </div>
+      </sc-if>
+    </div>
+    <div style="margin: 6px 16px 0; font-size: 12px; line-height: 16px; color: {{t.onSurfaceVariant}}">{{expiryNote}}</div>
+
+    <div style="margin-top: 14px; background: {{t.container}}; border-radius: 24px; padding: 14px 16px; display: flex; gap: 12px; font-size: 14px; line-height: 20px; color: {{t.onSurface}}">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="{{t.primary}}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0; margin-top: 1px"><path d="M12 3l8 3v6c0 4.5-3.4 8-8 9-4.6-1-8-4.5-8-9V6z"/></svg>
+      <span>Your WHOOP summaries, weight and photos for this period are shared through a private link. Anyone with the link can see what you include until it expires or you revoke it. It never appears in search results.</span>
+    </div>
+
+    <a href="AndroidReview.dc.html" style="margin-top: 14px; height: 64px; border-radius: 32px; background: {{t.primary}}; color: {{t.onPrimary}}; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 16px; font-weight: 700"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7"/></svg>I agree, create link</a>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"dark":{"editor":"boolean","default":true},"$preview":{"width":412,"height":1170}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { on: { activity: true, weight: true, weightPhotos: false, food: true }, expires: true };
+  }
+  renderVals() {
+    const dark = this.props.dark ?? true;
+    const rgba = (h, a) => 'rgba(' + parseInt(h.slice(1, 3), 16) + ',' + parseInt(h.slice(3, 5), 16) + ',' + parseInt(h.slice(5, 7), 16) + ',' + a + ')';
+    const t = dark ? {
+      surface: '#111318', container: '#1D2024', containerHighest: '#33353A', onSurface: '#E2E2E9', onSurfaceVariant: '#C4C6D0', outline: '#8E9099', outlineVariant: '#44474E',
+      primary: '#AAC7FF', onPrimary: '#0A305F', secondaryContainer: '#3E4759', onSecondaryContainer: '#DAE2F9', tertiaryContainer: '#573E5C', onTertiaryContainer: '#FAD8FD',
+      txt: { strain: '#FF375F', weight: '#409CFF', food: '#FFC23D' }, hero: { strain: '#36141F', weight: '#13263F', food: '#352A10' }
+    } : {
+      surface: '#F9F9FF', container: '#EDEDF4', containerHighest: '#E2E2E9', onSurface: '#191C20', onSurfaceVariant: '#44474E', outline: '#74777F', outlineVariant: '#C4C6D0',
+      primary: '#415F91', onPrimary: '#FFFFFF', secondaryContainer: '#DAE2F9', onSecondaryContainer: '#131C2B', tertiaryContainer: '#FAD8FD', onTertiaryContainer: '#29132D',
+      txt: { strain: '#C8003C', weight: '#0062CC', food: '#946200' }, hero: { strain: '#FFE1E8', weight: '#DDEBFF', food: '#FFF0CF' }
+    };
+    const G = { strain: '#FA114F', weight: '#0A84FF', food: '#FFB000' };
+    const icons = {
+      activity: 'M3 12h4l3-8 4 16 3-8h4',
+      weight: 'M3.5 7.5a4 4 0 0 1 4-4h9a4 4 0 0 1 4 4v9a4 4 0 0 1-4 4h-9a4 4 0 0 1-4-4zM8.5 9.5a5 5 0 0 1 7 0',
+      weightPhotos: 'M4 8h3l1.5-2h7L17 8h3v11H4zM12 16.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7',
+      food: 'M5 3v5a2 2 0 0 0 4 0V3M7 3v18M17 3c-2 1.5-2.5 4-2.5 7H17v11'
+    };
+    const defs = [['activity', 'Activity, recovery and sleep', 'strain'], ['weight', 'Weight', 'weight'], ['weightPhotos', 'Weight photos', 'weight'], ['food', 'Food photos', 'food']];
+    const items = defs.map(([k, name, m]) => {
+      const on = this.state.on[k];
+      return {
+        name, on, off: !on, icon: icons[k], color: G[m], txt: t.txt[m], badge: rgba(G[m], dark ? 0.28 : 0.2),
+        bg: on ? t.hero[m] : t.container,
+        toggle: () => this.setState({ on: { ...this.state.on, [k]: !this.state.on[k] } })
+      };
+    });
+    let cookie = '';
+    for (let i = 0; i <= 360; i += 3) {
+      const a = i * Math.PI / 180;
+      const r = 38 + 3.5 * Math.cos(a * 8);
+      cookie += (i === 0 ? 'M' : 'L') + (42 + r * Math.cos(a)).toFixed(1) + ' ' + (42 + r * Math.sin(a)).toFixed(1);
+    }
+    const expires = this.state.expires;
+    return {
+      t, items, expires, noExpiry: !expires, cookie: cookie + 'Z',
+      toggleExpiry: () => this.setState({ expires: !expires }),
+      expiryNote: expires ? 'The link stops working after this date. You can revoke it sooner.' : 'The link works until you revoke it in Review.'
+    };
+  }
+}
+</script>
+</body>
+</html>

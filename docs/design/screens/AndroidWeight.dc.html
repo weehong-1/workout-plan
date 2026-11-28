@@ -1,0 +1,272 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Android Weight</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Flex:opsz,wght@8..144,400..800&display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+@media (prefers-reduced-motion: no-preference) {
+  .wl-draw{stroke-dasharray:1;stroke-dashoffset:1;animation:wl-draw 1.1s cubic-bezier(.2,.8,.2,1) .15s forwards}
+  .wl-pop{transform-box:fill-box;transform-origin:center;transform:scale(0);animation:wl-pop .45s cubic-bezier(.3,1.6,.5,1) 1s forwards}
+  .wl-fade{opacity:0;animation:wl-fade .6s ease .1s forwards}
+  .wl-rise{opacity:0;transform:translateY(10px);animation:wl-rise .5s cubic-bezier(.2,.8,.2,1) forwards}
+  .wl-badge{transform:scale(0) rotate(-20deg);animation:wl-badge .6s cubic-bezier(.3,1.6,.5,1) .5s forwards}
+}
+@keyframes wl-draw{to{stroke-dashoffset:0}}
+@keyframes wl-pop{to{transform:scale(1)}}
+@keyframes wl-fade{to{opacity:1}}
+@keyframes wl-rise{to{opacity:1;transform:none}}
+@keyframes wl-badge{to{transform:none}}
+</style>
+</helmet>
+<div style="width: 412px; height: 1300px; position: relative; overflow: hidden; background: {{t.surface}}; font-family: 'Roboto Flex', Roboto, system-ui, sans-serif; color: {{t.onSurface}}; box-sizing: border-box">
+  <div style="padding: 40px 12px 0 16px; display: flex; justify-content: flex-end; align-items: center">
+    <a href="AndroidProfile.dc.html" aria-label="Profile" style="width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; text-decoration: none"><span style="width: 40px; height: 40px; border-radius: 20px; background: {{t.primaryContainer}}; color: {{t.onPrimaryContainer}}; display: flex; align-items: center; justify-content: center; font: 700 16px 'Roboto Flex', Roboto, sans-serif">V</span></a>
+  </div>
+  <h1 style="margin: 4px 16px 16px; font-size: 36px; line-height: 44px; font-weight: 600">Weight</h1>
+
+  <section style="margin: 0 16px; background: {{t.hero}}; border-radius: 36px; padding: 18px 20px 16px">
+    <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 8px">
+      <div>
+        <div style="display: flex; align-items: center; gap: 8px; font-size: 14px; line-height: 20px; font-weight: 600; color: {{t.txt}}">
+          <span style="width: 32px; height: 32px; border-radius: 16px; background: {{t.badge}}; display: flex; align-items: center; justify-content: center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><rect x="3.5" y="3.5" width="17" height="17" rx="4"/><path d="M8.5 9.5a5 5 0 0 1 7 0M12 10l1.3-1.8"/></svg></span>{{z.heroLabel}}</div>
+        <div style="margin-top: 8px" aria-live="polite"><span style="font-size: 45px; line-height: 52px; font-weight: 800; letter-spacing: -0.5px; font-variant-numeric: tabular-nums">{{shown}}</span><span style="font-size: 14px; color: {{t.onSurfaceVariant}}"> kg</span></div>
+        <div style="font-size: 13px; line-height: 18px; color: {{t.onSurfaceVariant}}">Latest 78.4 kg · today, 7:12 AM</div>
+      </div>
+      <svg class="wl-badge" width="92" height="92" viewBox="0 0 92 92" role="img" aria-label="{{z.badgeAria}}" style="flex-shrink: 0">
+        <path d="{{cookie}}" fill="{{t.goodStrong}}"/>
+        <text x="46" y="47" text-anchor="middle" font-size="22" font-weight="800" fill="#FFFFFF" font-family="'Roboto Flex', Roboto, sans-serif">{{z.delta}}</text>
+        <text x="46" y="64" text-anchor="middle" font-size="12" font-weight="600" fill="#FFFFFF" font-family="'Roboto Flex', Roboto, sans-serif">{{z.deltaUnit}}</text>
+      </svg>
+    </div>
+
+    <div style="margin-top: 14px; display: flex; gap: 2px">
+      <sc-for list="{{zoomBtns}}" as="b" hint-placeholder-count="3">
+        <button onClick="{{b.pick}}" aria-pressed="{{b.on}}" style="flex: 1; height: 40px; border: none; border-radius: {{b.radius}}; background: {{b.bg}}; color: {{b.fg}}; font: {{b.weight}} 14px 'Roboto Flex', Roboto, sans-serif">{{b.label}}</button>
+      </sc-for>
+    </div>
+
+    <sc-if value="{{isW}}" hint-placeholder-val="{{true}}">
+      <svg width="340" height="160" viewBox="0 0 340 160" role="img" aria-label="{{z.chartAria}}" style="display: block; margin-top: 14px">
+        <path d="{{chartW.grid}}" stroke="{{t.grid}}" stroke-width="1"/>
+        <path class="wl-fade" d="{{chartW.bands}}" fill="{{t.band}}"/>
+        <path class="wl-draw" pathLength="1" d="{{chartW.line}}" fill="none" stroke="#0A84FF" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+        <path class="wl-pop" d="{{chartW.down}}" fill="{{t.goodDot}}" stroke="{{t.hero}}" stroke-width="2.5"/>
+        <path class="wl-pop" d="{{chartW.up}}" fill="{{t.upDot}}" stroke="{{t.hero}}" stroke-width="2.5"/>
+      </svg>
+    </sc-if>
+    <sc-if value="{{isM}}" hint-placeholder-val="{{false}}">
+      <svg width="340" height="160" viewBox="0 0 340 160" role="img" aria-label="{{z.chartAria}}" style="display: block; margin-top: 14px">
+        <path d="{{chartM.grid}}" stroke="{{t.grid}}" stroke-width="1"/>
+        <path class="wl-fade" d="{{chartM.bands}}" fill="{{t.band}}"/>
+        <path class="wl-draw" pathLength="1" d="{{chartM.line}}" fill="none" stroke="#0A84FF" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+        <path class="wl-pop" d="{{chartM.down}}" fill="{{t.goodDot}}" stroke="{{t.hero}}" stroke-width="2.5"/>
+        <path class="wl-pop" d="{{chartM.up}}" fill="{{t.upDot}}" stroke="{{t.hero}}" stroke-width="2.5"/>
+      </svg>
+    </sc-if>
+    <sc-if value="{{isY}}" hint-placeholder-val="{{false}}">
+      <svg width="340" height="160" viewBox="0 0 340 160" role="img" aria-label="{{z.chartAria}}" style="display: block; margin-top: 14px">
+        <path d="{{chartY.grid}}" stroke="{{t.grid}}" stroke-width="1"/>
+        <path class="wl-fade" d="{{chartY.bands}}" fill="{{t.band}}"/>
+        <path class="wl-draw" pathLength="1" d="{{chartY.line}}" fill="none" stroke="#0A84FF" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+        <path class="wl-pop" d="{{chartY.down}}" fill="{{t.goodDot}}" stroke="{{t.hero}}" stroke-width="2.5"/>
+        <path class="wl-pop" d="{{chartY.up}}" fill="{{t.upDot}}" stroke="{{t.hero}}" stroke-width="2.5"/>
+      </svg>
+    </sc-if>
+    <div style="display: flex; justify-content: space-between; font-size: 12px; line-height: 16px; font-weight: 500; color: {{t.onSurfaceVariant}}"><span>{{z.axisStart}}</span><span>{{z.axisEnd}}</span></div>
+    <div style="margin-top: 10px; display: flex; flex-wrap: wrap; gap: 6px">
+      <span style="display: flex; align-items: center; gap: 6px; height: 32px; padding: 0 12px 0 8px; border-radius: 16px; background: {{t.goodBg}}; color: {{t.good}}; font-size: 14px; font-weight: 600"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 7l10 10M17 9v8H9"/></svg>{{z.streak}}</span>
+      <span style="display: flex; align-items: center; gap: 6px; height: 32px; padding: 0 12px; border-radius: 16px; background: {{t.surface}}; color: {{t.onSurfaceVariant}}; font-size: 12px; font-weight: 500"><span style="width: 8px; height: 8px; border-radius: 4px; background: {{t.goodDot}}"></span>lower <span style="width: 8px; height: 8px; border-radius: 4px; background: {{t.upDot}}; margin-left: 4px"></span>higher than before</span>
+    </div>
+  </section>
+
+  <div style="margin: 22px 16px 10px; display: flex; align-items: center; justify-content: space-between">
+    <h2 style="margin: 0; font-size: 22px; line-height: 28px; font-weight: 600">History</h2>
+    <button aria-haspopup="dialog" style="height: 36px; padding: 0 10px 0 14px; border: none; border-radius: 18px; background: {{t.container}}; color: {{t.onSurface}}; display: flex; align-items: center; gap: 4px; font: 700 14px 'Roboto Flex', Roboto, sans-serif">{{z.jump}}<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>
+  </div>
+
+  <div style="margin: 0 16px; display: flex; flex-direction: column; gap: 6px">
+    <sc-for list="{{rows}}" as="r" hint-placeholder-count="4">
+      <div class="wl-rise" style="animation-delay: {{r.delay}}; border-radius: 24px; background: {{r.bg}}; overflow: hidden">
+        <button onClick="{{r.toggle}}" aria-expanded="{{r.open}}" style="width: 100%; display: flex; align-items: center; gap: 12px; min-height: 68px; padding: 0 12px; border: none; background: transparent; color: {{t.onSurface}}; text-align: left; font-family: 'Roboto Flex', Roboto, sans-serif">
+          <span style="width: 52px; height: 44px; border-radius: 14px; background: {{t.badge}}; color: {{t.txt}}; display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1.1; flex-shrink: 0"><span style="font-size: 14px; font-weight: 700">{{r.top}}</span><span style="font-size: 12px; font-weight: 500">{{r.sub}}</span></span>
+          <span style="flex: 1; min-width: 0">
+            <span style="display: block"><span style="font-size: 22px; line-height: 28px; font-weight: 800">{{r.avg}}</span><span style="font-size: 14px; color: {{t.onSurfaceVariant}}"> kg avg</span></span>
+            <span style="display: block; font-size: 12px; line-height: 16px; font-weight: 500; color: {{t.onSurfaceVariant}}">{{r.meta}}</span>
+          </span>
+          <span style="font-size: 14px; font-weight: 600; padding: 4px 10px; border-radius: 999px; background: {{r.dBg}}; color: {{r.dFg}}">{{r.delta}}</span>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="{{t.onSurfaceVariant}}" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="transform: rotate({{r.rot}}deg); transition: transform .2s"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+        <sc-if value="{{r.open}}" hint-placeholder-val="{{false}}">
+          <div style="padding: 0 12px 10px 76px">
+            <sc-for list="{{r.entries}}" as="e" hint-placeholder-count="3">
+              <a href="AndroidWeighIn.dc.html" style="display: flex; align-items: center; gap: 10px; min-height: 44px; border-top: 1px solid {{t.outlineVariant}}; text-decoration: none; color: {{t.onSurface}}">
+                <span style="flex: 1; font-size: 14px; line-height: 20px">{{e.day}}</span>
+                <span style="font-size: 16px; font-weight: 600">{{e.kg}}</span>
+                <sc-if value="{{e.photo}}" hint-placeholder-val="{{false}}"><span aria-label="Has progress photo" style="width: 28px; height: 28px; border-radius: 8px; background: {{t.containerHigh}}; display: flex; align-items: center; justify-content: center; color: {{t.onSurfaceVariant}}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-8 8"/></svg></span></sc-if>
+              </a>
+            </sc-for>
+          </div>
+        </sc-if>
+      </div>
+    </sc-for>
+  </div>
+  <div style="margin: 12px 16px 0; display: flex; flex-direction: column; align-items: stretch; gap: 8px">
+    <sc-if value="{{canMore}}" hint-placeholder-val="{{true}}">
+      <button onClick="{{more}}" style="width: 100%; height: 48px; padding: 0 16px; display: flex; align-items: center; justify-content: center; gap: 8px; border: 1px solid {{t.outline}}; border-radius: 24px; background: transparent; color: {{t.onSurface}}; font: 700 14px/20px 'Roboto Flex', Roboto, sans-serif; cursor: pointer">{{moreLabel}}<svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+    </sc-if>
+    <span style="text-align: center; font-size: 12px; line-height: 16px; font-weight: 500; color: {{t.onSurfaceVariant}}">{{z.listNote}}</span>
+  </div>
+
+  <a href="AndroidWeighIn.dc.html" style="position: absolute; right: 16px; bottom: 96px; height: 56px; border-radius: 16px; padding: 0 20px 0 16px; background: {{t.strong}}; color: #FFFFFF; text-decoration: none; display: flex; align-items: center; gap: 10px; font-size: 16px; font-weight: 700; box-shadow: 0 4px 12px rgba(10,132,255,0.35)">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Log weight</a>
+
+  <nav aria-label="Main" style="position: absolute; left: 0; right: 0; bottom: 0; height: 80px; background: {{t.container}}; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); align-items: center; padding-bottom: 8px; box-sizing: border-box">
+    <a href="AndroidActivity.dc.html" style="display: flex; flex-direction: column; align-items: center; gap: 4px; text-decoration: none; color: {{t.onSurfaceVariant}}; font-size: 12px; font-weight: 500"><span style="width: 56px; height: 32px; display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="13" cy="4.5" r="2"/><path d="M9 21l2-6 3 3v3M7 12l2-4 4 1 2 3 3 1"/></svg></span>Activity</a>
+    <a href="AndroidWeight.dc.html" aria-current="page" style="display: flex; flex-direction: column; align-items: center; gap: 4px; text-decoration: none; color: {{t.onSurface}}; font-size: 12px; font-weight: 700"><span style="width: 56px; height: 32px; border-radius: 16px; background: {{t.secondaryContainer}}; color: {{t.onSecondaryContainer}}; display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="3.5" y="3.5" width="17" height="17" rx="4"/><path d="M8.5 9.5a5 5 0 0 1 7 0M12 10l1.3-1.8"/></svg></span>Weight</a>
+    <a href="AndroidFood.dc.html" style="display: flex; flex-direction: column; align-items: center; gap: 4px; text-decoration: none; color: {{t.onSurfaceVariant}}; font-size: 12px; font-weight: 500"><span style="width: 56px; height: 32px; display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 3v5a2 2 0 0 0 4 0V3M7 3v18M17 3c-2 1.5-2.5 4-2.5 7H17v11"/></svg></span>Food</a>
+    <a href="AndroidReview.dc.html" style="display: flex; flex-direction: column; align-items: center; gap: 4px; text-decoration: none; color: {{t.onSurfaceVariant}}; font-size: 12px; font-weight: 500"><span style="width: 56px; height: 32px; display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M21 20H3"/></svg></span>Review</a>
+  </nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"dark":{"editor":"boolean","default":true},"$preview":{"width":412,"height":1300}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { zoom: 'W', open: 0, count: 4, shown: 80.2 };
+    this.data = {
+      W: {
+        avg: [80.9, 80.6, 80.7, 80.3, 80.1, 79.9, 80.0, 79.6, 79.3, 79.1, 78.9, 78.5],
+        spread: [0.4, 0.3, 0.5, 0.4, 0.3, 0.4, 0.5, 0.3, 0.4, 0.3, 0.4, 0.2],
+        labels: ['7 Sep', '14 Sep', '21 Sep', '28 Sep', '5 Oct', '12 Oct', '19 Oct', '26 Oct', '2 Nov', '9 Nov', '16 Nov', '23 Nov'],
+        ends: ['13 Sep', '20 Sep', '27 Sep', '4 Oct', '11 Oct', '18 Oct', '25 Oct', '1 Nov', '8 Nov', '15 Nov', '22 Nov', '29 Nov'],
+        counts: [4, 3, 5, 4, 3, 4, 5, 4, 3, 4, 4, 3]
+      },
+      M: {
+        avg: [84.6, 84.1, 83.7, 83.0, 82.6, 82.9, 82.2, 81.6, 81.1, 80.7, 80.0, 78.9],
+        spread: [0.9, 0.8, 1.0, 0.9, 0.7, 0.8, 0.9, 0.8, 0.7, 0.8, 0.9, 0.6],
+        labels: ['Dec', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov'],
+        years: ['2025', '2026', '2026', '2026', '2026', '2026', '2026', '2026', '2026', '2026', '2026', '2026'],
+        counts: [16, 15, 14, 17, 15, 16, 14, 15, 16, 17, 16, 14]
+      },
+      Y: {
+        avg: [76.2, 77.5, 78.9, 80.4, 82.1, 83.5, 84.0, 85.2, 84.8, 81.7],
+        spread: [1.8, 2.0, 1.9, 2.2, 2.1, 1.8, 1.7, 2.0, 2.4, 3.1],
+        labels: ['2017', '2018', '2019', '2020', '2021', '2022', '2023', '2024', '2025', '2026'],
+        counts: [96, 120, 134, 160, 171, 165, 180, 176, 190, 176]
+      }
+    };
+  }
+  componentDidMount() { this.countTo(this.target(this.state.zoom)); }
+  componentWillUnmount() { if (this.raf) cancelAnimationFrame(this.raf); }
+  target(z) { const a = this.data[z].avg; return a[a.length - 1]; }
+  countTo(to) {
+    if (this.raf) cancelAnimationFrame(this.raf);
+    const reduce = typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reduce || typeof requestAnimationFrame === 'undefined') { this.setState({ shown: to }); return; }
+    const from = this.state.shown, t0 = performance.now();
+    const step = (now) => {
+      const p = Math.min(1, (now - t0) / 900), e = 1 - Math.pow(1 - p, 3);
+      this.setState({ shown: from + (to - from) * e });
+      if (p < 1) this.raf = requestAnimationFrame(step);
+    };
+    this.raf = requestAnimationFrame(step);
+  }
+  setZoom(z) { this.setState({ zoom: z, open: 0, count: z === 'Y' ? 5 : (z === 'M' ? 6 : 4) }); this.countTo(this.target(z)); }
+  chart(z) {
+    const d = this.data[z], n = d.avg.length;
+    const lo = Math.min(...d.avg.map((v, i) => v - d.spread[i])), hi = Math.max(...d.avg.map((v, i) => v + d.spread[i]));
+    const X = (i) => 14 + i * (312 / (n - 1)), Y = (v) => 10 + (hi - v) / (hi - lo) * 140;
+    let line = '', bands = '', down = '', up = '';
+    d.avg.forEach((v, i) => {
+      const x = X(i), y = Y(v);
+      line += (i ? 'L' : 'M') + x.toFixed(1) + ' ' + y.toFixed(1);
+      const y1 = Y(v + d.spread[i]), y2 = Y(v - d.spread[i]);
+      bands += 'M' + (x - 4).toFixed(1) + ' ' + (y1 + 4).toFixed(1) + 'a4 4 0 0 1 8 0V' + (y2 - 4).toFixed(1) + 'a4 4 0 0 1 -8 0Z';
+      const dot = 'M' + (x - 6).toFixed(1) + ' ' + y.toFixed(1) + 'a6 6 0 1 0 12 0a6 6 0 1 0 -12 0';
+      if (i > 0 && v > d.avg[i - 1]) up += dot; else down += dot;
+    });
+    const grid = [0.25, 0.5, 0.75].map((f) => 'M0 ' + (10 + f * 140).toFixed(1) + 'H340').join('');
+    return { line, bands, down, up, grid };
+  }
+  renderVals() {
+    const dark = this.props.dark ?? true;
+    const t = dark ? {
+      surface: '#111318', container: '#1D2024', containerHigh: '#282A2F', onSurface: '#E2E2E9', onSurfaceVariant: '#C4C6D0', outline: '#8E9099', outlineVariant: '#44474E',
+      primaryContainer: '#284777', onPrimaryContainer: '#D6E3FF', secondaryContainer: '#3E4759', onSecondaryContainer: '#DAE2F9',
+      hero: '#13263F', txt: '#409CFF', badge: 'rgba(10,132,255,0.26)', strong: '#0A6FE0', grid: 'rgba(255,255,255,0.1)', band: 'rgba(10,132,255,0.28)',
+      good: '#30D158', goodBg: 'rgba(52,199,89,0.2)', goodDot: '#30D158', goodStrong: '#1E8E3E', up: '#FFB4AB', upBg: 'rgba(255,59,48,0.18)', upDot: '#FF453A'
+    } : {
+      surface: '#F9F9FF', container: '#EDEDF4', containerHigh: '#E2E2E9', onSurface: '#191C20', onSurfaceVariant: '#44474E', outline: '#74777F', outlineVariant: '#C4C6D0',
+      primaryContainer: '#D6E3FF', onPrimaryContainer: '#001B3E', secondaryContainer: '#DAE2F9', onSecondaryContainer: '#131C2B',
+      hero: '#DDEBFF', txt: '#0062CC', badge: 'rgba(10,132,255,0.18)', strong: '#0062CC', grid: 'rgba(0,0,0,0.08)', band: 'rgba(10,132,255,0.2)',
+      good: '#1E7B34', goodBg: 'rgba(52,199,89,0.16)', goodDot: '#1E9E45', goodStrong: '#1E7B34', up: '#B3261E', upBg: 'rgba(255,59,48,0.12)', upDot: '#E5342A'
+    };
+    const z = this.state.zoom, d = this.data[z], n = d.avg.length;
+    const sign = (x) => (x > 0 ? '+' : '−') + Math.abs(x).toFixed(1);
+    const info = {
+      W: { heroLabel: "This week's average", deltaUnit: 'vs last week', streak: '5 weeks down in a row', axisStart: 'Week of 7 Sep', axisEnd: 'This week',
+        jump: 'Nov 2026', listNote: 'Older weeks load as you scroll. For earlier years, switch to Months or Years.', chartAria: 'Weekly average weight for 12 weeks, falling from 80.9 to 78.5 kg' },
+      M: { heroLabel: "This month's average", deltaUnit: 'vs October', streak: 'Down 5.7 kg in 12 months', axisStart: 'Dec 2025', axisEnd: 'Nov 2026',
+        jump: '2026', listNote: 'Pick a year to jump; months load as you scroll.', chartAria: 'Monthly average weight for 12 months, falling from 84.6 to 78.9 kg' },
+      Y: { heroLabel: '2026 average', deltaUnit: 'vs 2025', streak: 'Down 3.5 kg from the 2024 peak', axisStart: '2017', axisEnd: '2026',
+        jump: 'All years', listNote: 'Tap a year to see its months.', chartAria: 'Yearly average weight from 2017 to 2026, peaking at 85.2 kg in 2024' }
+    }[z];
+    const last = d.avg[n - 1], prev = d.avg[n - 2];
+    info.delta = sign(last - prev);
+    info.badgeAria = (last < prev ? 'Down ' : 'Up ') + Math.abs(last - prev).toFixed(1) + ' kilograms ' + info.deltaUnit;
+    const zoomBtns = [['W', 'Weeks', '20px 6px 6px 20px'], ['M', 'Months', '6px'], ['Y', 'Years', '6px 20px 20px 6px']].map(([k, label, radius]) => ({
+      label, radius, on: z === k, pick: () => this.setZoom(k),
+      bg: z === k ? t.strong : t.surface, fg: z === k ? '#FFFFFF' : t.onSurface, weight: z === k ? 700 : 500
+    }));
+    const order = Array.from({ length: n }, (_, i) => n - 1 - i).slice(0, this.state.count);
+    const rows = order.map((i, k) => {
+      const diff = i > 0 ? d.avg[i] - d.avg[i - 1] : 0;
+      const down = diff < 0;
+      let top, sub, meta;
+      if (z === 'W') { const [dd, mm] = d.labels[i].split(' '); top = dd; sub = mm; meta = d.labels[i] + ' – ' + d.ends[i] + ' · ' + d.counts[i] + ' weigh-ins'; }
+      else if (z === 'M') { top = d.labels[i]; sub = d.years[i]; meta = d.counts[i] + ' weigh-ins'; }
+      else { top = d.labels[i]; sub = ''; meta = d.counts[i] + ' weigh-ins · range ' + (d.avg[i] - d.spread[i]).toFixed(1) + '–' + (d.avg[i] + d.spread[i]).toFixed(1); }
+      const open = this.state.open === k;
+      const entries = z === 'W' && i === n - 1 ? [
+        { day: 'Thu, 26 Nov', kg: '78.4', photo: true }, { day: 'Tue, 24 Nov', kg: '78.7', photo: false }, { day: 'Mon, 23 Nov', kg: '78.5', photo: false }
+      ] : (z === 'W' ? [
+        { day: 'Sat', kg: (d.avg[i] + 0.1).toFixed(1), photo: true }, { day: 'Wed', kg: (d.avg[i] - 0.1).toFixed(1), photo: false }, { day: 'Mon', kg: d.avg[i].toFixed(1), photo: false }
+      ] : (z === 'M' ? [
+        { day: 'Week 4', kg: (d.avg[i] - 0.3).toFixed(1) + ' avg', photo: false }, { day: 'Week 3', kg: (d.avg[i] - 0.1).toFixed(1) + ' avg', photo: false },
+        { day: 'Week 2', kg: (d.avg[i] + 0.1).toFixed(1) + ' avg', photo: true }, { day: 'Week 1', kg: (d.avg[i] + 0.3).toFixed(1) + ' avg', photo: false }
+      ] : [
+        { day: 'Best month', kg: (d.avg[i] - d.spread[i]).toFixed(1), photo: false }, { day: 'Highest month', kg: (d.avg[i] + d.spread[i]).toFixed(1), photo: false }
+      ]));
+      return {
+        top, sub, meta, avg: d.avg[i].toFixed(1), open, rot: open ? 180 : 0, entries,
+        delta: i > 0 ? sign(diff) : '—', dBg: i === 0 ? t.container : (down ? t.goodBg : t.upBg), dFg: i === 0 ? t.onSurfaceVariant : (down ? t.good : t.up),
+        bg: open ? t.containerHigh : t.container, delay: (k * 60) + 'ms',
+        toggle: () => this.setState({ open: open ? -1 : k })
+      };
+    });
+    let cookie = '';
+    for (let i = 0; i <= 360; i += 3) {
+      const a = i * Math.PI / 180, r = 42 + 3.5 * Math.cos(a * 9);
+      cookie += (i === 0 ? 'M' : 'L') + (46 + r * Math.cos(a)).toFixed(1) + ' ' + (46 + r * Math.sin(a)).toFixed(1);
+    }
+    const left = n - this.state.count;
+    return {
+      t, z: info, zoomBtns, rows, cookie: cookie + 'Z',
+      shown: this.state.shown.toFixed(1),
+      isW: z === 'W', isM: z === 'M', isY: z === 'Y',
+      chartW: this.chart('W'), chartM: this.chart('M'), chartY: this.chart('Y'),
+      canMore: left > 0, moreLabel: 'Show ' + Math.min(4, left) + ' more',
+      more: () => this.setState({ count: Math.min(n, this.state.count + 4) })
+    };
+  }
+}
+</script>
+</body>
+</html>

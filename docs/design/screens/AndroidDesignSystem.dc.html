@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Android design system</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Flex:opsz,wght@8..144,400..800&display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div style="width: 1280px; height: 1600px; box-sizing: border-box; padding: 56px; background: #F9F9FF; font-family: 'Roboto Flex', Roboto, system-ui, sans-serif; color: #191C20; display: flex; flex-direction: column; gap: 24px">
+  <div>
+    <div style="font-size: 14px; font-weight: 600; color: #44474E; letter-spacing: 0.1px">Workout Plan Android · Material 3 Expressive</div>
+    <h1 style="margin: 6px 0 0; font-size: 45px; line-height: 52px; font-weight: 600">Design system</h1>
+    <p style="margin: 8px 0 0; font-size: 16px; line-height: 24px; color: #44474E; max-width: 840px">Material colour roles drive every surface, so dynamic colour from the wallpaper can take over on Android 12 and later. Activity data comes from WHOOP. Metric colours match iOS, so a trainer sees one colour per metric on every platform.</p>
+  </div>
+
+  <div style="display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 24px">
+    <section style="grid-column: span 7; background: #EDEDF4; border-radius: 28px; padding: 24px">
+      <h2 style="margin: 0 0 4px; font-size: 22px; line-height: 28px; font-weight: 600">Colour roles</h2>
+      <p style="margin: 0 0 16px; font-size: 14px; color: #44474E">Fallback scheme from a blue seed, used when dynamic colour is off</p>
+      <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px">
+        <div style="background: #FFFFFF; border-radius: 20px; padding: 12px; display: flex; flex-direction: column; gap: 6px">
+          <div style="font-size: 14px; font-weight: 600">Light</div>
+          <sc-for list="{{light}}" as="s" hint-placeholder-count="10">
+            <div style="display: flex; align-items: center; gap: 8px; font-size: 12px"><span style="width: 22px; height: 22px; border-radius: 6px; background: {{s.hex}}; border: 1px solid rgba(0,0,0,0.12)"></span><span style="flex: 1">{{s.name}}</span><span style="font-family: ui-monospace, Menlo, monospace; color: #44474E">{{s.hex}}</span></div>
+          </sc-for>
+        </div>
+        <div style="background: #111318; color: #E2E2E9; border-radius: 20px; padding: 12px; display: flex; flex-direction: column; gap: 6px">
+          <div style="font-size: 14px; font-weight: 600">Dark</div>
+          <sc-for list="{{dark}}" as="s" hint-placeholder-count="10">
+            <div style="display: flex; align-items: center; gap: 8px; font-size: 12px"><span style="width: 22px; height: 22px; border-radius: 6px; background: {{s.hex}}; border: 1px solid rgba(255,255,255,0.2)"></span><span style="flex: 1">{{s.name}}</span><span style="font-family: ui-monospace, Menlo, monospace; color: #C4C6D0">{{s.hex}}</span></div>
+          </sc-for>
+        </div>
+      </div>
+    </section>
+
+    <section style="grid-column: span 5; background: #EDEDF4; border-radius: 28px; padding: 24px">
+      <h2 style="margin: 0 0 4px; font-size: 22px; line-height: 28px; font-weight: 600">Metric colours</h2>
+      <p style="margin: 0 0 16px; font-size: 14px; color: #44474E">Shared with iOS. Graphic colour for charts; text colour for small text</p>
+      <div style="display: flex; flex-direction: column; gap: 8px">
+        <sc-for list="{{metrics}}" as="m" hint-placeholder-count="8">
+          <div style="display: grid; grid-template-columns: 28px 1fr 84px 84px; align-items: center; gap: 10px; font-size: 13px">
+            <span style="width: 28px; height: 28px; border-radius: 14px; background: {{m.ring}}"></span>
+            <span style="font-weight: 600; color: {{m.text}}">{{m.name}}</span>
+            <span style="font-family: ui-monospace, Menlo, monospace; color: #44474E">{{m.ring}}</span>
+            <span style="font-family: ui-monospace, Menlo, monospace; color: #44474E">{{m.text}}</span>
+          </div>
+        </sc-for>
+      </div>
+    </section>
+
+    <section style="grid-column: span 7; background: #EDEDF4; border-radius: 28px; padding: 24px">
+      <h2 style="margin: 0 0 4px; font-size: 22px; line-height: 28px; font-weight: 600">Type · Roboto Flex</h2>
+      <p style="margin: 0 0 12px; font-size: 14px; color: #44474E">The only text styles on Android screens. One hero number per screen at most; Activity uses its dials instead</p>
+      <sc-for list="{{type}}" as="t" hint-placeholder-count="9">
+        <div style="display: grid; grid-template-columns: 170px 120px 1fr; align-items: baseline; padding: 7px 0; border-bottom: 1px solid #C4C6D0">
+          <span style="font-size: 13px; color: #191C20">{{t.name}}</span>
+          <span style="font-size: 12px; color: #44474E; font-family: ui-monospace, Menlo, monospace">{{t.spec}}</span>
+          <span style="font-size: {{t.size}}px; font-weight: {{t.weight}}; line-height: 1.2">{{t.sample}}</span>
+        </div>
+      </sc-for>
+    </section>
+
+    <section style="grid-column: span 5; background: #EDEDF4; border-radius: 28px; padding: 24px; display: flex; flex-direction: column; gap: 18px">
+      <div>
+        <h2 style="margin: 0 0 12px; font-size: 22px; line-height: 28px; font-weight: 600">Shape</h2>
+        <div style="display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap">
+          <sc-for list="{{shapes}}" as="r" hint-placeholder-count="6">
+            <div style="text-align: center; font-size: 11px; color: #44474E"><div style="width: 56px; height: 56px; background: #D6E3FF; border-radius: {{r.v}}; margin-bottom: 6px"></div>{{r.label}}</div>
+          </sc-for>
+        </div>
+      </div>
+      <div>
+        <h2 style="margin: 0 0 8px; font-size: 22px; line-height: 28px; font-weight: 600">Rules</h2>
+        <ul style="margin: 0; padding-left: 18px; font-size: 14px; line-height: 21px; color: #44474E">
+          <li>Navigation bar on the four main screens; detail screens get a top app bar and, where there are actions, a floating toolbar.</li>
+          <li>One primary action per screen as an extended FAB.</li>
+          <li>Progress is shown with wavy indicators; charts use metric colours only.</li>
+          <li>Spacing on a 4 dp grid; 16 dp screen margin; touch targets 48 dp.</li>
+          <li>Numbers animate in: values count up, charts draw left to right; both stay still when the phone asks for reduced motion.</li>
+        </ul>
+      </div>
+    </section>
+
+    <section style="grid-column: span 12; background: #EDEDF4; border-radius: 28px; padding: 24px">
+      <h2 style="margin: 0 0 16px; font-size: 22px; line-height: 28px; font-weight: 600">Components</h2>
+      <div style="display: flex; gap: 32px; align-items: center; flex-wrap: wrap">
+        <div style="text-align: center; font-size: 12px; color: #44474E">
+          <svg width="112" height="112" viewBox="0 0 112 112" role="img" aria-label="Wavy circular progress indicator at 72 percent">
+            <circle cx="56" cy="56" r="44" fill="none" stroke="#FFE0B8" stroke-width="8"/>
+            <polyline fill="none" stroke="#FF9500" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" points="{{wave}}"/>
+          </svg>
+          <div>Wavy progress</div>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 12px; width: 240px">
+          <div style="display: flex; gap: 2px">
+            <button style="flex: 1; height: 40px; border: none; border-radius: 20px 6px 6px 20px; background: #415F91; color: #FFFFFF; font: 600 14px 'Roboto Flex', Roboto, sans-serif">Week</button>
+            <button style="flex: 1; height: 40px; border: none; border-radius: 6px; background: #DAE2F9; color: #131C2B; font: 500 14px 'Roboto Flex', Roboto, sans-serif">Month</button>
+            <button style="flex: 1; height: 40px; border: none; border-radius: 6px 20px 20px 6px; background: #DAE2F9; color: #131C2B; font: 500 14px 'Roboto Flex', Roboto, sans-serif">Year</button>
+          </div>
+          <div style="display: flex; gap: 8px">
+            <button aria-pressed="true" style="height: 32px; border: none; border-radius: 8px; padding: 0 12px 0 8px; background: #DAE2F9; color: #131C2B; font: 500 14px 'Roboto Flex', Roboto, sans-serif; display: flex; align-items: center; gap: 6px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7"/></svg>Lunch</button>
+            <button style="height: 32px; border: 1px solid #74777F; border-radius: 8px; padding: 0 12px; background: transparent; color: #44474E; font: 500 14px 'Roboto Flex', Roboto, sans-serif">Dinner</button>
+          </div>
+          <span style="font-size: 12px; color: #44474E">Connected button group · filter chips</span>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 12px; align-items: flex-start">
+          <button style="height: 56px; border: none; border-radius: 16px; padding: 0 20px 0 16px; background: #D6E3FF; color: #001B3E; font: 600 16px 'Roboto Flex', Roboto, sans-serif; display: flex; align-items: center; gap: 10px; box-shadow: 0 3px 6px rgba(0,0,0,0.15)"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Log weight</button>
+          <button role="switch" aria-checked="true" aria-label="Example switch" style="width: 52px; height: 32px; border-radius: 16px; border: none; padding: 4px; background: #415F91; display: flex; justify-content: flex-end; align-items: center"><span style="width: 24px; height: 24px; border-radius: 12px; background: #FFFFFF; display: flex; align-items: center; justify-content: center; color: #415F91"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7"/></svg></span></button>
+          <span style="font-size: 12px; color: #44474E">Extended FAB · switch</span>
+        </div>
+        <div style="width: 412px; height: 80px; background: #EDEDF4; border: 1px solid #C4C6D0; border-radius: 16px; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); align-items: center">
+          <sc-for list="{{nav}}" as="n" hint-placeholder-count="4">
+            <div style="display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 12px; font-weight: {{n.weight}}; color: {{n.color}}">
+              <span style="width: 56px; height: 32px; border-radius: 16px; background: {{n.pill}}"></span>{{n.label}}
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":1600}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const pts = [];
+    for (let i = 0; i <= 260; i++) {
+      const a = (-90 + i) * Math.PI / 180;
+      const r = 44 + 2.5 * Math.sin(i * Math.PI / 180 * 14);
+      pts.push((56 + r * Math.cos(a)).toFixed(1) + ',' + (56 + r * Math.sin(a)).toFixed(1));
+    }
+    return {
+      wave: pts.join(' '),
+      light: [
+        { name: 'Primary', hex: '#415F91' }, { name: 'On primary', hex: '#FFFFFF' }, { name: 'Primary container', hex: '#D6E3FF' },
+        { name: 'On primary container', hex: '#001B3E' }, { name: 'Secondary container', hex: '#DAE2F9' }, { name: 'Surface', hex: '#F9F9FF' },
+        { name: 'Surface container', hex: '#EDEDF4' }, { name: 'Surface container high', hex: '#E7E8EE' }, { name: 'On surface', hex: '#191C20' },
+        { name: 'On surface variant', hex: '#44474E' }, { name: 'Outline variant', hex: '#C4C6D0' }
+      ],
+      dark: [
+        { name: 'Primary', hex: '#AAC7FF' }, { name: 'On primary', hex: '#0A305F' }, { name: 'Primary container', hex: '#284777' },
+        { name: 'On primary container', hex: '#D6E3FF' }, { name: 'Secondary container', hex: '#3E4759' }, { name: 'Surface', hex: '#111318' },
+        { name: 'Surface container', hex: '#1D2024' }, { name: 'Surface container high', hex: '#282A2F' }, { name: 'On surface', hex: '#E2E2E9' },
+        { name: 'On surface variant', hex: '#C4C6D0' }, { name: 'Outline variant', hex: '#44474E' }
+      ],
+      metrics: [
+        { name: 'Steps', ring: '#FF9500', text: '#B25E00' }, { name: 'Strain', ring: '#FA114F', text: '#C8003C' },
+        { name: 'Recovery', ring: '#34C759', text: '#1E7B34' }, { name: 'Sleep', ring: '#8E5CF7', text: '#6A3BD1' },
+        { name: 'Heart', ring: '#FF3B30', text: '#C9201A' },
+        { name: 'Weight', ring: '#0A84FF', text: '#0062CC' }, { name: 'Food', ring: '#FFB000', text: '#946200' }
+      ],
+      type: [
+        { name: 'Screen title', spec: '36/44 · 600', size: 36, weight: 600, sample: 'Good day, Vernon' },
+        { name: 'Hero number', spec: '45/52 · 800', size: 45, weight: 800, sample: '78.5 kg' },
+        { name: 'Value', spec: '28/36 · 800', size: 28, weight: 800, sample: '7 h 40' },
+        { name: 'Section title', spec: '22/28 · 600', size: 22, weight: 600, sample: 'Highlights' },
+        { name: 'Small value', spec: '22/28 · 800', size: 22, weight: 800, sample: '7,235' },
+        { name: 'Card title', spec: '16/24 · 600', size: 16, weight: 600, sample: 'Sleep' },
+        { name: 'Metric label', spec: '14/20 · 600', size: 14, weight: 600, sample: 'Steps' },
+        { name: 'Button, chip', spec: '14/20 · 700', size: 14, weight: 700, sample: 'Log weight' },
+        { name: 'Body', spec: '14/20 · 400', size: 14, weight: 400, sample: 'Last: 78.7 kg on Tue, 24 Nov' },
+        { name: 'Supporting', spec: '13/18 · 400', size: 13, weight: 400, sample: '11:25 PM – 7:05 AM' },
+        { name: 'Caption', spec: '12/16 · 500', size: 12, weight: 500, sample: 'From WHOOP · synced 8:12 AM' }
+      ],
+      shapes: [
+        { v: '8px', label: 'Small 8' }, { v: '12px', label: 'Medium 12' }, { v: '16px', label: 'Large 16' },
+        { v: '28px', label: 'XL 28' }, { v: '32px', label: 'XL+ 32' }, { v: '999px', label: 'Full' }
+      ],
+      nav: [
+        { label: 'Activity', pill: '#DAE2F9', color: '#191C20', weight: 700 },
+        { label: 'Weight', pill: 'transparent', color: '#44474E', weight: 500 },
+        { label: 'Food', pill: 'transparent', color: '#44474E', weight: 500 },
+        { label: 'Review', pill: 'transparent', color: '#44474E', weight: 500 }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

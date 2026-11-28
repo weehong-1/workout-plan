@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Android Sign in</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Flex:opsz,wght@8..144,400..800&display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+@media (prefers-reduced-motion: no-preference) {
+  .lg-float{transform-box:fill-box;transform-origin:center;animation:lg-float 5s ease-in-out infinite}
+  .lg-d1{animation-delay:-1.2s}.lg-d2{animation-delay:-2.4s}.lg-d3{animation-delay:-3.6s}.lg-d4{animation-delay:-0.6s}
+  .lg-spin{transform-box:fill-box;transform-origin:center;animation:lg-spin 40s linear infinite}
+  .lg-rise{opacity:0;transform:translateY(16px);animation:lg-rise .6s cubic-bezier(.2,.8,.2,1) forwards}
+  .lg-r1{animation-delay:.1s}.lg-r2{animation-delay:.2s}.lg-r3{animation-delay:.3s}
+}
+@keyframes lg-float{0%,100%{transform:translateY(0) rotate(0deg)}50%{transform:translateY(-10px) rotate(6deg)}}
+@keyframes lg-spin{to{transform:rotate(360deg)}}
+@keyframes lg-rise{to{opacity:1;transform:none}}
+</style>
+</helmet>
+<div style="width: 412px; height: 915px; position: relative; overflow: hidden; background: {{t.surface}}; font-family: 'Roboto Flex', Roboto, system-ui, sans-serif; color: {{t.onSurface}}; box-sizing: border-box">
+
+  <svg width="412" height="440" viewBox="0 0 412 440" aria-hidden="true" style="display: block; margin-top: 8px">
+    <g class="lg-spin"><path d="{{big}}" fill="{{t.primaryContainer}}"/></g>
+    <path d="{{wave}}" fill="none" stroke="{{t.onPrimaryContainer}}" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="262" cy="212" r="13" fill="#34C759"/>
+
+    <g class="lg-float"><circle cx="76" cy="96" r="38" fill="#FF9500"/>
+      <g transform="translate(60 80) scale(1.33)" fill="none" stroke="#FFFFFF" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="13" cy="4.5" r="2"/><path d="M9 21l2-6 3 3v3M7 12l2-4 4 1 2 3 3 1"/></g></g>
+    <g class="lg-float lg-d1"><rect x="292" y="70" width="96" height="48" rx="24" fill="#FA114F" transform="rotate(-14 340 94)"/>
+      <path d="M318 98l8-10 7 7 9-13 10 9" fill="none" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" transform="rotate(-14 340 94)"/></g>
+    <g class="lg-float lg-d2"><path d="{{flower}}" fill="#8E5CF7"/>
+      <path d="M346 318a17 17 0 1 0 16 22 13 13 0 0 1-16-22z" fill="#FFFFFF"/></g>
+    <g class="lg-float lg-d3"><rect x="40" y="300" width="80" height="80" rx="26" fill="#0A84FF" transform="rotate(-12 80 340)"/>
+      <g transform="rotate(-12 80 340) translate(62 322) scale(1.5)" fill="none" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round"><rect x="3.5" y="3.5" width="17" height="17" rx="4"/><path d="M8.5 9.5a5 5 0 0 1 7 0M12 10l1.3-1.8"/></g></g>
+    <g class="lg-float lg-d4"><circle cx="208" cy="400" r="22" fill="#FFB000"/>
+      <g transform="translate(196 388)" fill="none" stroke="#3D2800" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3v5a2 2 0 0 0 4 0V3M7 3v18M17 3c-2 1.5-2.5 4-2.5 7H17v11"/></g></g>
+  </svg>
+
+  <div style="padding: 0 24px">
+    <h1 class="lg-rise" style="margin: 8px 0 0; font-size: 36px; line-height: 44px; font-weight: 600">Activity, weight and food in one place</h1>
+    <p class="lg-rise lg-r1" style="margin: 12px 0 0; font-size: 14px; line-height: 20px; color: {{t.onSurfaceVariant}}">Activity comes from your WHOOP. Weight and food photos come from you.</p>
+
+    <div class="lg-rise lg-r2" style="margin-top: 28px; display: flex; flex-direction: column; gap: 10px">
+      <a href="AndroidActivity.dc.html" style="height: 64px; border-radius: 32px; background: {{t.primary}}; color: {{t.onPrimary}}; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 10px; font-size: 16px; font-weight: 700">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8.5" r="4"/><path d="M4.5 20a7.5 7.5 0 0 1 15 0"/></svg>Continue with Google</a>
+      <a href="AndroidActivity.dc.html" style="height: 64px; border-radius: 32px; background: {{t.secondaryContainer}}; color: {{t.onSecondaryContainer}}; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 10px; font-size: 16px; font-weight: 700">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="8" r="4.5"/><path d="M11 11.5l9 9M16.5 17l2-2M14 14.5l2-2"/></svg>Sign in with a passkey</a>
+    </div>
+
+    <div class="lg-rise lg-r3" style="margin-top: 20px; display: flex; gap: 10px; align-items: flex-start; font-size: 13px; line-height: 18px; color: {{t.onSurfaceVariant}}">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="{{t.primary}}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0"><path d="M12 3l8 3v6c0 4.5-3.4 8-8 9-4.6-1-8-4.5-8-9V6z"/></svg>
+      <span>Private by default. Nothing leaves your account until you create a trainer link.</span>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"dark":{"editor":"boolean","default":true},"$preview":{"width":412,"height":915}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const dark = this.props.dark ?? true;
+    const t = dark ? {
+      surface: '#111318', onSurface: '#E2E2E9', onSurfaceVariant: '#C4C6D0',
+      primary: '#AAC7FF', onPrimary: '#0A305F', primaryContainer: '#284777', onPrimaryContainer: '#D6E3FF',
+      secondaryContainer: '#3E4759', onSecondaryContainer: '#DAE2F9'
+    } : {
+      surface: '#F9F9FF', onSurface: '#191C20', onSurfaceVariant: '#44474E',
+      primary: '#415F91', onPrimary: '#FFFFFF', primaryContainer: '#D6E3FF', onPrimaryContainer: '#001B3E',
+      secondaryContainer: '#DAE2F9', onSecondaryContainer: '#131C2B'
+    };
+    const shape = (cx, cy, r, amp, lobes) => {
+      let d = '';
+      for (let i = 0; i <= 360; i += 2) {
+        const a = i * Math.PI / 180;
+        const rr = r + amp * Math.cos(a * lobes);
+        d += (i === 0 ? 'M' : 'L') + (cx + rr * Math.cos(a)).toFixed(1) + ' ' + (cy + rr * Math.sin(a)).toFixed(1);
+      }
+      return d + 'Z';
+    };
+    let wave = '';
+    for (let x = 0; x <= 112; x += 4) {
+      const y = 180 + x * 0.3 + 10 * Math.sin(x / 9);
+      wave += (x === 0 ? 'M' : 'L') + (150 + x).toFixed(1) + ' ' + y.toFixed(1);
+    }
+    return { t, big: shape(206, 210, 118, 9, 12), flower: shape(352, 330, 40, 7, 6), wave };
+  }
+}
+</script>
+</body>
+</html>

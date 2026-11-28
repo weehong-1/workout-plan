@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Android Log weigh-in</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Flex:opsz,wght@8..144,400..800&display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div style="width: 412px; height: 915px; position: relative; overflow: hidden; background: {{t.scrimBg}}; font-family: 'Roboto Flex', Roboto, system-ui, sans-serif; color: {{t.onSurface}}; box-sizing: border-box">
+  <div style="position: absolute; left: 0; right: 0; bottom: 0; top: 96px; background: {{t.sheet}}; border-radius: 32px 32px 0 0; padding: 0 20px; box-sizing: border-box">
+    <div style="width: 32px; height: 4px; border-radius: 2px; background: {{t.onSurfaceVariant}}; opacity: 0.4; margin: 20px auto 16px"></div>
+    <h1 style="margin: 0 4px; font-size: 22px; line-height: 28px; font-weight: 600">Log weigh-in</h1>
+
+    <section style="margin-top: 16px; background: {{t.hero}}; border-radius: 32px; padding: 18px 16px">
+      <label for="aw" style="display: block; text-align: center; font-size: 14px; font-weight: 600; color: {{t.txt}}">Weight</label>
+      <div style="margin-top: 4px; display: flex; align-items: center; justify-content: space-between">
+        <button onClick="{{minus}}" aria-label="Decrease by 0.1" style="width: 56px; height: 56px; border-radius: 28px; border: none; background: {{t.badge}}; color: {{t.txt}}; display: flex; align-items: center; justify-content: center"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" aria-hidden="true"><path d="M5 12h14"/></svg></button>
+        <div style="display: flex; align-items: baseline; gap: 6px">
+          <span id="aw" role="status" style="font-size: 45px; line-height: 52px; font-weight: 800; letter-spacing: -1px">{{kg}}</span>
+          <span style="font-size: 22px; font-weight: 600; color: {{t.onSurfaceVariant}}">kg</span>
+        </div>
+        <button onClick="{{plus}}" aria-label="Increase by 0.1" style="width: 56px; height: 56px; border-radius: 28px; border: none; background: {{t.badge}}; color: {{t.txt}}; display: flex; align-items: center; justify-content: center"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
+      </div>
+      <div style="margin-top: 4px; text-align: center; font-size: 13px; color: {{t.onSurfaceVariant}}">Last: 78.7 kg on Tue, 24 Nov · tap the number to type</div>
+      <div style="margin: 14px auto 0; display: flex; gap: 2px; width: 180px">
+        <button aria-pressed="true" style="flex: 1; height: 40px; border: none; border-radius: 20px 6px 6px 20px; background: {{t.strong}}; color: #FFFFFF; font: 700 14px 'Roboto Flex', Roboto, sans-serif">kg</button>
+        <button style="flex: 1; height: 40px; border: none; border-radius: 6px 20px 20px 6px; background: {{t.sheet}}; color: {{t.onSurface}}; font: 500 14px 'Roboto Flex', Roboto, sans-serif">lb</button>
+      </div>
+    </section>
+
+    <div style="margin-top: 12px; display: flex; flex-wrap: wrap; align-items: center; gap: 8px">
+      <button style="height: 40px; padding: 0 16px 0 12px; border-radius: 12px; border: 1px solid {{t.outline}}; background: transparent; color: {{t.onSurface}}; display: flex; align-items: center; gap: 8px; font: 600 14px 'Roboto Flex', Roboto, sans-serif"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="{{t.txt}}" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>Today, 26 Nov</button>
+      <span style="font-size: 12px; line-height: 16px; color: {{t.onSurfaceVariant}}; flex: 1 1 160px">One entry per day; saving a date that has one updates it.</span>
+    </div>
+
+    <h2 style="margin: 20px 4px 10px; font-size: 16px; line-height: 24px; font-weight: 600">Progress photos <span style="font-weight: 500; color: {{t.onSurfaceVariant}}">· optional</span></h2>
+    <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px">
+      <div aria-label="Progress photo" style="aspect-ratio: 3 / 4; border-radius: 24px; background: {{t.tile}}; display: flex; align-items: center; justify-content: center; color: {{t.onSurfaceVariant}}"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-8 8"/></svg></div>
+      <button style="aspect-ratio: 3 / 4; border-radius: 24px; border: none; background: {{t.strong}}; color: #FFFFFF; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; font: 700 14px 'Roboto Flex', Roboto, sans-serif"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l1.5-2h7L17 8h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>Camera</button>
+      <button style="aspect-ratio: 3 / 4; border-radius: 24px; border: none; background: {{t.badge}}; color: {{t.txt}}; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; font: 700 14px 'Roboto Flex', Roboto, sans-serif"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-8 8"/></svg>Gallery</button>
+    </div>
+    <div style="margin: 8px 4px 0; font-size: 12px; line-height: 16px; color: {{t.onSurfaceVariant}}">Up to 6 photos. Photos are resized and location data is removed.</div>
+
+    <div style="position: absolute; left: 20px; right: 20px; bottom: 28px; display: flex; gap: 8px">
+      <a href="AndroidWeight.dc.html" style="flex: 1; height: 56px; border-radius: 28px; display: flex; align-items: center; justify-content: center; text-decoration: none; background: {{t.tile}}; color: {{t.onSurface}}; font-size: 16px; font-weight: 600">Cancel</a>
+      <a href="AndroidWeight.dc.html" style="flex: 2; height: 56px; border-radius: 28px; display: flex; align-items: center; justify-content: center; gap: 8px; text-decoration: none; background: {{t.strong}}; color: #FFFFFF; font-size: 16px; font-weight: 700"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7"/></svg>Save</a>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"dark":{"editor":"boolean","default":true},"$preview":{"width":412,"height":915}}'>
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { kg: 78.4 }; }
+  renderVals() {
+    const dark = this.props.dark ?? true;
+    const t = dark ? {
+      scrimBg: '#08090C', sheet: '#191C20', tile: '#282A2F', onSurface: '#E2E2E9', onSurfaceVariant: '#C4C6D0', outline: '#8E9099',
+      hero: '#13263F', txt: '#409CFF', badge: 'rgba(10,132,255,0.26)', strong: '#0A6FE0'
+    } : {
+      scrimBg: '#7A7B80', sheet: '#F3F3FA', tile: '#E2E2E9', onSurface: '#191C20', onSurfaceVariant: '#44474E', outline: '#74777F',
+      hero: '#DDEBFF', txt: '#0062CC', badge: 'rgba(10,132,255,0.18)', strong: '#0062CC'
+    };
+    const kg = this.state.kg;
+    return {
+      t, kg: kg.toFixed(1),
+      minus: () => this.setState({ kg: Math.round((kg - 0.1) * 10) / 10 }),
+      plus: () => this.setState({ kg: Math.round((kg + 0.1) * 10) / 10 })
+    };
+  }
+}
+</script>
+</body>
+</html>

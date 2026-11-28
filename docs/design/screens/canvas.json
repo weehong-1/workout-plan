@@ -1,0 +1,266 @@
+{
+ "v": 3,
+ "createdOnFiles": {
+  "v": 1,
+  "at": "2026-11-26T04:46:00Z"
+ },
+ "title": "Slopevo Android: Screens",
+ "launch": {
+  "view": "canvas"
+ },
+ "pages": [
+  {
+   "id": "android",
+   "name": "Android"
+  },
+  {
+   "id": "logo",
+   "name": "Logo"
+  }
+ ],
+ "boards": {
+  "AndroidDesignSystem.dc.html": {
+   "x": 0,
+   "y": 0,
+   "w": 1280,
+   "h": 1600,
+   "title": "Android design system",
+   "page": "android"
+  },
+  "AndroidActivity.dc.html": {
+   "x": 1360,
+   "y": 0,
+   "w": 412,
+   "h": 1320,
+   "title": "Activity",
+   "page": "android",
+   "is_interactive": true
+  },
+  "AndroidActivityLight.dc.html": {
+   "x": 1360,
+   "y": 2140,
+   "w": 412,
+   "h": 1320,
+   "title": "Activity \u00b7 light",
+   "page": "android",
+   "is_interactive": true
+  },
+  "AndroidStrain.dc.html": {
+   "x": 1852,
+   "y": 0,
+   "w": 412,
+   "h": 1070,
+   "title": "Strain detail",
+   "page": "android",
+   "is_interactive": true
+  },
+  "AndroidStrainLight.dc.html": {
+   "x": 1852,
+   "y": 2140,
+   "w": 412,
+   "h": 1070,
+   "title": "Strain detail \u00b7 light",
+   "page": "android",
+   "is_interactive": true
+  },
+  "AndroidWeight.dc.html": {
+   "x": 2344,
+   "y": 0,
+   "w": 412,
+   "h": 1300,
+   "title": "Weight",
+   "page": "android",
+   "is_interactive": true
+  },
+  "AndroidWeightLight.dc.html": {
+   "x": 2344,
+   "y": 2140,
+   "w": 412,
+   "h": 1300,
+   "title": "Weight \u00b7 light",
+   "page": "android",
+   "is_interactive": true
+  },
+  "AndroidWeighIn.dc.html": {
+   "x": 2836,
+   "y": 0,
+   "w": 412,
+   "h": 915,
+   "title": "Log weigh-in",
+   "page": "android",
+   "is_interactive": true
+  },
+  "AndroidWeighInLight.dc.html": {
+   "x": 2836,
+   "y": 2140,
+   "w": 412,
+   "h": 915,
+   "title": "Log weigh-in \u00b7 light",
+   "page": "android",
+   "is_interactive": true
+  },
+  "AndroidFood.dc.html": {
+   "x": 3328,
+   "y": 0,
+   "w": 412,
+   "h": 960,
+   "title": "Food",
+   "page": "android",
+   "is_interactive": true
+  },
+  "AndroidFoodLight.dc.html": {
+   "x": 3328,
+   "y": 2140,
+   "w": 412,
+   "h": 960,
+   "title": "Food \u00b7 light",
+   "page": "android",
+   "is_interactive": true
+  },
+  "AndroidReview.dc.html": {
+   "x": 3820,
+   "y": 0,
+   "w": 412,
+   "h": 1260,
+   "title": "Review",
+   "page": "android",
+   "is_interactive": true
+  },
+  "AndroidReviewLight.dc.html": {
+   "x": 3820,
+   "y": 2140,
+   "w": 412,
+   "h": 1260,
+   "title": "Review \u00b7 light",
+   "page": "android",
+   "is_interactive": true
+  },
+  "AndroidTrainerLink.dc.html": {
+   "x": 4312,
+   "y": 0,
+   "w": 412,
+   "h": 1170,
+   "title": "Share with trainer",
+   "page": "android",
+   "is_interactive": true
+  },
+  "AndroidTrainerLinkLight.dc.html": {
+   "x": 4312,
+   "y": 2140,
+   "w": 412,
+   "h": 1170,
+   "title": "Share with trainer \u00b7 light",
+   "page": "android",
+   "is_interactive": true
+  },
+  "AndroidLogin.dc.html": {
+   "x": 4804,
+   "y": 0,
+   "w": 412,
+   "h": 915,
+   "title": "Sign in",
+   "page": "android",
+   "is_interactive": true
+  },
+  "AndroidLoginLight.dc.html": {
+   "x": 4804,
+   "y": 2140,
+   "w": 412,
+   "h": 915,
+   "title": "Sign in \u00b7 light",
+   "page": "android",
+   "is_interactive": true
+  },
+  "AndroidProfile.dc.html": {
+   "x": 5296,
+   "y": 0,
+   "w": 412,
+   "h": 1900,
+   "title": "Profile",
+   "page": "android",
+   "is_interactive": true
+  },
+  "AndroidProfileLight.dc.html": {
+   "x": 5296,
+   "y": 2140,
+   "w": 412,
+   "h": 1900,
+   "title": "Profile \u00b7 light",
+   "page": "android",
+   "is_interactive": true
+  },
+  "LogoCombo.dc.html": {
+   "x": 0,
+   "y": 0,
+   "w": 1200,
+   "h": 720,
+   "title": "Slopevo app icon",
+   "page": "logo"
+  }
+ },
+ "order": [
+  "AndroidDesignSystem.dc.html",
+  "AndroidActivity.dc.html",
+  "AndroidStrain.dc.html",
+  "AndroidWeight.dc.html",
+  "AndroidWeighIn.dc.html",
+  "AndroidFood.dc.html",
+  "AndroidReview.dc.html",
+  "AndroidTrainerLink.dc.html",
+  "AndroidLogin.dc.html",
+  "AndroidProfile.dc.html",
+  "AndroidActivityLight.dc.html",
+  "AndroidStrainLight.dc.html",
+  "AndroidWeightLight.dc.html",
+  "AndroidWeighInLight.dc.html",
+  "AndroidFoodLight.dc.html",
+  "AndroidReviewLight.dc.html",
+  "AndroidTrainerLinkLight.dc.html",
+  "AndroidLoginLight.dc.html",
+  "AndroidProfileLight.dc.html",
+  "LogoCombo.dc.html"
+ ],
+ "notes": {
+  "androidTitle": {
+   "x": 0,
+   "y": -300,
+   "text": "Android app: Material 3 Expressive (dark)",
+   "kind": "title1",
+   "maxW": 5708,
+   "page": "android"
+  },
+  "androidNote": {
+   "x": 0,
+   "y": 1980,
+   "w": 440,
+   "fill": "orange",
+   "page": "android",
+   "text": "Sample data only.\nActivity data comes from WHOOP through its API (steps, strain, heart rate, recovery, sleep, workouts), so it is the same on any phone and on the trainer page.\nWHOOP gives heart-rate summaries, not a minute-by-minute line.\nEvery screen has a Dark switch in Tweaks; the light row shows the same screens with it off.\nSign in: the real app shows Google's own sign-in button through Android's Credential Manager; the one drawn here is a stand-in."
+  },
+  "androidLight": {
+   "x": 1360,
+   "y": 1980,
+   "text": "Light mode",
+   "kind": "title1",
+   "maxW": 4348,
+   "page": "android"
+  },
+  "logoTitle": {
+   "x": 0,
+   "y": -200,
+   "text": "Slopevo \u00b7 app icon",
+   "kind": "title1",
+   "maxW": 1200,
+   "page": "logo"
+  },
+  "logoNote": {
+   "x": 0,
+   "y": 780,
+   "text": "Final icon: the scalloped badge with a downhill hill and three weekly points on its line (green = this week).\nExported: 1024 and 512 px PNG, 1024 px JPG (square, for WHOOP), and a rounded-corner PNG.",
+   "page": "logo",
+   "w": 440,
+   "fill": "orange"
+  }
+ },
+ "designSystems": []
+}

@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Android Food</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Flex:opsz,wght@8..144,400..800&display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div style="width: 412px; height: 960px; position: relative; overflow: hidden; background: {{t.surface}}; font-family: 'Roboto Flex', Roboto, system-ui, sans-serif; color: {{t.onSurface}}; box-sizing: border-box">
+  <div style="padding: 40px 12px 0 16px; display: flex; justify-content: flex-end; align-items: center">
+    <a href="AndroidProfile.dc.html" aria-label="Profile" style="width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; text-decoration: none"><span style="width: 40px; height: 40px; border-radius: 20px; background: {{t.primaryContainer}}; color: {{t.onPrimaryContainer}}; display: flex; align-items: center; justify-content: center; font: 700 16px 'Roboto Flex', Roboto, sans-serif">V</span></a>
+  </div>
+  <h1 style="margin: 4px 16px 14px; font-size: 36px; line-height: 44px; font-weight: 600">Food</h1>
+
+  <div role="list" aria-label="Days" style="margin: 0 16px; display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px">
+    <sc-for list="{{days}}" as="d" hint-placeholder-count="7">
+      <sc-if value="{{d.on}}" hint-placeholder-val="{{false}}">
+        <button role="listitem" aria-pressed="true" style="height: 68px; border: none; border-radius: 24px; background: #FFB000; color: #3D2800; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; font-family: 'Roboto Flex', Roboto, sans-serif">
+          <span style="font-size: 12px; font-weight: 700">{{d.wd}}</span><span style="font-size: 22px; font-weight: 800">{{d.n}}</span>
+        </button>
+      </sc-if>
+      <sc-if value="{{d.off}}" hint-placeholder-val="{{true}}">
+        <button role="listitem" aria-pressed="false" style="height: 68px; border: none; border-radius: 18px; background: {{t.container}}; color: {{t.onSurface}}; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; font-family: 'Roboto Flex', Roboto, sans-serif">
+          <span style="font-size: 12px; font-weight: 500; color: {{t.onSurfaceVariant}}">{{d.wd}}</span><span style="font-size: 22px; font-weight: 800">{{d.n}}</span><span style="width: 6px; height: 6px; border-radius: 3px; background: {{d.dot}}"></span>
+        </button>
+      </sc-if>
+    </sc-for>
+  </div>
+
+  <section style="margin: 12px 16px 0; background: {{t.hero}}; border-radius: 36px; padding: 18px 20px">
+    <div style="display: flex; align-items: center; gap: 12px">
+      <span style="width: 40px; height: 40px; border-radius: 20px; background: {{t.badge}}; color: {{t.txt}}; display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 3v5a2 2 0 0 0 4 0V3M7 3v18M17 3c-2 1.5-2.5 4-2.5 7H17v11"/></svg></span>
+      <div style="flex: 1">
+        <div style="font-size: 14px; font-weight: 600; color: {{t.txt}}">Thursday, 26 Nov</div>
+        <div><span style="font-size: 28px; font-weight: 800">6</span><span style="font-size: 15px; color: {{t.onSurfaceVariant}}"> photos today</span></div>
+      </div>
+    </div>
+    <svg width="332" height="64" viewBox="0 0 332 64" role="img" aria-label="Meals across the day, from 7:45 AM to 7:12 PM" style="display: block; margin-top: 10px">
+      <polyline fill="none" stroke="{{t.badge}}" stroke-width="6" stroke-linecap="round" points="{{dayWave}}"/>
+      <path d="{{dots}}" fill="#FFB000" stroke="{{t.hero}}" stroke-width="3"/>
+      <text x="0" y="62" font-size="11" fill="{{t.onSurfaceVariant}}" font-family="'Roboto Flex', Roboto, sans-serif">6 AM</text>
+      <text x="166" y="62" text-anchor="middle" font-size="11" fill="{{t.onSurfaceVariant}}" font-family="'Roboto Flex', Roboto, sans-serif">2 PM</text>
+      <text x="332" y="62" text-anchor="end" font-size="11" fill="{{t.onSurfaceVariant}}" font-family="'Roboto Flex', Roboto, sans-serif">10 PM</text>
+    </svg>
+  </section>
+
+  <div style="margin: 14px 0 12px; padding: 0 16px; display: flex; gap: 8px; overflow: hidden">
+    <sc-for list="{{chips}}" as="c" hint-placeholder-count="5">
+      <sc-if value="{{c.on}}" hint-placeholder-val="{{false}}">
+        <button onClick="{{c.pick}}" aria-pressed="true" style="flex-shrink: 0; height: 36px; border: none; border-radius: 18px; padding: 0 14px 0 10px; background: #FFB000; color: #3D2800; font: 700 14px 'Roboto Flex', Roboto, sans-serif; display: flex; align-items: center; gap: 6px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7"/></svg>{{c.name}}</button>
+      </sc-if>
+      <sc-if value="{{c.off}}" hint-placeholder-val="{{true}}">
+        <button onClick="{{c.pick}}" aria-pressed="false" style="flex-shrink: 0; height: 36px; border: none; border-radius: 18px; padding: 0 14px; background: {{t.container}}; color: {{t.onSurface}}; font: 600 14px 'Roboto Flex', Roboto, sans-serif">{{c.name}}</button>
+      </sc-if>
+    </sc-for>
+  </div>
+
+  <div style="margin: 0 16px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px">
+    <sc-for list="{{photos}}" as="p" hint-placeholder-count="6">
+      <button aria-label="Food photo at {{p.time}}" style="aspect-ratio: 1 / 1; position: relative; border: none; padding: 0; border-radius: {{p.radius}}; background: {{p.bg}}; display: flex; align-items: center; justify-content: center; color: {{t.onSurfaceVariant}}">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-8 8"/></svg>
+        <span style="position: absolute; left: 8px; bottom: 8px; background: rgba(0,0,0,0.62); color: #FFFFFF; font: 700 12px 'Roboto Flex', Roboto, sans-serif; padding: 3px 8px; border-radius: 999px">{{p.time}}</span>
+        <sc-if value="{{p.hasLabel}}" hint-placeholder-val="{{true}}">
+          <span style="position: absolute; right: 8px; top: 8px; background: #FFB000; color: #3D2800; font: 700 12px 'Roboto Flex', Roboto, sans-serif; padding: 3px 8px; border-radius: 999px">{{p.label}}</span>
+        </sc-if>
+      </button>
+    </sc-for>
+  </div>
+
+  <button style="position: absolute; right: 16px; bottom: 96px; height: 64px; border: none; border-radius: 20px; padding: 0 24px 0 20px; background: #FFB000; color: #3D2800; display: flex; align-items: center; gap: 10px; font: 700 16px 'Roboto Flex', Roboto, sans-serif; box-shadow: 0 4px 12px rgba(255,176,0,0.35)">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l1.5-2h7L17 8h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>Add photo</button>
+
+  <nav aria-label="Main" style="position: absolute; left: 0; right: 0; bottom: 0; height: 80px; background: {{t.container}}; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); align-items: center; padding-bottom: 8px; box-sizing: border-box">
+    <a href="AndroidActivity.dc.html" style="display: flex; flex-direction: column; align-items: center; gap: 4px; text-decoration: none; color: {{t.onSurfaceVariant}}; font-size: 12px; font-weight: 500"><span style="width: 56px; height: 32px; display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="13" cy="4.5" r="2"/><path d="M9 21l2-6 3 3v3M7 12l2-4 4 1 2 3 3 1"/></svg></span>Activity</a>
+    <a href="AndroidWeight.dc.html" style="display: flex; flex-direction: column; align-items: center; gap: 4px; text-decoration: none; color: {{t.onSurfaceVariant}}; font-size: 12px; font-weight: 500"><span style="width: 56px; height: 32px; display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="3.5" y="3.5" width="17" height="17" rx="4"/><path d="M8.5 9.5a5 5 0 0 1 7 0M12 10l1.3-1.8"/></svg></span>Weight</a>
+    <a href="AndroidFood.dc.html" aria-current="page" style="display: flex; flex-direction: column; align-items: center; gap: 4px; text-decoration: none; color: {{t.onSurface}}; font-size: 12px; font-weight: 700"><span style="width: 56px; height: 32px; border-radius: 16px; background: {{t.secondaryContainer}}; color: {{t.onSecondaryContainer}}; display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 3v5a2 2 0 0 0 4 0V3M7 3v18M17 3c-2 1.5-2.5 4-2.5 7H17v11"/></svg></span>Food</a>
+    <a href="AndroidReview.dc.html" style="display: flex; flex-direction: column; align-items: center; gap: 4px; text-decoration: none; color: {{t.onSurfaceVariant}}; font-size: 12px; font-weight: 500"><span style="width: 56px; height: 32px; display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M21 20H3"/></svg></span>Review</a>
+  </nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"dark":{"editor":"boolean","default":true},"$preview":{"width":412,"height":960}}'>
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { label: 'All' }; }
+  renderVals() {
+    const dark = this.props.dark ?? true;
+    const t = dark ? {
+      surface: '#111318', container: '#1D2024', onSurface: '#E2E2E9', onSurfaceVariant: '#C4C6D0',
+      primaryContainer: '#284777', onPrimaryContainer: '#D6E3FF', secondaryContainer: '#3E4759', onSecondaryContainer: '#DAE2F9',
+      hero: '#352A10', txt: '#FFC23D', badge: 'rgba(255,176,0,0.26)', ph1: '#282A2F', ph2: '#33353A'
+    } : {
+      surface: '#F9F9FF', container: '#EDEDF4', onSurface: '#191C20', onSurfaceVariant: '#44474E',
+      primaryContainer: '#D6E3FF', onPrimaryContainer: '#001B3E', secondaryContainer: '#DAE2F9', onSecondaryContainer: '#131C2B',
+      hero: '#FFF0CF', txt: '#946200', badge: 'rgba(255,176,0,0.22)', ph1: '#E2E2E9', ph2: '#D8D9E0'
+    };
+    const all = [
+      { time: '7:45', h: 7.75, label: 'Breakfast' }, { time: '10:20', h: 10.33, label: '' }, { time: '12:35', h: 12.58, label: 'Lunch' },
+      { time: '15:10', h: 15.17, label: 'Snack' }, { time: '19:05', h: 19.08, label: 'Dinner' }, { time: '19:12', h: 19.2, label: 'Dinner' }
+    ];
+    const wy = (x) => 26 + 7 * Math.sin(x / 14);
+    const wave = [];
+    for (let x = 4; x <= 328; x += 3) wave.push(x + ',' + wy(x).toFixed(1));
+    const dots = all.map((p) => { const x = Math.round(8 + (p.h - 6) / 16 * 316); const y = wy(x); return 'M' + (x - 9) + ' ' + y.toFixed(1) + 'a9 9 0 1 0 18 0a9 9 0 1 0 -18 0'; }).join('');
+    const radii = ['28px 12px 12px 12px', '12px', '12px 28px 12px 12px', '12px 12px 12px 28px', '12px', '12px 12px 28px 12px'];
+    const sel = this.state.label;
+    const photos = all.filter((p) => sel === 'All' || p.label === sel)
+      .map((p, i) => ({ ...p, hasLabel: p.label !== '', bg: i % 2 ? t.ph2 : t.ph1, radius: radii[i % 6] }));
+    const chips = ['All', 'Breakfast', 'Lunch', 'Dinner', 'Snack'].map((name) => ({
+      name, on: name === sel, off: name !== sel, pick: () => this.setState({ label: name })
+    }));
+    const days = [['Fri', 20, 1], ['Sat', 21, 1], ['Sun', 22, 0], ['Mon', 23, 1], ['Tue', 24, 1], ['Wed', 25, 1], ['Thu', 26, 1]]
+      .map(([wd, n, has]) => ({ wd, n, on: n === 26, off: n !== 26, dot: has ? '#FFB000' : 'transparent' }));
+    return { t, photos, chips, days, dots, dayWave: wave.join(' ') };
+  }
+}
+</script>
+</body>
+</html>
