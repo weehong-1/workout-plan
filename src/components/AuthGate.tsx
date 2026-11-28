@@ -1,6 +1,7 @@
 "use client";
 
 import { Fragment, useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 import type { Session } from "@supabase/supabase-js";
 import { AccountView } from "@/components/AccountView";
 import { AccountSessionProvider, signOut } from "@/lib/auth";
@@ -20,7 +21,18 @@ type AccountLoad = {
   error?: string;
 };
 
+/** Pages anyone may open without an account: the privacy policy and trainer links. */
+export function isPublicPath(pathname: string | null): boolean {
+  return /^\/(privacy|share\/[^/]+)\/?$/.test(pathname ?? "");
+}
+
 export function AuthGate({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
+  if (isPublicPath(pathname)) return <>{children}</>;
+  return <AccountGate>{children}</AccountGate>;
+}
+
+function AccountGate({ children }: { children: React.ReactNode }) {
   const [auth, setAuth] = useState<AuthState>({ checked: false, session: null, revision: 0 });
   const [accountLoad, setAccountLoad] = useState<AccountLoad | null>(null);
   const [retry, setRetry] = useState(0);

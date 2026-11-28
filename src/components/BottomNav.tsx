@@ -40,6 +40,8 @@ export function BottomNav() {
   const pathname = usePathname();
   // The workout screen is full focus: no tab bar while logging sets.
   if (/^\/day\/[^/]+$/.test(pathname)) return null;
+  // Public pages are read by people without an account.
+  if (pathname === "/privacy" || pathname.startsWith("/share/")) return null;
   return (
     <nav aria-label="Main" className="fixed inset-x-0 bottom-0 z-40 border-t border-[var(--line)] bg-[var(--bg)]/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-md">
       <ul className="mx-auto flex h-16 max-w-xl">
