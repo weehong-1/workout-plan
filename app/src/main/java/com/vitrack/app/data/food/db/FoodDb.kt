@@ -48,6 +48,9 @@ interface FoodDao {
     @Query("DELETE FROM food_photo WHERE id = :id")
     suspend fun delete(id: Long)
 
+    @Query("SELECT * FROM food_photo")
+    suspend fun all(): List<FoodPhotoEntity>
+
     @Query("SELECT COUNT(*) FROM food_photo")
     suspend fun count(): Int
 }

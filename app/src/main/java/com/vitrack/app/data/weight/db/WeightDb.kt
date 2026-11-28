@@ -36,6 +36,9 @@ abstract class WeightDao {
     @Query("SELECT * FROM weigh_in ORDER BY epochDay DESC")
     abstract fun observeWeighIns(): Flow<List<WeighInEntity>>
 
+    @Query("SELECT * FROM weigh_in")
+    abstract suspend fun allWeighIns(): List<WeighInEntity>
+
     @Query("SELECT * FROM weigh_in_photo ORDER BY addedAtMillis, id")
     abstract fun observePhotos(): Flow<List<WeighInPhotoEntity>>
 
