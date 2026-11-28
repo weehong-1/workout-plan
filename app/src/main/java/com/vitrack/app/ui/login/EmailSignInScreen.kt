@@ -145,6 +145,8 @@ fun EmailSignInScreen(
                 Text(
                     when (error) {
                         EmailSignInError.Network -> stringResource(R.string.login_error_network)
+                        EmailSignInError.TooMany -> stringResource(R.string.login_error_too_many)
+                        EmailSignInError.WrongCode -> stringResource(R.string.login_error_wrong_code)
                         is EmailSignInError.Server -> error.message.ifBlank { stringResource(R.string.login_error_network) }
                     },
                     style = MaterialTheme.typography.bodyMedium,

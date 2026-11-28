@@ -20,6 +20,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -33,6 +34,15 @@ class ActivityViewModel @Inject constructor(
 
     private val stepsRange = MutableStateFlow<StepsRange>(StepsRange.Last7Days)
 
+    /** The day picked from the calendar; null is today. */
+    private val pickedDay = MutableStateFlow<LocalDate?>(null)
+
+    /** The picked day's snapshot; Pending while it loads, so the old day isn't shown as the new one. */
+    private val snapshot = pickedDay.flatMapLatest { day ->
+        activityRepository.observeSnapshot(day).map<ActivitySnapshot?, DayLoad> { DayLoad.Loaded(it, day == null) }
+            .onStart { emit(DayLoad.Pending) }
+    }
+
     private val stepsHistory = stepsRange.flatMapLatest { range ->
         val today = LocalDate.now(clock)
         val (start, end) = range.bounds(today)
@@ -43,13 +53,18 @@ class ActivityViewModel @Inject constructor(
     }
 
     val uiState: StateFlow<ActivityUiState> = combine(
-        activityRepository.observeSnapshot(),
+        snapshot,
         profileRepository.observeDisplayName(),
         stepsHistory,
         settingsRepository.stepGoal,
-    ) { snapshot, name, (range, days), stepGoal ->
-        // The goal set in Profile, over the one that came with the data.
-        snapshot.copy(stepGoal = stepGoal).toUiState(name, range, days)
+    ) { loaded, name, (range, days), stepGoal ->
+        when {
+            loaded !is DayLoad.Loaded -> ActivityUiState.Loading
+            loaded.snapshot == null -> ActivityUiState.NotConnected
+            // The goal set in Profile, over the one that came with the data.
+            else -> loaded.snapshot.copy(stepGoal = stepGoal).toUiState(name, range, days)
+                .copy(isToday = loaded.isToday, today = LocalDate.now(clock))
+        }
     }
         .stateIn(
             scope = viewModelScope,
@@ -59,6 +74,20 @@ class ActivityViewModel @Inject constructor(
 
     fun selectStepsRange(range: StepsRange) {
         stepsRange.value = range
+    }
+
+    /** Shows [day]; today (or a day after it) goes back to today. */
+    fun selectDay(day: LocalDate) {
+        pickedDay.value = day.takeIf { it.isBefore(LocalDate.now(clock)) }
+    }
+
+    fun showToday() {
+        pickedDay.value = null
+    }
+
+    private sealed interface DayLoad {
+        data object Pending : DayLoad
+        data class Loaded(val snapshot: ActivitySnapshot?, val isToday: Boolean) : DayLoad
     }
 }
 

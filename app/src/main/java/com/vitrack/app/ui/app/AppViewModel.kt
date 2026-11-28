@@ -8,6 +8,8 @@ import com.vitrack.app.data.auth.SignInLinkException
 import com.vitrack.app.data.backend.BackendException
 import com.vitrack.app.data.settings.SettingsRepository
 import com.vitrack.app.data.settings.ThemeMode
+import com.vitrack.app.data.whoop.WhoopRepository
+import com.vitrack.app.data.whoop.whoopReturnOf
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.CancellationException
@@ -51,6 +53,7 @@ private data class LinkState(val opening: Boolean = false, val problem: LinkProb
 class AppViewModel @Inject constructor(
     settings: SettingsRepository,
     private val auth: AuthRepository,
+    private val whoop: WhoopRepository,
 ) : ViewModel() {
 
     private val link = MutableStateFlow(LinkState())
@@ -64,8 +67,12 @@ class AppViewModel @Inject constructor(
         )
     }.stateIn(viewModelScope, SharingStarted.Eagerly, AppState())
 
-    /** Called with the URI the app was opened with; anything but a sign-in link is ignored. */
+    /** Called with the URI the app was opened with: a sign-in link, or WHOOP sending the person back. */
     fun openLink(uri: String?) {
+        if (uri != null && whoopReturnOf(uri) != null) {
+            viewModelScope.launch { whoop.completeReturn(uri) }
+            return
+        }
         if (uri == null || !uri.startsWith(SIGN_IN_REDIRECT) || !auth.isAvailable) return
         link.value = LinkState(opening = true)
         viewModelScope.launch {

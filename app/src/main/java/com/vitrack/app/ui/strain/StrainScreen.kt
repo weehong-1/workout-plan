@@ -51,6 +51,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.vitrack.app.R
+import com.vitrack.app.ui.common.ConnectWhoopPrompt
 import com.vitrack.app.data.activity.DailyActivity
 import com.vitrack.app.data.activity.MAX_STRAIN
 import com.vitrack.app.data.activity.Workout
@@ -123,6 +124,7 @@ fun StrainScreen(
             StrainUiState.Loading -> Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
                 ContainedLoadingIndicator()
             }
+            StrainUiState.NotConnected -> ConnectWhoopPrompt(Modifier.padding(padding))
             is StrainUiState.Ready -> StrainContent(uiState, onSelectPeriod, padding)
         }
     }

@@ -40,6 +40,15 @@
 
                 <data android:scheme="vitrack" android:host="login-callback" />
             </intent-filter>
+            <!-- WHOOP sends the person back here, through the whoop-callback Edge Function. -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data android:scheme="vitrack" android:host="whoop-callback" />
+            </intent-filter>
         </activity>
 
         <receiver

@@ -41,6 +41,29 @@ class ActivityViewModelTest {
     private fun ActivityViewModel.ready() = uiState.value as ActivityUiState.Ready
 
     @Test
+    fun `picking a past day loads that day, and back to today returns`() = runTest {
+        val activity = FakeActivityRepository(snapshot(week = drawnWeek))
+        val viewModel = viewModel(activity)
+
+        viewModel.selectDay(TODAY.minusDays(3))
+        assertEquals(TODAY.minusDays(3), activity.snapshotDays.last())
+        assertEquals(false, viewModel.ready().isToday)
+        assertEquals(TODAY, viewModel.ready().today)
+
+        viewModel.showToday()
+        assertEquals(null, activity.snapshotDays.last())
+        assertEquals(true, viewModel.ready().isToday)
+
+        viewModel.selectDay(TODAY) // picking today is the same as back to today
+        assertEquals(true, viewModel.ready().isToday)
+    }
+
+    @Test
+    fun `without WHOOP it asks to connect`() = runTest {
+        assertEquals(ActivityUiState.NotConnected, viewModel(FakeActivityRepository(snapshot = null)).uiState.value)
+    }
+
+    @Test
     fun `maps the snapshot and name into a ready state`() = runTest {
         val state = viewModel().ready()
 

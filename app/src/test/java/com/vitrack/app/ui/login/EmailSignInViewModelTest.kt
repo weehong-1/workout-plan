@@ -39,7 +39,7 @@ class EmailSignInViewModelTest {
     }
 
     @Test
-    fun `a wrong code shows the server's message and stays on the code step`() = runTest {
+    fun `a wrong code says so and stays on the code step`() = runTest {
         val auth = FakeAuthRepository()
         val viewModel = EmailSignInViewModel(auth)
         viewModel.setEmail("vernon@example.com")
@@ -50,9 +50,21 @@ class EmailSignInViewModelTest {
 
         assertNull(auth.current.value)
         assertEquals(SignInStep.Code, viewModel.state.value.step)
-        assertEquals(EmailSignInError.Server("Token has expired or is invalid"), viewModel.state.value.error)
+        assertEquals(EmailSignInError.WrongCode, viewModel.state.value.error)
         viewModel.setCode("1")
         assertNull(viewModel.state.value.error)
+    }
+
+    @Test
+    fun `the email limit reads as too many tries`() = runTest {
+        val auth = FakeAuthRepository().apply { failNext = BackendException.Server(429, "email rate limit exceeded") }
+        val viewModel = EmailSignInViewModel(auth)
+        viewModel.setEmail("vernon@example.com")
+
+        viewModel.sendCode()
+
+        assertEquals(EmailSignInError.TooMany, viewModel.state.value.error)
+        assertEquals(SignInStep.Email, viewModel.state.value.step)
     }
 
     @Test

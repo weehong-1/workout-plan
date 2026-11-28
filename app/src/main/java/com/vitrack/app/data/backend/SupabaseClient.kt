@@ -173,6 +173,12 @@ class SupabaseClient(
         send("DELETE", "/rest/v1/$table", query = query, authorized = true)
     }
 
+    // Edge Functions
+
+    /** Calls the Edge Function [name] with a JSON [body], signed in. */
+    suspend fun function(name: String, body: String): String =
+        send("POST", "/functions/v1/$name", body = body, authorized = true)
+
     // Storage (private "photos" bucket, one folder per account)
 
     suspend fun upload(jpeg: ByteArray, path: String) {

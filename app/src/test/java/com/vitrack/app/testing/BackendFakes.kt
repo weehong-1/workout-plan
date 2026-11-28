@@ -145,3 +145,35 @@ class FakeAuthRepository(override val isAvailable: Boolean = true) : AuthReposit
         current.value = null
     }
 }
+
+class FakeWhoopRepository(status: com.vitrack.app.data.whoop.WhoopStatus = com.vitrack.app.data.whoop.WhoopStatus.NotConnected) :
+    com.vitrack.app.data.whoop.WhoopRepository {
+    val statusFlow = MutableStateFlow(status)
+    val returnFlow = MutableStateFlow<com.vitrack.app.data.whoop.WhoopReturn?>(null)
+    var records = com.vitrack.app.data.whoop.WhoopRecords()
+    var recordsError: Exception? = null
+    val recordRequests = mutableListOf<Pair<java.time.Instant, java.time.Instant>>()
+    val returns = mutableListOf<String>()
+    var disconnected = false
+
+    override val status: kotlinx.coroutines.flow.StateFlow<com.vitrack.app.data.whoop.WhoopStatus> = statusFlow
+    override val lastReturn: kotlinx.coroutines.flow.StateFlow<com.vitrack.app.data.whoop.WhoopReturn?> = returnFlow
+    override suspend fun refreshStatus() = Unit
+    override suspend fun connectUrl() = "https://api.prod.whoop.com/oauth/oauth2/auth?state=s"
+    override suspend fun disconnect() {
+        disconnected = true
+        statusFlow.value = com.vitrack.app.data.whoop.WhoopStatus.NotConnected
+    }
+    override suspend fun records(start: java.time.Instant, end: java.time.Instant): com.vitrack.app.data.whoop.WhoopRecords {
+        recordRequests += start to end
+        recordsError?.let { throw it }
+        return records
+    }
+    override suspend fun completeReturn(link: String) {
+        returns += link
+        returnFlow.value = com.vitrack.app.data.whoop.whoopReturnOf(link)
+    }
+    override fun clearReturn() {
+        returnFlow.value = null
+    }
+}

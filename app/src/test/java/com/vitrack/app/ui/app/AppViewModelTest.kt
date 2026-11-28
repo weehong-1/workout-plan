@@ -4,6 +4,7 @@ import com.vitrack.app.data.auth.Account
 import com.vitrack.app.data.settings.ThemeMode
 import com.vitrack.app.testing.FakeAuthRepository
 import com.vitrack.app.testing.FakeSettingsRepository
+import com.vitrack.app.testing.FakeWhoopRepository
 import com.vitrack.app.testing.MainDispatcherRule
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
@@ -20,7 +21,7 @@ class AppViewModelTest {
     @Test
     fun `with a server, sign-in comes first and the tabs follow it`() = runTest {
         val auth = FakeAuthRepository()
-        val viewModel = AppViewModel(FakeSettingsRepository(), auth)
+        val viewModel = AppViewModel(FakeSettingsRepository(), auth, FakeWhoopRepository())
 
         assertEquals(AppGate.SignIn, viewModel.state.value.gate)
         auth.current.value = Account("u", "vernon@example.com")
@@ -31,7 +32,7 @@ class AppViewModelTest {
 
     @Test
     fun `without a server the app opens straight away`() = runTest {
-        val viewModel = AppViewModel(FakeSettingsRepository(), FakeAuthRepository(isAvailable = false))
+        val viewModel = AppViewModel(FakeSettingsRepository(), FakeAuthRepository(isAvailable = false), FakeWhoopRepository())
 
         assertEquals(AppGate.App, viewModel.state.value.gate)
     }
@@ -39,7 +40,7 @@ class AppViewModelTest {
     @Test
     fun `opening the emailed link signs in`() = runTest {
         val auth = FakeAuthRepository()
-        val viewModel = AppViewModel(FakeSettingsRepository(), auth)
+        val viewModel = AppViewModel(FakeSettingsRepository(), auth, FakeWhoopRepository())
 
         viewModel.openLink("vitrack://login-callback?code=abc")
 
@@ -53,7 +54,7 @@ class AppViewModelTest {
         val auth = FakeAuthRepository().apply {
             linkError = com.vitrack.app.data.auth.SignInLinkException(com.vitrack.app.data.auth.SignInLinkException.Reason.Expired)
         }
-        val viewModel = AppViewModel(FakeSettingsRepository(), auth)
+        val viewModel = AppViewModel(FakeSettingsRepository(), auth, FakeWhoopRepository())
 
         viewModel.openLink("https://example.com/?code=abc")
         viewModel.openLink(null)
@@ -67,9 +68,22 @@ class AppViewModelTest {
     }
 
     @Test
+    fun `WHOOP sending the person back is passed to WHOOP, not sign-in`() = runTest {
+        val auth = FakeAuthRepository()
+        val whoop = FakeWhoopRepository()
+        val viewModel = AppViewModel(FakeSettingsRepository(), auth, whoop)
+
+        viewModel.openLink("vitrack://whoop-callback?result=connected")
+
+        assertEquals(listOf("vitrack://whoop-callback?result=connected"), whoop.returns)
+        assertEquals(emptyList<String>(), auth.links)
+        assertEquals(com.vitrack.app.data.whoop.WhoopReturn.Connected, whoop.lastReturn.value)
+    }
+
+    @Test
     fun `the theme follows Profile`() = runTest {
         val settings = FakeSettingsRepository()
-        val viewModel = AppViewModel(settings, FakeAuthRepository(isAvailable = false))
+        val viewModel = AppViewModel(settings, FakeAuthRepository(isAvailable = false), FakeWhoopRepository())
 
         settings.themeMode.value = ThemeMode.Dark
 

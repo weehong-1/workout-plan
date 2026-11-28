@@ -44,13 +44,17 @@ fun snapshot(
     syncedAt = LocalTime.of(8, 12),
 )
 
-class FakeActivityRepository(snapshot: ActivitySnapshot = snapshot()) : ActivityRepository {
-    val snapshots = MutableStateFlow(snapshot)
+/** [snapshot] null is WHOOP not connected: no snapshot and empty history. */
+class FakeActivityRepository(snapshot: ActivitySnapshot? = snapshot()) : ActivityRepository {
+    val snapshots = MutableStateFlow<ActivitySnapshot?>(snapshot)
 
     /** Days requested by each history call, to check the period wiring. */
     val historyRequests = mutableListOf<Int>()
 
-    override fun observeSnapshot(): Flow<ActivitySnapshot> = snapshots
+    /** Days asked for by snapshot calls; null is today. */
+    val snapshotDays = mutableListOf<java.time.LocalDate?>()
+
+    override fun observeSnapshot(day: java.time.LocalDate?): Flow<ActivitySnapshot?> = snapshots.also { snapshotDays += day }
 
     /**
      * Days ending [TODAY]. Days in the snapshot's week keep their values; older
@@ -58,7 +62,7 @@ class FakeActivityRepository(snapshot: ActivitySnapshot = snapshot()) : Activity
      */
     override fun observeHistory(days: Int): Flow<List<DailyActivity>> {
         historyRequests += days
-        val week = snapshots.value.lastSevenDays.associateBy { it.date }
+        val week = (snapshots.value ?: return flowOf(emptyList())).lastSevenDays.associateBy { it.date }
         return flowOf(
             (days - 1 downTo 0).map { back ->
                 val date = TODAY.minusDays(back.toLong())

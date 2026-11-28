@@ -15,6 +15,9 @@ data class StrainBar(
 sealed interface StrainUiState {
     data object Loading : StrainUiState
 
+    /** WHOOP isn't connected, so there is no strain to show. */
+    data object NotConnected : StrainUiState
+
     data class Ready(
         val today: DailyActivity,
         /** Average day strain over the last 7 days, today included. */

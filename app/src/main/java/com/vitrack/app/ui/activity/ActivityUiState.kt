@@ -23,6 +23,9 @@ sealed interface StepsRange {
 sealed interface ActivityUiState {
     data object Loading : ActivityUiState
 
+    /** WHOOP isn't connected, so there is no activity to show. */
+    data object NotConnected : ActivityUiState
+
     data class Ready(
         val date: LocalDate,
         val displayName: String?,
@@ -42,6 +45,10 @@ sealed interface ActivityUiState {
         val stepsDays: List<DaySteps>,
         val averageSteps: Int,
         val syncedAt: LocalTime,
+        /** False when a past day was picked from the calendar. */
+        val isToday: Boolean = true,
+        /** The real today, for the calendars; [date] is the day shown. */
+        val today: LocalDate = date,
     ) : ActivityUiState {
         val stepProgress: Float get() = (steps.toFloat() / stepGoal).coerceIn(0f, 1f)
         val workoutMinutes: Int get() = workouts.sumOf { it.durationMinutes }

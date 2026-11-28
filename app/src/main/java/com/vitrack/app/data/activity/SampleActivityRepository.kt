@@ -10,7 +10,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 
 /**
- * Sample data matching the design canvas, until WHOOP is connected.
+ * Sample data matching the design canvas, for previews and tests.
  * The last 7 days are the drawn values; older days are generated from the
  * date, so the same day always shows the same numbers.
  */
@@ -19,7 +19,7 @@ class SampleActivityRepository @Inject constructor(
     private val clock: Clock,
 ) : ActivityRepository {
 
-    override fun observeSnapshot(): Flow<ActivitySnapshot> = flow {
+    override fun observeSnapshot(day: LocalDate?): Flow<ActivitySnapshot> = flow {
         val week = history(7)
         emit(
             ActivitySnapshot(

@@ -1,7 +1,9 @@
 package com.vitrack.app.di
 
 import com.vitrack.app.data.activity.ActivityRepository
-import com.vitrack.app.data.activity.SampleActivityRepository
+import com.vitrack.app.data.whoop.SupabaseWhoopRepository
+import com.vitrack.app.data.whoop.WhoopActivityRepository
+import com.vitrack.app.data.whoop.WhoopRepository
 import com.vitrack.app.data.auth.AuthRepository
 import com.vitrack.app.data.auth.SupabaseAuthRepository
 import com.vitrack.app.data.food.FoodRepository
@@ -36,7 +38,10 @@ import java.util.Locale
 abstract class RepositoryModule {
 
     @Binds
-    abstract fun bindActivityRepository(impl: SampleActivityRepository): ActivityRepository
+    abstract fun bindActivityRepository(impl: WhoopActivityRepository): ActivityRepository
+
+    @Binds
+    abstract fun bindWhoopRepository(impl: SupabaseWhoopRepository): WhoopRepository
 
     @Binds
     abstract fun bindProfileRepository(impl: AccountProfileRepository): ProfileRepository

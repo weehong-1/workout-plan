@@ -33,6 +33,7 @@ class StrainViewModel @Inject constructor(
         repository.observeSnapshot(),
         history,
     ) { snapshot, (p, days) ->
+        if (snapshot == null) return@combine StrainUiState.NotConnected
         StrainUiState.Ready(
             today = snapshot.today,
             weeklyAverageStrain = snapshot.lastSevenDays.map { it.strain }.average().takeIf { !it.isNaN() } ?: snapshot.today.strain,

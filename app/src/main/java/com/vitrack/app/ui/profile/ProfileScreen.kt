@@ -64,6 +64,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
@@ -88,6 +89,7 @@ import com.vitrack.app.data.settings.ReminderKind
 import com.vitrack.app.data.settings.STEP_GOAL_RANGE
 import com.vitrack.app.data.settings.ThemeMode
 import com.vitrack.app.data.settings.WeightUnit
+import com.vitrack.app.data.whoop.WhoopStatus
 import com.vitrack.app.ui.common.ConnectedChoiceRow
 import com.vitrack.app.ui.common.Format
 import com.vitrack.app.ui.common.rememberReducedMotion
@@ -107,9 +109,17 @@ fun ProfileRoute(
     onBack: () -> Unit,
     onOpenTrainerLinks: () -> Unit,
     viewModel: ProfileViewModel = hiltViewModel(),
+    whoopViewModel: WhoopViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+    val whoop by whoopViewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
+    val uriHandler = LocalUriHandler.current
+    LaunchedEffect(whoop.openUrl) {
+        val url = whoop.openUrl ?: return@LaunchedEffect
+        runCatching { uriHandler.openUri(url) }
+        whoopViewModel.urlOpened()
+    }
 
     val exportFile = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/zip")) { uri ->
         if (uri == null) return@rememberLauncherForActivityResult
@@ -125,6 +135,7 @@ fun ProfileRoute(
 
     ProfileScreen(
         state = state,
+        whoop = whoop,
         onBack = onBack,
         actions = ProfileActions(
             setGoalKind = viewModel::setGoalKind,
@@ -147,6 +158,9 @@ fun ProfileRoute(
             signOut = viewModel::signOut,
             deleteAccount = viewModel::deleteAccount,
             dismissMessage = viewModel::dismissMessage,
+            connectWhoop = whoopViewModel::connect,
+            disconnectWhoop = whoopViewModel::disconnect,
+            dismissWhoopMessage = whoopViewModel::dismissMessage,
         ),
     )
 }
@@ -165,13 +179,16 @@ class ProfileActions(
     val signOut: () -> Unit,
     val deleteAccount: (String) -> Unit,
     val dismissMessage: () -> Unit,
+    val connectWhoop: () -> Unit = {},
+    val disconnectWhoop: () -> Unit = {},
+    val dismissWhoopMessage: () -> Unit = {},
 )
 
-private enum class EditDialog { Name, GoalWeight, StepGoal, Height, Delete }
+private enum class EditDialog { Name, GoalWeight, StepGoal, Height, Delete, DisconnectWhoop }
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-fun ProfileScreen(state: ProfileUiState, onBack: () -> Unit, actions: ProfileActions) {
+fun ProfileScreen(state: ProfileUiState, onBack: () -> Unit, actions: ProfileActions, whoop: WhoopUiState = WhoopUiState()) {
     var dialog by rememberSaveable { mutableStateOf<EditDialog?>(null) }
     val snackbar = remember { SnackbarHostState() }
     val messageText = state.message?.let { messageText(it, state.unit) }
@@ -179,6 +196,13 @@ fun ProfileScreen(state: ProfileUiState, onBack: () -> Unit, actions: ProfileAct
         if (messageText != null) {
             snackbar.showSnackbar(messageText)
             actions.dismissMessage()
+        }
+    }
+    val whoopText = whoop.message?.let { whoopMessageText(it) }
+    LaunchedEffect(whoop.message) {
+        if (whoopText != null) {
+            actions.dismissWhoopMessage()
+            snackbar.showSnackbar(whoopText)
         }
     }
 
@@ -198,13 +222,13 @@ fun ProfileScreen(state: ProfileUiState, onBack: () -> Unit, actions: ProfileAct
                     )
                 }
                 Column(Modifier.padding(horizontal = Spacing.l).padding(bottom = 32.dp)) {
-                    HeaderCard(state, onEditName = { dialog = EditDialog.Name })
+                    HeaderCard(state, whoopConnected = whoop.status == WhoopStatus.Connected, onEditName = { dialog = EditDialog.Name })
                     SectionTitle(R.string.profile_goal)
                     GoalCard(state, actions, onChangeGoal = { dialog = EditDialog.GoalWeight }, onEditSteps = { dialog = EditDialog.StepGoal }, onEditHeight = { dialog = EditDialog.Height })
                     SectionTitle(R.string.profile_display)
                     DisplayCard(state, actions)
                     SectionTitle(R.string.profile_connected)
-                    WhoopCard()
+                    WhoopCard(whoop, onConnect = actions.connectWhoop, onDisconnect = { dialog = EditDialog.DisconnectWhoop })
                     SectionTitle(R.string.profile_sharing)
                     SharingRow(state, actions.openTrainerLinks)
                     SectionTitle(R.string.profile_reminders)
@@ -252,9 +276,30 @@ fun ProfileScreen(state: ProfileUiState, onBack: () -> Unit, actions: ProfileAct
         )
         EditDialog.Height -> HeightDialog(state.heightCm, state.unit, onSave = { actions.setHeightCm(it); dialog = null }, onDismiss = { dialog = null })
         EditDialog.Delete -> DeleteDialog(onDelete = { actions.deleteAccount(it); dialog = null }, onDismiss = { dialog = null })
+        EditDialog.DisconnectWhoop -> AlertDialog(
+            onDismissRequest = { dialog = null },
+            title = { Text(stringResource(R.string.profile_whoop_disconnect_title)) },
+            text = { Text(stringResource(R.string.profile_whoop_disconnect_body)) },
+            confirmButton = {
+                TextButton(onClick = { actions.disconnectWhoop(); dialog = null }) { Text(stringResource(R.string.profile_whoop_disconnect)) }
+            },
+            dismissButton = { TextButton(onClick = { dialog = null }) { Text(stringResource(R.string.profile_whoop_cancel)) } },
+        )
         null -> Unit
     }
 }
+
+@Composable
+private fun whoopMessageText(message: WhoopMessage): String = stringResource(
+    when (message) {
+        WhoopMessage.Connected -> R.string.profile_whoop_msg_connected
+        WhoopMessage.Denied -> R.string.profile_whoop_msg_denied
+        WhoopMessage.Expired -> R.string.profile_whoop_msg_expired
+        WhoopMessage.Failed -> R.string.profile_whoop_msg_failed
+        WhoopMessage.Network -> R.string.profile_whoop_msg_network
+        WhoopMessage.Disconnected -> R.string.profile_whoop_msg_disconnected
+    },
+)
 
 @Composable
 private fun messageText(message: ProfileMessage, unit: WeightUnit): String = when (message) {
@@ -276,7 +321,7 @@ private fun SectionTitle(text: Int) {
 }
 
 @Composable
-private fun HeaderCard(state: ProfileUiState, onEditName: () -> Unit) {
+private fun HeaderCard(state: ProfileUiState, whoopConnected: Boolean, onEditName: () -> Unit) {
     val scheme = MaterialTheme.colorScheme
     Surface(shape = RoundedCornerShape(36.dp), color = scheme.primaryContainer, contentColor = scheme.onPrimaryContainer) {
         Column(Modifier.fillMaxWidth().padding(Spacing.xl)) {
@@ -306,7 +351,7 @@ private fun HeaderCard(state: ProfileUiState, onEditName: () -> Unit) {
                 }
             }
             Row(Modifier.padding(top = Spacing.l), horizontalArrangement = Arrangement.spacedBy(Spacing.s)) {
-                Chip(stringResource(R.string.profile_whoop_sample_chip))
+                Chip(stringResource(if (whoopConnected) R.string.profile_whoop_connected_chip else R.string.profile_whoop_sample_chip))
                 Chip(pluralStringResource(R.plurals.profile_links_chip, state.activeLinks, state.activeLinks))
             }
         }
@@ -529,9 +574,10 @@ private fun SettingRow(label: String, control: @Composable () -> Unit) {
     }
 }
 
-/** WHOOP isn't connected yet: the app shows sample activity data until the WHOOP API is set up. */
+/** WHOOP's connection. Until it's connected, Activity shows sample data. */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-private fun WhoopCard() {
+private fun WhoopCard(whoop: WhoopUiState, onConnect: () -> Unit, onDisconnect: () -> Unit) {
     val strain = VitrackTheme.metrics.strain
     Surface(shape = RoundedCornerShape(28.dp), color = strain.hero) {
         Column(Modifier.fillMaxWidth().padding(Spacing.l)) {
@@ -542,12 +588,24 @@ private fun WhoopCard() {
                 Column(Modifier.weight(1f)) {
                     Text(stringResource(R.string.profile_whoop), style = MaterialTheme.typography.titleMedium)
                     Text(
-                        stringResource(R.string.profile_whoop_status),
+                        stringResource(
+                            when (whoop.status) {
+                                WhoopStatus.Connected -> R.string.profile_whoop_status_connected
+                                WhoopStatus.NotConnected -> R.string.profile_whoop_status
+                                WhoopStatus.NotSetUp -> R.string.profile_whoop_status_not_set_up
+                            },
+                        ),
                         style = MaterialTheme.typography.bodySmall.copy(fontSize = 13.sp),
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
-                OutlinedButton(onClick = {}, enabled = false) { Text(stringResource(R.string.profile_manage)) }
+                when {
+                    whoop.busy -> LoadingIndicator(Modifier.size(40.dp))
+                    whoop.status == WhoopStatus.Connected ->
+                        OutlinedButton(onClick = onDisconnect) { Text(stringResource(R.string.profile_whoop_disconnect)) }
+                    else ->
+                        Button(onClick = onConnect, enabled = whoop.status == WhoopStatus.NotConnected) { Text(stringResource(R.string.profile_whoop_connect)) }
+                }
             }
             Text(
                 stringResource(R.string.profile_whoop_data),

@@ -18,7 +18,13 @@ enum class SignInStep { Email, Code }
 sealed interface EmailSignInError {
     data object Network : EmailSignInError
 
-    /** The server's own message, such as an expired code. */
+    /** Too many emails or tries in a short time (Supabase's rate limit). */
+    data object TooMany : EmailSignInError
+
+    /** The code is wrong, expired, or from an earlier email. */
+    data object WrongCode : EmailSignInError
+
+    /** The server's own message, for anything else. */
     data class Server(val message: String) : EmailSignInError
 }
 
@@ -79,7 +85,12 @@ class EmailSignInViewModel @Inject constructor(private val auth: AuthRepository)
             } catch (e: CancellationException) {
                 throw e
             } catch (e: BackendException.Server) {
-                EmailSignInError.Server(e.message.orEmpty())
+                val message = e.message.orEmpty()
+                when {
+                    e.status == 429 || "rate limit" in message.lowercase() -> EmailSignInError.TooMany
+                    e.status == 403 || "expired or is invalid" in message.lowercase() -> EmailSignInError.WrongCode
+                    else -> EmailSignInError.Server(message)
+                }
             } catch (e: Exception) {
                 EmailSignInError.Network
             }

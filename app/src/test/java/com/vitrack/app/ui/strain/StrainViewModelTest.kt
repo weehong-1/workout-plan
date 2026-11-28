@@ -24,6 +24,14 @@ class StrainViewModelTest {
     private fun ready(viewModel: StrainViewModel) = viewModel.uiState.value as StrainUiState.Ready
 
     @Test
+    fun `without WHOOP it asks to connect`() = runTest {
+        val viewModel = StrainViewModel(FakeActivityRepository(snapshot = null))
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { viewModel.uiState.collect {} }
+
+        assertEquals(StrainUiState.NotConnected, viewModel.uiState.value)
+    }
+
+    @Test
     fun `starts on the week with one bar per day, today highlighted`() = runTest {
         val viewModel = StrainViewModel(FakeActivityRepository())
         backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { viewModel.uiState.collect {} }

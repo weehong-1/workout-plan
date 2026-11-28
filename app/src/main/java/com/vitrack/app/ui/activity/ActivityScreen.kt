@@ -51,7 +51,15 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDialog
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.SelectableDates
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberDatePickerState
+import java.time.LocalDate
 import com.vitrack.app.R
+import com.vitrack.app.ui.common.ConnectWhoopPrompt
 import com.vitrack.app.data.activity.MAX_STRAIN
 import com.vitrack.app.data.activity.Workout
 import com.vitrack.app.data.activity.WorkoutKind
@@ -83,6 +91,8 @@ fun ActivityRoute(
         onOpenStrain = onOpenStrain,
         onSelectStepsRange = viewModel::selectStepsRange,
         modifier = modifier,
+        onSelectDay = viewModel::selectDay,
+        onShowToday = viewModel::showToday,
     )
 }
 
@@ -93,12 +103,15 @@ fun ActivityScreen(
     onOpenStrain: () -> Unit,
     onSelectStepsRange: (StepsRange) -> Unit,
     modifier: Modifier = Modifier,
+    onSelectDay: (LocalDate) -> Unit = {},
+    onShowToday: () -> Unit = {},
 ) {
     when (uiState) {
         ActivityUiState.Loading -> Box(modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             ContainedLoadingIndicator()
         }
-        is ActivityUiState.Ready -> ActivityContent(uiState, onOpenStrain, onSelectStepsRange, modifier)
+        ActivityUiState.NotConnected -> ConnectWhoopPrompt(modifier.statusBarsPadding())
+        is ActivityUiState.Ready -> ActivityContent(uiState, onOpenStrain, onSelectStepsRange, onSelectDay, onShowToday, modifier)
     }
 }
 
@@ -107,16 +120,19 @@ private fun ActivityContent(
     state: ActivityUiState.Ready,
     onOpenStrain: () -> Unit,
     onSelectStepsRange: (StepsRange) -> Unit,
+    onSelectDay: (LocalDate) -> Unit,
+    onShowToday: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     var showRangeSheet by remember { mutableStateOf(false) }
+    var showDayPicker by remember { mutableStateOf(false) }
     // Content stops at the status bar so it never scrolls under the clock.
     LazyColumn(
         modifier = modifier.fillMaxSize().statusBarsPadding(),
         contentPadding = PaddingValues(start = Spacing.l, end = Spacing.l, bottom = Spacing.xxl),
         verticalArrangement = Arrangement.spacedBy(Spacing.s),
     ) {
-        item { Header(state) }
+        item { Header(state, onPickDay = { showDayPicker = true }, onShowToday = onShowToday) }
         item { TodayCard(state, onOpenStrain) }
         item {
             Text(
@@ -139,23 +155,58 @@ private fun ActivityContent(
     if (showRangeSheet) {
         StepsRangeSheet(
             current = state.stepsRange,
-            today = state.date,
+            today = state.today,
             onApply = { onSelectStepsRange(it); showRangeSheet = false },
             onDismiss = { showRangeSheet = false },
         )
     }
+    if (showDayPicker) {
+        DayPickerDialog(
+            shown = state.date,
+            today = state.today,
+            onPick = { onSelectDay(it); showDayPicker = false },
+            onDismiss = { showDayPicker = false },
+        )
+    }
 }
 
+/** Picks a day to show, from a year ago up to today. */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun Header(state: ActivityUiState.Ready) {
+private fun DayPickerDialog(shown: LocalDate, today: LocalDate, onPick: (LocalDate) -> Unit, onDismiss: () -> Unit) {
+    val first = today.minusDays(DAY_PICKER_DAYS_BACK)
+    val firstMillis = first.utcMillis()
+    val todayMillis = today.utcMillis()
+    val picker = rememberDatePickerState(
+        initialSelectedDateMillis = shown.utcMillis(),
+        selectableDates = object : SelectableDates {
+            override fun isSelectableDate(utcTimeMillis: Long) = utcTimeMillis in firstMillis..todayMillis
+            override fun isSelectableYear(year: Int) = year in first.year..today.year
+        },
+    )
+    DatePickerDialog(
+        onDismissRequest = onDismiss,
+        confirmButton = {
+            TextButton(
+                onClick = { picker.selectedDateMillis?.let { onPick(it.utcDate()) } ?: onDismiss() },
+            ) { Text(stringResource(R.string.activity_pick_show)) }
+        },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.activity_pick_cancel)) } },
+    ) { DatePicker(state = picker) }
+}
+
+/** WHOOP data is asked for by range; a year back keeps one request reasonable. */
+private const val DAY_PICKER_DAYS_BACK = 365L
+
+@Composable
+private fun Header(state: ActivityUiState.Ready, onPickDay: () -> Unit, onShowToday: () -> Unit) {
     Column {
         Row(
             modifier = Modifier.fillMaxWidth().padding(top = Spacing.s),
             horizontalArrangement = Arrangement.End,
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            // The day picker is not built yet.
-            IconButton(onClick = {}, modifier = Modifier.size(48.dp)) {
+            IconButton(onClick = onPickDay, modifier = Modifier.size(48.dp)) {
                 Icon(
                     painterResource(R.drawable.ic_calendar),
                     contentDescription = stringResource(R.string.activity_pick_day),
@@ -164,12 +215,19 @@ private fun Header(state: ActivityUiState.Ready) {
             }
             AccountAvatar(state.displayName)
         }
-        Text(
-            Format.dayHeading(state.date),
-            style = MaterialTheme.typography.labelLarge,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(top = Spacing.xs),
-        )
+        Row(Modifier.padding(top = Spacing.xs), verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                Format.dayHeading(state.date),
+                style = MaterialTheme.typography.labelLarge,
+                color = if (state.isToday) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.primary,
+                modifier = Modifier.weight(1f, fill = false),
+            )
+            if (!state.isToday) {
+                TextButton(onClick = onShowToday, modifier = Modifier.padding(start = Spacing.xs)) {
+                    Text(stringResource(R.string.activity_back_to_today))
+                }
+            }
+        }
         Text(
             text = state.displayName?.let { stringResource(R.string.activity_greeting_named, it) }
                 ?: stringResource(R.string.activity_greeting),
@@ -396,7 +454,7 @@ private fun StepsCard(state: ActivityUiState.Ready, onOpenRange: () -> Unit) {
                 Text(Format.dayMonth(days.last().date), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
-        Text(
+        if (state.isToday) Text(
             stringResource(R.string.activity_synced, Format.time(state.syncedAt)),
             style = MaterialTheme.typography.labelMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
