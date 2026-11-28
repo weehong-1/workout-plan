@@ -11,6 +11,8 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
@@ -153,91 +155,95 @@ fun LoginRoute(
 @Composable
 fun LoginScreen(state: LoginUiState, onGoogle: () -> Unit, onEmail: () -> Unit) {
     val reducedMotion = rememberReducedMotion()
-    Column(
+    BoxWithConstraints(
         Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.surface)
             .statusBarsPadding()
-            .navigationBarsPadding()
-            .verticalScroll(rememberScrollState()),
+            .navigationBarsPadding(),
     ) {
-        Illustration(animate = !reducedMotion, modifier = Modifier.padding(top = Spacing.s))
-        Column(Modifier.padding(horizontal = Spacing.xl).padding(bottom = Spacing.xxl)) {
+        // At least a screen tall, so the spacer pushes the buttons and the two
+        // notes to the bottom; on a short screen it all scrolls instead.
+        Column(Modifier.verticalScroll(rememberScrollState()).heightIn(min = maxHeight)) {
+            Illustration(animate = !reducedMotion, modifier = Modifier.padding(top = Spacing.s))
             Rise(0, !reducedMotion) {
                 Text(
                     stringResource(R.string.login_title),
                     style = MaterialTheme.typography.headlineLarge.copy(fontSize = 36.sp, lineHeight = 44.sp, fontWeight = FontWeight.SemiBold),
                     textAlign = TextAlign.Center,
-                    modifier = Modifier.fillMaxWidth().padding(top = Spacing.s).semantics { heading() },
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = Spacing.xl).padding(top = Spacing.s).semantics { heading() },
                 )
             }
-            Rise(1, !reducedMotion) {
-                Column(Modifier.padding(top = 28.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Button(
-                        onClick = onGoogle,
-                        enabled = !state.isBusy,
-                        shape = RoundedCornerShape(32.dp),
-                        modifier = Modifier.fillMaxWidth().height(64.dp),
-                    ) {
-                        if (state.isBusy) {
-                            LoadingIndicator(modifier = Modifier.size(32.dp))
-                        } else {
-                            Icon(painterResource(R.drawable.ic_account), contentDescription = null, modifier = Modifier.size(22.dp))
-                            Text(stringResource(R.string.login_google), style = ButtonText, modifier = Modifier.padding(start = 10.dp))
+            Spacer(Modifier.weight(1f))
+            Column(Modifier.padding(horizontal = Spacing.xl).padding(bottom = Spacing.xxl)) {
+                Rise(1, !reducedMotion) {
+                    Column(Modifier.padding(top = 28.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                        Button(
+                            onClick = onGoogle,
+                            enabled = !state.isBusy,
+                            shape = RoundedCornerShape(32.dp),
+                            modifier = Modifier.fillMaxWidth().height(64.dp),
+                        ) {
+                            if (state.isBusy) {
+                                LoadingIndicator(modifier = Modifier.size(32.dp))
+                            } else {
+                                Icon(painterResource(R.drawable.ic_account), contentDescription = null, modifier = Modifier.size(22.dp))
+                                Text(stringResource(R.string.login_google), style = ButtonText, modifier = Modifier.padding(start = 10.dp))
+                            }
+                        }
+                        Button(
+                            onClick = onEmail,
+                            enabled = !state.isBusy,
+                            shape = RoundedCornerShape(32.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                                contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                            ),
+                            modifier = Modifier.fillMaxWidth().height(64.dp),
+                        ) {
+                            Icon(painterResource(R.drawable.ic_mail), contentDescription = null, modifier = Modifier.size(22.dp))
+                            Text(stringResource(R.string.login_with_email), style = ButtonText, modifier = Modifier.padding(start = 10.dp))
                         }
                     }
-                    Button(
-                        onClick = onEmail,
-                        enabled = !state.isBusy,
-                        shape = RoundedCornerShape(32.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                            contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
-                        ),
-                        modifier = Modifier.fillMaxWidth().height(64.dp),
-                    ) {
-                        Icon(painterResource(R.drawable.ic_mail), contentDescription = null, modifier = Modifier.size(22.dp))
-                        Text(stringResource(R.string.login_with_email), style = ButtonText, modifier = Modifier.padding(start = 10.dp))
+                }
+                state.error?.let { error ->
+                    Text(
+                        when (error) {
+                            LoginError.GoogleNotSetUp -> stringResource(R.string.login_google_not_set_up)
+                            LoginError.NoGoogleAccount -> stringResource(R.string.login_no_google_account)
+                            LoginError.Network -> stringResource(R.string.login_error_network)
+                            is LoginError.Server -> error.message.ifBlank { stringResource(R.string.login_error_failed) }
+                            LoginError.Failed -> stringResource(R.string.login_error_failed)
+                        },
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.padding(top = Spacing.m, start = Spacing.xs).semantics { liveRegion = LiveRegionMode.Polite },
+                    )
+                }
+                Rise(2, !reducedMotion) {
+                    Row(Modifier.padding(top = 20.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        Icon(
+                            painterResource(R.drawable.ic_shield),
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(16.dp),
+                        )
+                        Text(
+                            stringResource(R.string.login_private),
+                            style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp, lineHeight = 16.sp),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
                     }
                 }
-            }
-            state.error?.let { error ->
-                Text(
-                    when (error) {
-                        LoginError.GoogleNotSetUp -> stringResource(R.string.login_google_not_set_up)
-                        LoginError.NoGoogleAccount -> stringResource(R.string.login_no_google_account)
-                        LoginError.Network -> stringResource(R.string.login_error_network)
-                        is LoginError.Server -> error.message.ifBlank { stringResource(R.string.login_error_failed) }
-                        LoginError.Failed -> stringResource(R.string.login_error_failed)
-                    },
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.error,
-                    modifier = Modifier.padding(top = Spacing.m, start = Spacing.xs).semantics { liveRegion = LiveRegionMode.Polite },
-                )
-            }
-            Rise(2, !reducedMotion) {
-                Row(Modifier.padding(top = 20.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Icon(
-                        painterResource(R.drawable.ic_shield),
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(18.dp),
-                    )
+                Rise(3, !reducedMotion) {
                     Text(
-                        stringResource(R.string.login_private),
-                        style = MaterialTheme.typography.bodySmall.copy(fontSize = 13.sp, lineHeight = 18.sp),
+                        stringResource(R.string.login_subtitle),
+                        style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp, lineHeight = 16.sp),
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        // Lines up with the privacy text: past its 16 dp shield and 10 dp gap.
+                        modifier = Modifier.padding(start = 26.dp, top = Spacing.m),
                     )
                 }
-            }
-            Rise(3, !reducedMotion) {
-                Text(
-                    stringResource(R.string.login_subtitle),
-                    style = MaterialTheme.typography.bodySmall.copy(fontSize = 13.sp, lineHeight = 18.sp),
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    // Lines up with the privacy text: past its 18 dp shield and 10 dp gap.
-                    modifier = Modifier.padding(start = 28.dp, top = Spacing.m),
-                )
             }
         }
     }
