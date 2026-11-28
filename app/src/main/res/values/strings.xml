@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Vitrack</string>
+    <string name="app_name">Slopevo</string>
 
     <!-- Navigation -->
     <string name="tab_activity">Activity</string>
@@ -338,7 +338,7 @@
     <string name="profile_remind_weigh_when">Every morning, 7:00 AM</string>
     <string name="profile_remind_food">Food photos</string>
     <string name="profile_remind_food_when">8:00 PM, only if no photo that day</string>
-    <string name="profile_notifications_blocked">Notifications are off for Vitrack. Turn them on in the phone\'s Settings to get reminders.</string>
+    <string name="profile_notifications_blocked">Notifications are off for Slopevo. Turn them on in the phone\'s Settings to get reminders.</string>
     <string name="profile_your_data">Your data</string>
     <string name="profile_export">Export my data</string>
     <string name="profile_export_note">Weight, food photos and labels as one file</string>
